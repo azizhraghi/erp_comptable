@@ -1,0 +1,1843 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>ComptaExpert v3.2.15 - Correction Finale</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    
+    <style>
+        :root { --p-color: #2c3e50; --err: #e74c3c; --ok: #27ae60; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 20px; font-size: 14px; }
+        #loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; }
+        .spinner { border: 5px solid #f3f3f3; border-top: 5px solid var(--p-color); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .no-print { max-width: 1300px; margin: 0 auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .grid-ui { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.85em; color: var(--p-color); }
+        input, select, button { padding: 10px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; font-size: 13px; }
+        #audit-box { margin-top: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; display: none; background: #fff; }
+        .audit-row { padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .st-ok { color: var(--ok); font-weight: bold; }
+        .st-err { color: var(--err); font-weight: bold; }
+        .hidden { display: none; }
+        @media print {
+            @page { size: A4 landscape; margin: 8mm 5mm; }
+            .no-print, #loader { display: none !important; }
+            .print-area { display: block !important; }
+            table { width: 100% !important; border-collapse: collapse !important; font-size: 7.5pt !important; table-layout: fixed !important; border: 0.4pt solid #000; }
+            th, td { border: 0.4pt solid #000 !important; padding: 2px 3px !important; overflow: hidden; word-wrap: break-word; }
+            th { background: #f2f2f2 !important; -webkit-print-color-adjust: exact; }
+            .text-right { text-align: right !important; }
+            .text-center { text-align: center !important; }
+            .bold { font-weight: bold !important; }
+            .page-break { page-break-before: always; }
+            .bg-grey { background: #eeeeee !important; -webkit-print-color-adjust: exact; }
+            .no-border { border: none !important; }
+            
+            /* Suppression du cadrage de l'entête (demande spécifique) */
+            .header-print, .header-print td, .header-print th {
+                border: none !important;
+                padding: 0 !important;
+            }
+            
+            /* Mise en forme professionnelle des rapports */
+            .col-compte-ligne { width: 8% !important; padding-left: 8px !important; text-align: left !important;}
+            .col-compte-aux { width: 8% !important; padding-left: 8px !important; text-align: left !important;}
+            .ba-lib-fix { width: 54% !important; padding-left: 8px !important; text-align: left !important; }
+            .ba-mnt-header { width: 8% !important; text-align: center !important; padding: 0 4px !important;}
+            .ba-solde { width: 10% !important; text-align: right !important; padding: 0 4px !important;}
+            
+            /* Grand-Livre */
+            .gl-date { width: 5% !important; }
+            .gl-jl { width: 5% !important; }
+            .gl-nfac { width: 7% !important; overflow: hidden !important; text-overflow: clip !important; }
+            .gl-ref { 
+                width: 7% !important; 
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: clip !important;
+                height: 1.2em !important;
+                line-height: 1.2em !important;
+            }
+            .gl-piece { width: 4% !important; }
+            .gl-lib { width: 42% !important; padding-left: 5px !important; }
+            .gl-let { width: 4% !important; }
+            .gl-debit { width: 8% !important; text-align: center !important; }
+            .gl-credit { width: 8% !important; text-align: center !important; }
+            .gl-solde { width: 10% !important; text-align: right !important; }
+            
+            /* Répétition des entêtes sur chaque page */
+            thead { display: table-header-group; }
+        }
+        .print-area { display: none; }
+        .btn-action { background: var(--p-color); color: white; cursor: pointer; border: none; font-weight: bold; }
+        .btn-template { background: #7f8c8d; color: white; cursor: pointer; border: none; margin-bottom: 10px; font-size: 0.8em; width: auto; padding: 5px 15px;}
+        .btn-edition { background: #3498db; color: white; cursor: pointer; border: none; margin-top: 10px; }
+        .edition-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 20px; }
+        
+        /* Styles pour la visualisation des données */
+        #data-visualization { 
+            margin-top: 20px; 
+            border: 1px solid #ddd; 
+            border-radius: 5px; 
+            overflow: hidden;
+            display: none;
+        }
+        #data-visualization h3 {
+            background: var(--p-color);
+            color: white;
+            padding: 10px 15px;
+            margin: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #data-visualization h3 button {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 3px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .data-filters {
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .data-table-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        table.data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        table.data-table th {
+            background: #e9ecef;
+            padding: 8px 10px;
+            text-align: left;
+            position: sticky;
+            top: 0;
+            cursor: pointer;
+        }
+        table.data-table th:hover {
+            background: #dee2e6;
+        }
+        table.data-table th.sorted-asc::after {
+            content: " ▲";
+        }
+        table.data-table th.sorted-desc::after {
+            content: " ▼";
+        }
+        table.data-table td {
+            padding: 6px 10px;
+            border-bottom: 1px solid #ddd;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        table.data-table tr:hover {
+            background: #f8f9fa;
+        }
+        .pagination-controls {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border-top: 1px solid #ddd;
+        }
+        .pagination-info {
+            color: #6c757d;
+        }
+        .pagination-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        .pagination-buttons button {
+            padding: 3px 8px;
+            background: #e9ecef;
+            border: 1px solid #ced4da;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .pagination-buttons button.active {
+            background: var(--p-color);
+            color: white;
+            border-color: var(--p-color);
+        }
+        .gl-filter-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .gl-filter-controls select {
+            padding: 5px;
+            border-radius: 3px;
+            border: 1px solid #ced4da;
+            font-size: 13px;
+        }
+        .gl-filter-controls button {
+            padding: 5px 10px;
+            background: var(--p-color);
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .gl-filter-controls .filter-label {
+            font-weight: bold;
+            margin-right: 5px;
+            color: #495057;
+        }
+        .data-table .debit, 
+        .data-table .credit, 
+        .data-table .balance {
+            text-align: right;
+        }
+        
+        /* Style pour le bandeau d'audit silencieux */
+        #status-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 8px;
+            text-align: center;
+            font-weight: bold;
+            z-index: 10001;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+
+<div id="loader"><div class="spinner"></div><p id="loader-msg">Traitement en cours...</p></div>
+
+<!-- NOUVEAU : Bandeau d'audit silencieux -->
+<div id="status-bar" style="display: none;"></div>
+
+<div class="no-print">
+    <button class="btn-template" onclick="downloadTemplate()">⬇ Télécharger Template Fichier Vierge</button>
+    <h2 style="margin-top:0; color:var(--p-color);">Édition Comptable v3.2.15</h2>
+    
+    <div class="grid-ui">
+        <div><label>Société *</label><input type="text" id="societe" placeholder="Nom de l'entreprise"></div>
+        <div>
+            <label>Exercice (Pilote)</label>
+            <input type="number" id="exercice" oninput="syncDates(this.value)" placeholder="Ex: 2024">
+        </div>
+        <div><label>Date Début</label><input type="date" id="dateD" onchange="validateDateRealite(this)"></div>
+        <div><label>Date Fin</label><input type="date" id="dateF" onchange="validateDateRealite(this)"></div>
+    </div>
+
+    <div class="grid-ui">
+        <div><label>Fichier Excel</label><input type="file" id="fileIn" accept=".xlsx, .xls"></div>
+        <div>
+            <label>Compte Général (Du)</label>
+            <select id="filterCD" onchange="updateDataVisualization()"><option value="">-- Tous --</option></select>
+        </div>
+        <div>
+            <label>Compte Général (Au)</label>
+            <select id="filterCF" onchange="updateDataVisualization()"><option value="">-- Tous --</option></select>
+        </div>
+        <div id="box-aux" class="hidden" style="display:contents">
+            <div><label>Tiers (Du)</label><select id="filterTD" onchange="updateDataVisualization()"></select></div>
+            <div><label>Tiers (Au)</label><select id="filterTF" onchange="updateDataVisualization()"></select></div>
+        </div>
+        <div>
+            <label>Lettrage</label>
+            <select id="filterLet" onchange="updateDataVisualization()">
+                <option value="all">Tous</option>
+                <option value="with">Avec lettrage</option>
+                <option value="without">Sans lettrage</option>
+            </select>
+        </div>
+        <div>
+            <label>Disposition</label>
+            <select id="disposition-filter" onchange="updateDataVisualization()">
+                <option value="initial">Données initiales</option>
+                <option value="glg" selected>Disposition GLG</option>
+                <option value="gla">Disposition GLA</option>
+            </select>
+        </div>
+    </div>
+
+    <div style="display: flex; gap:10px;">
+        <button class="btn-action" onclick="runAudit()" style="flex:1;">1. ANALYSER & AUDITER</button>
+    </div>
+
+    <div id="audit-box">
+        <h3 style="margin-top:0; border-bottom:2px solid var(--p-color); padding-bottom:5px;">Rapport d'Audit <span id="res-comptable" style="float:right"></span></h3>
+        <div id="audit-results"></div>
+    </div>
+
+    <!-- SECTION : Visualisation des Données -->
+    <div id="data-visualization">
+        <h3>
+            Visualisation des Données du Grand-Livre
+            <button onclick="toggleDataVisualization()">Masquer</button>
+        </h3>
+        
+        <div class="data-filters">
+            <input type="text" id="data-search" placeholder="Rechercher..." oninput="filterData()">
+            <select id="rows-per-page" onchange="updateDataVisualization()">
+                <option value="10">10 lignes par page</option>
+                <option value="25" selected>25 lignes par page</option>
+                <option value="50">50 lignes par page</option>
+                <option value="100">100 lignes par page</option>
+            </select>
+        </div>
+        
+        <div class="data-table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th data-sort="DATE_OBJ" class="sorted-asc">Date</th>
+                        <th data-sort="JOURNAL">Journal</th>
+                        <th data-sort="CPT">Compte</th>
+                        <th data-sort="INTITULE COMPTE">Intitulé Compte</th>
+                        <th data-sort="TRS">Tiers</th>
+                        <th data-sort="INTITULE TIERS">Intitulé Tiers</th>
+                        <th data-sort="LIBELLE">Libellé</th>
+                        <th data-sort="D" class="text-right debit">Débit</th>
+                        <th data-sort="C" class="text-right credit">Crédit</th>
+                        <th data-sort="SOLDE" class="text-right balance">Solde</th>
+                    </tr>
+                </thead>
+                <tbody id="data-table-body">
+                    <!-- Données insérées dynamiquement -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="pagination-controls">
+            <div class="pagination-info" id="pagination-info">Affichage 0-0 sur 0</div>
+            <div class="pagination-buttons" id="pagination-buttons">
+                <!-- Boutons de pagination insérés dynamiquement -->
+            </div>
+        </div>
+    </div>
+
+    <div class="edition-grid">
+        <button id="btn-BG" class="btn-edition" disabled onclick="render('BG')">Balance Générale</button>
+        <button id="btn-BA" class="btn-edition" disabled onclick="render('BA')">Balance Auxiliaire</button>
+        <button id="btn-GLG" class="btn-edition" disabled onclick="render('GLG')">Grand-Livre Générale</button>
+        <button id="btn-GLA" class="btn-edition" disabled onclick="render('GLA')">Grand-Livre Auxiliaire</button>
+    </div>
+</div>
+
+<div id="printArea" class="print-area"></div>
+
+<script>
+    /* 
+    HISTORIQUE DES VERSIONS (v3.2.14 → v3.2.15)
+    -----------------------------------------
+    v3.2.15 (23/02/2026) :
+    - Pagination globale continue pour tout le document
+    - Tri métier renforcé pour GLG et GLA
+    - Gestion stricte des reports
+    - Audit silencieux ajouté
+    */
+    
+    // --- NOUVELLES VARIABLES V3.2.15 ---
+    let GLOBAL_PAGE_COUNT = 1; 
+    const AUDIT_THRESHOLD = 0.001;
+    
+    let rawData = [];
+    let accountsMap = new Map();
+    let filteredData = {
+        BG: [],
+        BA: [],
+        GLG: [],
+        GLA: []
+    };
+    
+    // Variables pour la visualisation des données
+    let displayedData = [];
+    let currentPage = 1;
+    let rowsPerPage = 25;
+    let currentSortColumn = 'DATE_OBJ';
+    let sortDirection = 'asc';
+    
+    let isGenerating = false;
+    let cancelGeneration = false;
+    
+    const auditLabels = {
+        glob: "Équilibre Global",
+        len: "Comptes à 6 chiffres",
+        trs: "Auxiliaires Requis",
+        fol: "Équilibre Folios",
+        date: "Intervalle Exercice",
+        ran: "REPORT A NOUVEAU (RAN)",
+        balance: "Conformité des Soldes",
+        societe: "Nom de Société"
+    };
+
+    function syncDates(y) {
+        if(!y || y < 1900 || y > 2100) return;
+        document.getElementById('dateD').value = `${y}-01-01`;
+        document.getElementById('dateF').value = `${y}-12-31`;
+    }
+
+    function validateDateRealite(el) {
+        const d = new Date(el.value);
+        const y = document.getElementById('exercice').value;
+        if (isNaN(d.getTime()) || el.value.split('-')[0] !== y) {
+            alert("Date invalide ou hors exercice.");
+            syncDates(y); 
+        }
+    }
+
+    // LOGIQUE DE GESTION DES FILTRES COMPTES ET TIERS
+    function handleCompteSelection() {
+        const val = document.getElementById('filterCD').value;
+        const box = document.getElementById('box-aux');
+        const selTD = document.getElementById('filterTD');
+        const selTF = document.getElementById('filterTF');
+        
+        if(accountsMap.has(val)) {
+            box.classList.remove('hidden');
+            const tiers = [...accountsMap.get(val)].sort();
+            selTD.innerHTML = selTF.innerHTML = "";
+            tiers.forEach(t => { 
+                selTD.add(new Option(t, t)); 
+                selTF.add(new Option(t, t)); 
+            });
+            if(tiers.length > 0) selTF.selectedIndex = tiers.length - 1;
+        } else { 
+            box.classList.add('hidden'); 
+        }
+        
+        updateDataVisualization();
+    }
+
+    const fmt = (n) => (Math.abs(n) < 0.001) ? "" : new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(n);
+    const fmtBalance = (n) => {
+        const absN = Math.abs(n);
+        return absN < 0.001 ? "0,000" : 
+               new Intl.NumberFormat('fr-FR', { 
+                   minimumFractionDigits: 3, 
+                   maximumFractionDigits: 3 
+               }).format(n);
+    };
+    
+    const fmtD = (d) => { 
+        const x = new Date(d); 
+        if (isNaN(x)) return "";
+        
+        // Format JJ/MM/YY (demande spécifique)
+        const day = String(x.getDate()).padStart(2, '0');
+        const month = String(x.getMonth() + 1).padStart(2, '0');
+        const year = String(x.getFullYear()).slice(-2);
+        
+        return `${day}/${month}/${year}`;
+    };
+    
+    function showL(s, msg = "") {
+        document.getElementById('loader-msg').innerText = msg;
+        document.getElementById('loader').style.display = s ? 'flex' : 'none';
+    }
+
+    function downloadTemplate() {
+        const headers = [["DATE", "MOIS", "JOURNAL", "N° FAC", "REF", "N° PIECE", "FOLIO", "COMPTE", "INTITULE COMPTE", "COMPTE TIERS", "INTITULE TIERS", "LIBELLE", "ECH", "LET", "DÉBIT (TND)", "CRÉDIT (TND)", "SOLDE"]];
+        const ws = XLSX.utils.aoa_to_sheet(headers);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Template");
+        XLSX.writeFile(wb, "Template_GL_Import.xlsx");
+    }
+
+    document.getElementById('fileIn').addEventListener('change', (e) => {
+        showL(true, "Lecture du fichier...");
+        const reader = new FileReader();
+        reader.onload = (f) => {
+            const wb = XLSX.read(f.target.result, { type: 'array', cellDates: true });
+            const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "" });
+            rawData = data.map(r => ({
+                ...r,
+                D: Math.round((parseFloat(r["DÉBIT (TND)"]) || 0) * 1000) / 1000,
+                C: Math.round((parseFloat(r["CRÉDIT (TND)"]) || 0) * 1000) / 1000,
+                CPT: String(r.COMPTE || "").trim(),
+                TRS: String(r["COMPTE TIERS"] || "").trim(),
+                DATE_OBJ: r.DATE ? new Date(new Date(r.DATE).setHours(0,0,0,0)) : null,
+                SOLDE: (Math.round((parseFloat(r["DÉBIT (TND)"]) || 0) * 1000) / 1000) - 
+                       (Math.round((parseFloat(r["CRÉDIT (TND)"]) || 0) * 1000) / 1000)
+            }));
+            
+            const uniqueComptes = [...new Set(rawData.filter(r => r.CPT).map(r => r.CPT))].sort();
+            const selD = document.getElementById('filterCD');
+            const selF = document.getElementById('filterCF');
+            selD.innerHTML = selF.innerHTML = '<option value="">-- Tous --</option>';
+            uniqueComptes.forEach(c => { selD.add(new Option(c, c)); selF.add(new Option(c, c)); });
+            
+            accountsMap.clear();
+            rawData.forEach(r => {
+                if(r.TRS) {
+                    if(!accountsMap.has(r.CPT)) accountsMap.set(r.CPT, new Set());
+                    accountsMap.get(r.CPT).add(r.TRS);
+                }
+            });
+            
+            // Préparer les données triées pour la visualisation
+            prepareGLData();
+            
+            // Initialiser les filtres de tiers
+            const selTD = document.getElementById('filterTD');
+            const selTF = document.getElementById('filterTF');
+            selTD.innerHTML = selTF.innerHTML = '<option value="">-- Tous --</option>';
+            selTD.disabled = true;
+            selTF.disabled = true;
+            
+            // Exécuter l'audit silencieux
+            runSilentAudit(rawData);
+            
+            showL(false);
+        };
+        reader.readAsArrayBuffer(e.target.files[0]);
+    });
+    
+    // Fonction pour préparer les données GL triées
+    function prepareGLData() {
+        // Copier les données brutes
+        let glgData = [...rawData];
+        let glaData = [...rawData];
+        
+        // Appliquer le tri spécifique pour le Grand-Livre Général
+        glgData.sort((a, b) => {
+            // 1. Tri par compte
+            if (a.CPT !== b.CPT) return a.CPT.localeCompare(b.CPT);
+            
+            // 2. Vérifier si c'est une date de RAN (01/01)
+            const isARanDate = isRanDate(a.DATE_OBJ);
+            const isBRanDate = isRanDate(b.DATE_OBJ);
+            
+            // 3. Priorité aux écritures du 01/01/N
+            if (isARanDate && !isBRanDate) return -1;
+            if (!isARanDate && isBRanDate) return 1;
+            
+            // 4. Tri par date
+            if (a.DATE_OBJ !== b.DATE_OBJ) return a.DATE_OBJ - b.DATE_OBJ;
+            
+            // 5. Priorité aux RAN pour les mêmes dates
+            const isARan = (a.JOURNAL === 'RAN');
+            const isBRan = (b.JOURNAL === 'RAN');
+            if (isARan && !isBRan) return -1;
+            if (!isARan && isBRan) return 1;
+            
+            // 6. Si plusieurs RAN, tri par numéro de pièce
+            if (isARan && isBRan) {
+                return (a["N° PIECE"] || '').localeCompare(b["N° PIECE"] || '');
+            }
+            
+            // 7. Sinon, tri par journal
+            return a.JOURNAL.localeCompare(b.JOURNAL);
+        });
+        
+        // Appliquer le tri spécifique pour le Grand-Livre Auxiliaire
+        glaData.sort((a, b) => {
+            // 1. Tri par compte
+            if (a.CPT !== b.CPT) return a.CPT.localeCompare(b.CPT);
+            
+            // 2. Tri par tiers
+            if (a.TRS !== b.TRS) {
+                if (!a.TRS) return -1;
+                if (!b.TRS) return 1;
+                return a.TRS.localeCompare(b.TRS);
+            }
+            
+            // 3. Vérifier si c'est une date de RAN (01/01)
+            const isARanDate = isRanDate(a.DATE_OBJ);
+            const isBRanDate = isRanDate(b.DATE_OBJ);
+            
+            // 4. Priorité aux écritures du 01/01/N
+            if (isARanDate && !isBRanDate) return -1;
+            if (!isARanDate && isBRanDate) return 1;
+            
+            // 5. Tri par date
+            if (a.DATE_OBJ !== b.DATE_OBJ) return a.DATE_OBJ - b.DATE_OBJ;
+            
+            // 6. Priorité aux RAN pour les mêmes dates
+            const isARan = (a.JOURNAL === 'RAN');
+            const isBRan = (b.JOURNAL === 'RAN');
+            if (isARan && !isBRan) return -1;
+            if (!isARan && isBRan) return 1;
+            
+            // 7. Si plusieurs RAN, tri par numéro de pièce
+            if (isARan && isBRan) {
+                return (a["N° PIECE"] || '').localeCompare(b["N° PIECE"] || '');
+            }
+            
+            // 8. Sinon, tri par journal
+            return a.JOURNAL.localeCompare(b.JOURNAL);
+        });
+        
+        // Stocker les données triées
+        filteredData.GLG = glgData;
+        filteredData.GLA = glaData;
+        
+        // Mettre à jour l'interface de visualisation
+        updateDataVisualization();
+    }
+    
+    // Fonction pour mettre à jour la visualisation
+    function updateDataVisualization() {
+        const dataVis = document.getElementById('data-visualization');
+        
+        if (rawData.length > 0) {
+            dataVis.style.display = 'block';
+            
+            // Appliquer les filtres
+            let filtered = applyFilters(rawData);
+            
+            // Appliquer le tri de la disposition
+            const disposition = document.getElementById('disposition-filter').value;
+            if (disposition === 'glg') {
+                displayedData = sortGLGData(filtered);
+                calculateCumulativeBalanceGLG();
+            } else if (disposition === 'gla') {
+                displayedData = sortGLAData(filtered);
+                calculateCumulativeBalanceGLA();
+            } else {
+                displayedData = [...filtered];
+                calculateCumulativeBalanceInitial();
+            }
+            
+            // Mettre à jour la pagination
+            currentPage = 1;
+            renderDataTable();
+        } else {
+            dataVis.style.display = 'none';
+        }
+    }
+    
+    // Fonction pour afficher/masquer la visualisation
+    function toggleDataVisualization() {
+        const dataVis = document.getElementById('data-visualization');
+        if (dataVis.style.display === 'none') {
+            dataVis.style.display = 'block';
+            document.querySelector('#data-visualization h3 button').textContent = 'Masquer';
+        } else {
+            dataVis.style.display = 'none';
+            document.querySelector('#data-visualization h3 button').textContent = 'Afficher';
+        }
+    }
+    
+    // Fonction pour appliquer les filtres
+    function applyFilters(data) {
+        const cD = document.getElementById('filterCD').value;
+        const cF = document.getElementById('filterCF').value;
+        const tD = document.getElementById('filterTD').value;
+        const tF = document.getElementById('filterTF').value;
+        const letFilter = document.getElementById('filterLet').value;
+        
+        return data.filter(r => 
+            (!cD || r.CPT >= cD) && 
+            (!cF || r.CPT <= cF) && 
+            (!tD || !r.TRS || r.TRS >= tD) && 
+            (!tF || !r.TRS || r.TRS <= tF) &&
+            (
+                letFilter === "all" || 
+                (letFilter === "with" && r.LET && r.LET.trim() !== "") ||
+                (letFilter === "without" && (!r.LET || r.LET.trim() === ""))
+            )
+        );
+    }
+    
+    // Fonctions de tri
+    function sortGLGData(data) {
+        return [...data].sort((a, b) => {
+            // 1. Tri par compte
+            if (a.CPT !== b.CPT) return a.CPT.localeCompare(b.CPT);
+            
+            // 2. Vérifier si c'est une date de RAN (01/01)
+            const isARanDate = isRanDate(a.DATE_OBJ);
+            const isBRanDate = isRanDate(b.DATE_OBJ);
+            
+            // 3. Priorité aux écritures du 01/01/N
+            if (isARanDate && !isBRanDate) return -1;
+            if (!isARanDate && isBRanDate) return 1;
+            
+            // 4. Tri par date
+            if (a.DATE_OBJ !== b.DATE_OBJ) return a.DATE_OBJ - b.DATE_OBJ;
+            
+            // 5. Priorité aux RAN pour les mêmes dates
+            const isARan = (a.JOURNAL === 'RAN');
+            const isBRan = (b.JOURNAL === 'RAN');
+            if (isARan && !isBRan) return -1;
+            if (!isARan && isBRan) return 1;
+            
+            // 6. Si plusieurs RAN, tri par numéro de pièce
+            if (isARan && isBRan) {
+                return (a["N° PIECE"] || '').localeCompare(b["N° PIECE"] || '');
+            }
+            
+            // 7. Sinon, tri par journal
+            return a.JOURNAL.localeCompare(b.JOURNAL);
+        });
+    }
+    
+    function sortGLAData(data) {
+        return [...data].sort((a, b) => {
+            // 1. Tri par compte
+            if (a.CPT !== b.CPT) return a.CPT.localeCompare(b.CPT);
+            
+            // 2. Tri par tiers
+            if (a.TRS !== b.TRS) {
+                if (!a.TRS) return -1;
+                if (!b.TRS) return 1;
+                return a.TRS.localeCompare(b.TRS);
+            }
+            
+            // 3. Vérifier si c'est une date de RAN (01/01)
+            const isARanDate = isRanDate(a.DATE_OBJ);
+            const isBRanDate = isRanDate(b.DATE_OBJ);
+            
+            // 4. Priorité aux écritures du 01/01/N
+            if (isARanDate && !isBRanDate) return -1;
+            if (!isARanDate && isBRanDate) return 1;
+            
+            // 5. Tri par date
+            if (a.DATE_OBJ !== b.DATE_OBJ) return a.DATE_OBJ - b.DATE_OBJ;
+            
+            // 6. Priorité aux RAN pour les mêmes dates
+            const isARan = (a.JOURNAL === 'RAN');
+            const isBRan = (b.JOURNAL === 'RAN');
+            if (isARan && !isBRan) return -1;
+            if (!isARan && isBRan) return 1;
+            
+            // 7. Si plusieurs RAN, tri par numéro de pièce
+            if (isARan && isBRan) {
+                return (a["N° PIECE"] || '').localeCompare(b["N° PIECE"] || '');
+            }
+            
+            // 8. Sinon, tri par journal
+            return a.JOURNAL.localeCompare(b.JOURNAL);
+        });
+    }
+    
+    // Fonctions de calcul du solde cumulé
+    function calculateCumulativeBalanceGLG() {
+        let currentCpt = null;
+        let cumulativeBalance = 0;
+        
+        for (let i = 0; i < displayedData.length; i++) {
+            const r = displayedData[i];
+            
+            // Réinitialiser le solde cumulé quand on change de compte
+            if (currentCpt !== r.CPT) {
+                currentCpt = r.CPT;
+                cumulativeBalance = 0;
+            }
+            
+            // Mettre à jour le solde cumulé
+            cumulativeBalance += r.D - r.C;
+            
+            // Stocker le solde cumulé
+            r.SOLDE = cumulativeBalance;
+        }
+    }
+    
+    function calculateCumulativeBalanceGLA() {
+        let currentCpt = null;
+        let currentTrs = null;
+        let cumulativeBalance = 0;
+        
+        for (let i = 0; i < displayedData.length; i++) {
+            const r = displayedData[i];
+            
+            // Réinitialiser le solde cumulé quand on change de compte ou de tiers
+            if (currentCpt !== r.CPT || currentTrs !== r.TRS) {
+                currentCpt = r.CPT;
+                currentTrs = r.TRS;
+                cumulativeBalance = 0;
+            }
+            
+            // Mettre à jour le solde cumulé
+            cumulativeBalance += r.D - r.C;
+            
+            // Stocker le solde cumulé
+            r.SOLDE = cumulativeBalance;
+        }
+    }
+    
+    function calculateCumulativeBalanceInitial() {
+        // Pour les données initiales, on ne calcule pas de solde cumulé spécifique
+        for (let i = 0; i < displayedData.length; i++) {
+            const r = displayedData[i];
+            r.SOLDE = r.D - r.C;
+        }
+    }
+    
+    // Fonction pour trier les données
+    function sortData(column) {
+        if (currentSortColumn === column) {
+            sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            currentSortColumn = column;
+            sortDirection = 'asc';
+        }
+        
+        // Mettre à jour les classes CSS pour les en-têtes
+        document.querySelectorAll('.data-table th').forEach(th => {
+            th.classList.remove('sorted-asc', 'sorted-desc');
+        });
+        
+        const th = document.querySelector(`.data-table th[data-sort="${column}"]`);
+        th.classList.add(`sorted-${sortDirection}`);
+        
+        // Trier les données
+        displayedData.sort((a, b) => {
+            let valA = a[column];
+            let valB = b[column];
+            
+            // Gestion spéciale pour les dates
+            if (column === 'DATE_OBJ') {
+                if (!valA) return sortDirection === 'asc' ? -1 : 1;
+                if (!valB) return sortDirection === 'asc' ? 1 : -1;
+                return sortDirection === 'asc' ? valA - valB : valB - valA;
+            }
+            
+            // Gestion spéciale pour les montants
+            if (column === 'D' || column === 'C' || column === 'SOLDE') {
+                valA = parseFloat(valA) || 0;
+                valB = parseFloat(valB) || 0;
+                return sortDirection === 'asc' ? valA - valB : valB - valA;
+            }
+            
+            // Tri par défaut pour les chaînes de caractères
+            if (typeof valA === 'string' && typeof valB === 'string') {
+                const comp = valA.localeCompare(valB);
+                return sortDirection === 'asc' ? comp : -comp;
+            }
+            
+            // Comparaison numérique
+            if (typeof valA === 'number' && typeof valB === 'number') {
+                return sortDirection === 'asc' ? valA - valB : valB - valA;
+            }
+            
+            // Comparaison par défaut
+            return sortDirection === 'asc' ? 
+                (valA < valB ? -1 : valA > valB ? 1 : 0) : 
+                (valB < valA ? -1 : valB > valA ? 1 : 0);
+        });
+        
+        renderDataTable();
+    }
+    
+    // Fonction pour filtrer les données
+    function filterData() {
+        const searchTerm = document.getElementById('data-search').value.toLowerCase();
+        
+        if (!searchTerm) {
+            renderDataTable();
+            return;
+        }
+        
+        // Filtrer les données affichées
+        let filteredData = [];
+        const rowsPerPage = parseInt(document.getElementById('rows-per-page').value);
+        
+        for (let i = 0; i < displayedData.length; i++) {
+            const r = displayedData[i];
+            if (
+                (r.DATE_OBJ && fmtD(r.DATE_OBJ).toLowerCase().includes(searchTerm)) ||
+                (r.JOURNAL && r.JOURNAL.toLowerCase().includes(searchTerm)) ||
+                (r.CPT && r.CPT.toLowerCase().includes(searchTerm)) ||
+                (r["INTITULE COMPTE"] && r["INTITULE COMPTE"].toLowerCase().includes(searchTerm)) ||
+                (r.TRS && r.TRS.toLowerCase().includes(searchTerm)) ||
+                (r["INTITULE TIERS"] && r["INTITULE TIERS"].toLowerCase().includes(searchTerm)) ||
+                (r.LIBELLE && r.LIBELLE.toLowerCase().includes(searchTerm)) ||
+                (r.D && fmt(r.D).toLowerCase().includes(searchTerm)) ||
+                (r.C && fmt(r.C).toLowerCase().includes(searchTerm)) ||
+                (r.SOLDE && fmtBalance(r.SOLDE).toLowerCase().includes(searchTerm))
+            ) {
+                filteredData.push(r);
+            }
+        }
+        
+        // Sauvegarder les données filtrées
+        const originalData = [...displayedData];
+        displayedData = filteredData;
+        
+        // Mettre à jour la pagination
+        currentPage = 1;
+        renderDataTable();
+        
+        // Restaurer les données après la pagination
+        setTimeout(() => {
+            displayedData = originalData;
+        }, 500);
+    }
+    
+    // Fonction pour rendre le tableau de données
+    function renderDataTable() {
+        const tableBody = document.getElementById('data-table-body');
+        const paginationInfo = document.getElementById('pagination-info');
+        const paginationButtons = document.getElementById('pagination-buttons');
+        
+        // Mettre à jour le nombre de lignes par page
+        rowsPerPage = parseInt(document.getElementById('rows-per-page').value);
+        
+        // Calculer les indices de pagination
+        const startIndex = (currentPage - 1) * rowsPerPage;
+        const endIndex = Math.min(startIndex + rowsPerPage, displayedData.length);
+        
+        // Générer le HTML pour les lignes du tableau
+        let html = '';
+        for (let i = startIndex; i < endIndex; i++) {
+            const r = displayedData[i];
+            html += `
+            <tr>
+                <td>${r.DATE_OBJ ? fmtD(r.DATE_OBJ) : ''}</td>
+                <td>${r.JOURNAL || ''}</td>
+                <td>${r.CPT || ''}</td>
+                <td>${r["INTITULE COMPTE"] || ''}</td>
+                <td>${r.TRS || ''}</td>
+                <td>${r["INTITULE TIERS"] || ''}</td>
+                <td>${r.LIBELLE || ''}</td>
+                <td class="text-right debit">${fmt(r.D)}</td>
+                <td class="text-right credit">${fmt(r.C)}</td>
+                <td class="text-right balance">${fmtBalance(r.SOLDE)}</td>
+            </tr>`;
+        }
+        
+        tableBody.innerHTML = html;
+        
+        // Mettre à jour les informations de pagination
+        paginationInfo.textContent = `Affichage ${startIndex + 1}-${endIndex} sur ${displayedData.length}`;
+        
+        // Générer les boutons de pagination
+        const totalPages = Math.max(1, Math.ceil(displayedData.length / rowsPerPage));
+        let buttonsHtml = '';
+        
+        // Bouton Précédent
+        buttonsHtml += `<button onclick="changePage(${Math.max(1, currentPage - 1)})" ${currentPage === 1 ? 'disabled' : ''}>&lt;</button>`;
+        
+        // Boutons de page
+        const maxVisiblePages = 5;
+        let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+        let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+        
+        if (endPage - startPage + 1 < maxVisiblePages) {
+            startPage = Math.max(1, endPage - maxVisiblePages + 1);
+        }
+        
+        for (let i = startPage; i <= endPage; i++) {
+            buttonsHtml += `<button class="${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
+        }
+        
+        // Bouton Suivant
+        buttonsHtml += `<button onclick="changePage(${Math.min(totalPages, currentPage + 1)})" ${currentPage === totalPages ? 'disabled' : ''}>&gt;</button>`;
+        
+        paginationButtons.innerHTML = buttonsHtml;
+    }
+    
+    // Fonction pour changer de page
+    function changePage(page) {
+        currentPage = page;
+        renderDataTable();
+    }
+
+    function validateBalances() {
+        const errors = [];
+        
+        // Vérification GLG vs BG
+        const bgMap = {};
+        rawData.forEach(r => {
+            if (!r.CPT) return;
+            if (!bgMap[r.CPT]) bgMap[r.CPT] = { d: 0, c: 0 };
+            bgMap[r.CPT].d += r.D;
+            bgMap[r.CPT].c += r.C;
+        });
+        
+        const glMap = {};
+        rawData.forEach(r => {
+            if (!r.CPT) return;
+            const key = r.CPT;
+            if (!glMap[key]) glMap[key] = { d: 0, c: 0 };
+            glMap[key].d += r.D;
+            glMap[key].c += r.C;
+        });
+        
+        // Comparer les soldes
+        Object.keys(bgMap).forEach(cpt => {
+            const bgSolde = bgMap[cpt].d - bgMap[cpt].c;
+            const glSolde = glMap[cpt].d - glMap[cpt].c;
+            const diff = Math.abs(bgSolde - glSolde);
+            
+            if (diff > 0.001) {
+                errors.push(`Compte ${cpt}: BG=${fmt(bgSolde)}, GL=${fmt(glSolde)}`);
+            }
+        });
+        
+        // Vérification GLA vs BA
+        const baMap = {};
+        rawData.filter(r => r.TRS).forEach(r => {
+            if (!r.CPT || !r.TRS) return;
+            const key = `${r.CPT}___${r.TRS}`;
+            if (!baMap[key]) baMap[key] = { d: 0, c: 0 };
+            baMap[key].d += r.D;
+            baMap[key].c += r.C;
+        });
+        
+        const glaMap = {};
+        rawData.filter(r => r.TRS).forEach(r => {
+            if (!r.CPT || !r.TRS) return;
+            const key = `${r.CPT}___${r.TRS}`;
+            if (!glaMap[key]) glaMap[key] = { d: 0, c: 0 };
+            glaMap[key].d += r.D;
+            glaMap[key].c += r.C;
+        });
+        
+        // Comparer les soldes
+        Object.keys(baMap).forEach(key => {
+            const [cpt, trs] = key.split('___');
+            const baSolde = baMap[key].d - baMap[key].c;
+            const glaSolde = glaMap[key].d - glaMap[key].c;
+            const diff = Math.abs(baSolde - glaSolde);
+            
+            if (diff > 0.001) {
+                errors.push(`Compte ${cpt} Tiers ${trs}: BA=${fmt(baSolde)}, GLA=${fmt(glaSolde)}`);
+            }
+        });
+        
+        return errors;
+    }
+
+    function runAudit() {
+        // Validation du nom de société
+        const societe = document.getElementById('societe').value;
+        if (!societe.trim()) {
+            alert("Le nom de la société est obligatoire.");
+            document.getElementById('societe').focus();
+            return;
+        }
+        
+        if(!rawData.length) return alert("Charger un fichier.");
+        showL(true, "Audit...");
+        
+        setTimeout(() => {
+            let errors = {
+                glob: [], len: [], trs: [], fol: [], date: [], ran: [], balance: [], societe: []
+            };
+            
+            let tD = 0, tC = 0, r6 = 0, r7 = 0;
+            let folios = {};
+            const dD = new Date(document.getElementById('dateD').value).setHours(0,0,0,0);
+            const dF = new Date(document.getElementById('dateF').value).setHours(23,59,59,999);
+            const exercice = parseInt(document.getElementById('exercice').value);
+
+            rawData.forEach((r, i) => {
+                // Validation des champs obligatoires
+                if (!r.DATE) errors.date.push(i+1);
+                if (!r.CPT && !r.TRS) errors.len.push(i+1);
+                if (!r["N° PIECE"]) errors.fol.push(i+1);
+                if (!r.LIBELLE) errors.trs.push(i+1);
+                if (r.D === 0 && r.C === 0) errors.glob.push(i+1);
+                
+                // Vérifications métier
+                tD += r.D; tC += r.C;
+                if(r.CPT && r.CPT.startsWith('6')) r6 += (r.D - r.C);
+                if(r.CPT && r.CPT.startsWith('7')) r7 += (r.C - r.D);
+                
+                if(r.CPT && r.CPT.length !== 6) errors.len.push(i+1);
+                if(r.DATE_OBJ && (r.DATE_OBJ < dD || r.DATE_OBJ > dF)) errors.date.push(i+1);
+                if((r.CPT && (r.CPT.startsWith('40') || r.CPT.startsWith('41'))) && !r.TRS) errors.trs.push(i+1);
+                
+                // Validation RAN spécifique
+                if (r.JOURNAL === 'RAN') {
+                    const d = new Date(r.DATE_OBJ);
+                    if (d.getFullYear() !== exercice || d.getMonth() !== 0 || d.getDate() !== 1) {
+                        errors.ran.push(i+1);
+                    }
+                }
+                
+                // Équilibre des folios
+                const fK = `${fmtD(r.DATE_OBJ)}|${r.JOURNAL}|${r["N° PIECE"]}`;
+                folios[fK] = (folios[fK] || 0) + (r.D - r.C);
+            });
+
+            // Vérification globale
+            if(Math.abs(tD - tC) > 0.001) {
+                Object.keys(rawData).forEach(i => errors.glob.push(parseInt(i)+1));
+            }
+            
+            // Vérification des folios
+            Object.keys(folios).forEach(k => {
+                if(Math.abs(folios[k]) > 0.001) {
+                    rawData.forEach((r, i) => {
+                        if (`${fmtD(r.DATE_OBJ)}|${r.JOURNAL}|${r["N° PIECE"]}` === k) {
+                            errors.fol.push(i+1);
+                        }
+                    });
+                }
+            });
+            
+            // Vérification des soldes GLG/BG et GLA/BA
+            const balanceErrors = validateBalances();
+            if (balanceErrors.length > 0) {
+                errors.balance = balanceErrors;
+            }
+
+            // Pré-filtrer les données pour optimisation
+            filteredData.BG = [...rawData];
+            
+            filteredData.BA = rawData.filter(r => r.TRS);
+            
+            // Préparer les données triées pour GLG
+            filteredData.GLG = [...rawData].sort((a, b) => {
+                // 1. Tri par compte
+                if (a.CPT !== b.CPT) return a.CPT.localeCompare(b.CPT);
+                
+                // 2. Vérifier si c'est une date de RAN (01/01)
+                const isARanDate = isRanDate(a.DATE_OBJ);
+                const isBRanDate = isRanDate(b.DATE_OBJ);
+                
+                // 3. Priorité aux écritures du 01/01/N
+                if (isARanDate && !isBRanDate) return -1;
+                if (!isARanDate && isBRanDate) return 1;
+                
+                // 4. Tri par date
+                if (a.DATE_OBJ !== b.DATE_OBJ) return a.DATE_OBJ - b.DATE_OBJ;
+                
+                // 5. Priorité aux RAN pour les mêmes dates
+                const isARan = (a.JOURNAL === 'RAN');
+                const isBRan = (b.JOURNAL === 'RAN');
+                if (isARan && !isBRan) return -1;
+                if (!isARan && isBRan) return 1;
+                
+                // 6. Si plusieurs RAN, tri par numéro de pièce
+                if (isARan && isBRan) {
+                    return (a["N° PIECE"] || '').localeCompare(b["N° PIECE"] || '');
+                }
+                
+                // 7. Sinon, tri par journal
+                return a.JOURNAL.localeCompare(b.JOURNAL);
+            });
+            
+            // Préparer les données triées pour GLA
+            filteredData.GLA = rawData.filter(r => {
+                const is40x = r.CPT && r.CPT.startsWith('40');
+                const is41x = r.CPT && r.CPT.startsWith('41');
+                return (is40x || is41x) || (r.TRS && r.TRS.trim() !== "");
+            }).sort((a, b) => {
+                // 1. Tri par compte
+                if (a.CPT !== b.CPT) return a.CPT.localeCompare(b.CPT);
+                
+                // 2. Tri par tiers
+                if (a.TRS !== b.TRS) {
+                    if (!a.TRS) return -1;
+                    if (!b.TRS) return 1;
+                    return a.TRS.localeCompare(b.TRS);
+                }
+                
+                // 3. Vérifier si c'est une date de RAN (01/01)
+                const isARanDate = isRanDate(a.DATE_OBJ);
+                const isBRanDate = isRanDate(b.DATE_OBJ);
+                
+                // 4. Priorité aux écritures du 01/01/N
+                if (isARanDate && !isBRanDate) return -1;
+                if (!isARanDate && isBRanDate) return 1;
+                
+                // 5. Tri par date
+                if (a.DATE_OBJ !== b.DATE_OBJ) return a.DATE_OBJ - b.DATE_OBJ;
+                
+                // 6. Priorité aux RAN pour les mêmes dates
+                const isARan = (a.JOURNAL === 'RAN');
+                const isBRan = (b.JOURNAL === 'RAN');
+                if (isARan && !isBRan) return -1;
+                if (!isARan && isBRan) return 1;
+                
+                // 7. Si plusieurs RAN, tri par numéro de pièce
+                if (isARan && isBRan) {
+                    return (a["N° PIECE"] || '').localeCompare(b["N° PIECE"] || '');
+                }
+                
+                // 8. Sinon, tri par journal
+                return a.JOURNAL.localeCompare(b.JOURNAL);
+            });
+
+            // Affichage des résultats
+            document.getElementById('audit-box').style.display = "block";
+            const resArea = document.getElementById('audit-results'); 
+            resArea.innerHTML = "";
+            document.getElementById('res-comptable').innerText = "RÉSULTAT : " + fmt(r7 - r6);
+            
+            // Génération des messages d'erreur détaillés
+            Object.entries(errors).forEach(([key, lines]) => {
+                if (lines.length === 0) {
+                    if (key !== 'societe') { // Pas d'affichage pour societe si OK
+                        resArea.innerHTML += `<div class="audit-row"><span>${auditLabels[key]}</span><span class="st-ok">✅ VALIDÉ</span></div>`;
+                    }
+                } else {
+                    // Limiter l'affichage des lignes pour ne pas surcharger
+                    const lineList = lines.length > 5 
+                        ? `${lines.slice(0,5).join(', ')}... (+${lines.length-5})` 
+                        : lines.join(', ');
+                    
+                    resArea.innerHTML += `<div class="audit-row">
+                        <span>${auditLabels[key]}</span>
+                        <span class="st-err">❌ ${lines.length} erreurs détectées (détails: ${lineList})</span>
+                    </div>`;
+                }
+            });
+            
+            // Désactiver les boutons d'édition si erreurs
+            const hasErrors = Object.values(errors).some(e => e.length > 0);
+            ["BG", "BA", "GLG", "GLA"].forEach(id => 
+                document.getElementById(`btn-${id}`).disabled = hasErrors
+            );
+            
+            // Mettre à jour la visualisation des données
+            updateDataVisualization();
+            
+            // Exécuter l'audit silencieux
+            runSilentAudit(rawData);
+            
+            showL(false);
+        }, 500);
+    }
+
+    function getPrintHeader(title, pageNum, totalPages, cptInfo = "") {
+        const now = new Date();
+        
+        // Format personnalisé pour l'entête d'impression
+        const formatDate = (date) => {
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+        };
+        
+        return `<div class="page-break"><table class="header-print" style="width:100%; border:none !important; margin-bottom:5px;">
+            <tr>
+                <td class="bold" style="width:33%">${document.getElementById('societe').value}</td>
+                <td class="text-center bold" style="font-size:12pt; width:34%">${title}</td>
+                <td class="text-right" style="width:33%">Page: ${pageNum}/${totalPages}</td>
+            </tr>
+            <tr>
+                <td>Exercice: ${document.getElementById('exercice').value}</td>
+                <td class="text-center">Période du ${formatDate(new Date(document.getElementById('dateD').value))} au ${formatDate(new Date(document.getElementById('dateF').value))}</td>
+                <td class="text-right">Le: ${formatDate(now)} à ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}</td>
+            </tr>
+            ${cptInfo ? `<tr><td colspan="3" class="bold" style="padding-top:5px; border:none !important">${cptInfo}</td></tr>` : ''}
+        </table>`;
+    }
+
+    function render(type) {
+        if (isGenerating) return;
+        
+        isGenerating = true;
+        cancelGeneration = false;
+        
+        showL(true, "Génération du rapport...");
+        
+        // Gestion de l'annulation avec Échap
+        const handleEscape = (e) => {
+            if (e.key === 'Escape' && isGenerating) {
+                cancelGeneration = true;
+                showL(false);
+                document.removeEventListener('keydown', handleEscape);
+                alert("Génération du rapport annulée par l'utilisateur.");
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
+
+        setTimeout(() => {
+            try {
+                if (cancelGeneration) {
+                    // Nettoyage complet
+                    document.getElementById('printArea').innerHTML = "";
+                    isGenerating = false;
+                    document.removeEventListener('keydown', handleEscape);
+                    return;
+                }
+                
+                const area = document.getElementById('printArea'); 
+                area.innerHTML = "";
+                
+                // Appliquer les filtres sur les données pré-filtrées
+                let data = applyFilters(filteredData[type]);
+                
+                // Calculer le nombre total de pages pour le document
+                let totalDocPages = 0;
+                
+                if (type === 'BG') {
+                    // Pagination BG
+                    const linesPerPage = 33;
+                    data.sort((a, b) => a.CPT.localeCompare(b.CPT));
+                    const map = {};
+                    
+                    data.forEach(r => {
+                        if (!r.CPT) return;
+                        if(!map[r.CPT]) map[r.CPT] = { d: 0, c: 0 };
+                        map[r.CPT].d += r.D; 
+                        map[r.CPT].c += r.C;
+                    });
+                    
+                    totalDocPages = Math.max(1, Math.ceil(Object.keys(map).length / linesPerPage));
+                } 
+                else if (type === 'BA') {
+                    // Pagination BA (continue pour tout le document)
+                    const linesPerPage = 30;
+                    
+                    // Compter le nombre total d'items (tiers) pour tous les comptes
+                    let totalItems = 0;
+                    let currentCg = null;
+                    
+                    data.forEach(r => {
+                        if (r.CPT !== currentCg) {
+                            currentCg = r.CPT;
+                        }
+                        totalItems++;
+                    });
+                    
+                    totalDocPages = Math.max(1, Math.ceil(totalItems / linesPerPage));
+                }
+                else if (type.startsWith('GL')) {
+                    // Pagination GL
+                    const linesPerPage = 33;
+                    
+                    // Tri spécifique pour les Grand-Livres
+                    data.sort((a, b) => {
+                        // 1. Tri par compte
+                        if (a.CPT !== b.CPT) return a.CPT.localeCompare(b.CPT);
+                        
+                        // 2. Vérifier si c'est une date de RAN (01/01)
+                        const isARanDate = isRanDate(a.DATE_OBJ);
+                        const isBRanDate = isRanDate(b.DATE_OBJ);
+                        
+                        // 3. Priorité aux écritures du 01/01/N
+                        if (isARanDate && !isBRanDate) return -1;
+                        if (!isARanDate && isBRanDate) return 1;
+                        
+                        // 4. Tri par date
+                        if (a.DATE_OBJ !== b.DATE_OBJ) return a.DATE_OBJ - b.DATE_OBJ;
+                        
+                        // 5. Priorité aux RAN pour les mêmes dates
+                        const isARan = (a.JOURNAL === 'RAN');
+                        const isBRan = (b.JOURNAL === 'RAN');
+                        if (isARan && !isBRan) return -1;
+                        if (!isARan && isBRan) return 1;
+                        
+                        // 6. Si plusieurs RAN, tri par numéro de pièce
+                        if (isARan && isBRan) {
+                            return (a["N° PIECE"] || '').localeCompare(b["N° PIECE"] || '');
+                        }
+                        
+                        // 7. Sinon, tri par journal
+                        return a.JOURNAL.localeCompare(b.JOURNAL);
+                    });
+                    
+                    // Compter le nombre total de pages
+                    const groups = {};
+                    data.forEach(r => {
+                        const k = type === 'GLA' ? `${r.CPT}___${r.TRS}` : r.CPT;
+                        if(!groups[k]) groups[k] = [];
+                        groups[k].push(r);
+                    });
+                    
+                    totalDocPages = Object.values(groups).reduce((sum, rows) => 
+                        sum + Math.max(1, Math.ceil(rows.length / linesPerPage)), 0
+                    );
+                }
+                
+                // Générer le rapport selon le type
+                if(type === 'BG') {
+                    renderBalanceGenerale(data, area, totalDocPages);
+                } else if(type === 'BA') {
+                    renderBalanceAuxiliaire(data, area, totalDocPages);
+                } else {
+                    // Initialiser le compteur de page global
+                    GLOBAL_PAGE_COUNT = 1;
+                    renderGrandLivre(data, area, type, totalDocPages);
+                }
+                
+                isGenerating = false;
+                document.removeEventListener('keydown', handleEscape);
+                
+                if (!cancelGeneration) {
+                    showL(false); 
+                    window.print();
+                }
+            } catch (e) {
+                if (cancelGeneration) {
+                    document.getElementById('printArea').innerHTML = "";
+                    isGenerating = false;
+                    document.removeEventListener('keydown', handleEscape);
+                    return;
+                }
+                throw e;
+            }
+        }, 500);
+    }
+
+    function renderBalanceGenerale(data, area, totalDocPages) {
+        if (cancelGeneration) {
+            document.getElementById('printArea').innerHTML = "";
+            return;
+        }
+        
+        let map = {};
+        let tB = {d: 0, c: 0}; // Totaux Bilan (comptes 1-5)
+        let tG = {d: 0, c: 0}; // Totaux Gestion (comptes 6-7)
+        
+        data.forEach(r => {
+            if (cancelGeneration) throw new Error("Generation cancelled");
+            if (!r.CPT) return;
+            
+            if(!map[r.CPT]) map[r.CPT] = { 
+                d: 0, 
+                c: 0, 
+                lib: r["INTITULE COMPTE"] || ""
+            };
+            map[r.CPT].d += r.D; 
+            map[r.CPT].c += r.C;
+            
+            // Classification Bilan/Gestion (comptes 1-5 vs 6-7)
+            if (r.CPT && ['1','2','3','4','5'].includes(r.CPT[0])) {
+                tB.d += r.D;
+                tB.c += r.C;
+            } else if (r.CPT && ['6','7'].includes(r.CPT[0])) {
+                tG.d += r.D;
+                tG.c += r.C;
+            }
+        });
+        
+        // Calcul des totaux globaux
+        const totalD = tB.d + tG.d;
+        const totalC = tB.c + tG.c;
+        const solB = tB.d - tB.c;
+        const solG = tG.d - tG.c;
+        const solTotal = solB + solG;
+        
+        // Pagination dynamique
+        const linesPerPage = 33;
+        const totalPages = Math.max(1, Math.ceil(Object.keys(map).length / linesPerPage));
+        let currentPageNum = 1;
+        
+        for (let page = 0; page < totalPages; page++) {
+            if (cancelGeneration) throw new Error("Generation cancelled");
+            
+            const pageComptes = Object.keys(map).slice(page * linesPerPage, (page + 1) * linesPerPage);
+            
+            let html = getPrintHeader("BALANCE GÉNÉRALE", currentPageNum, totalDocPages) + 
+            `<table>
+                <thead>
+                    <tr>
+                        <th rowspan="2" class="col-compte-ligne">Compte</th>
+                        <th rowspan="2" class="ba-lib-fix">Intitulé</th>
+                        <th colspan="2" class="text-center">Mouvements</th>
+                        <th colspan="2" class="text-center">Soldes</th>
+                    </tr>
+                    <tr>
+                        <th class="ba-mnt-header">Débit</th>
+                        <th class="ba-mnt-header">Crédit</th>
+                        <th class="ba-mnt-header">Débit</th>
+                        <th class="ba-mnt-header">Crédit</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+                
+            pageComptes.forEach(c => {
+                if (cancelGeneration) throw new Error("Generation cancelled");
+                const s = map[c], sol = s.d - s.c;
+                html += `<tr>
+                    <td class="col-compte-ligne text-center">${c}</td>
+                    <td class="ba-lib-fix">${s.lib}</td>
+                    <td class="text-right ba-mnt-value">${fmt(s.d)}</td>
+                    <td class="text-right ba-mnt-value">${fmt(s.c)}</td>
+                    <td class="text-right ba-solde">${fmt(sol > 0 ? sol : 0)}</td>
+                    <td class="text-right ba-solde">${fmt(sol < 0 ? -sol : 0)}</td>
+                </tr>`;
+            });
+            
+            // Dernière page : ajouter les totaux
+            if (page === totalPages - 1) {
+                // Totaux Bilan
+                html += `<tr class="bg-grey bold no-border">
+                    <td></td>
+                    <td>TOTAUX BILAN</td>
+                    <td class="text-right ba-mnt-value">${fmt(tB.d)}</td>
+                    <td class="text-right ba-mnt-value">${fmt(tB.c)}</td>
+                    <td class="text-right ba-solde">${fmtBalance(solB > 0 ? solB : 0)}</td>
+                    <td class="text-right ba-solde">${fmtBalance(solB < 0 ? -solB : 0)}</td>
+                </tr>`;
+                
+                // Totaux Gestion
+                html += `<tr class="bg-grey bold no-border">
+                    <td></td>
+                    <td>TOTAUX GESTION</td>
+                    <td class="text-right ba-mnt-value">${fmt(tG.d)}</td>
+                    <td class="text-right ba-mnt-value">${fmt(tG.c)}</td>
+                    <td class="text-right ba-solde">${fmtBalance(solG > 0 ? solG : 0)}</td>
+                    <td class="text-right ba-solde">${fmtBalance(solG < 0 ? -solG : 0)}</td>
+                </tr>`;
+                
+                // Totaux Généraux
+                html += `<tr class="bg-grey bold no-border">
+                    <td></td>
+                    <td>TOTAUX BALANCE</td>
+                    <td class="text-right ba-mnt-value">${fmt(totalD)}</td>
+                    <td class="text-right ba-mnt-value">${fmt(totalC)}</td>
+                    <td class="text-right ba-solde">${fmtBalance(solTotal > 0 ? solTotal : 0)}</td>
+                    <td class="text-right ba-solde">${fmtBalance(solTotal < 0 ? -solTotal : 0)}</td>
+                </tr>`;
+            }
+            
+            area.innerHTML += html + "</tbody></table></div>";
+            currentPageNum++;
+        }
+    }
+
+    function renderBalanceAuxiliaire(data, area, totalDocPages) {
+        if (cancelGeneration) {
+            document.getElementById('printArea').innerHTML = "";
+            return;
+        }
+        
+        let groups = {};
+        let currentPageNum = 1;
+        
+        data.filter(r => r.TRS).forEach(r => {
+            if (cancelGeneration) throw new Error("Generation cancelled");
+            if (!groups[r.CPT]) groups[r.CPT] = {};
+            if (!groups[r.CPT][r.TRS]) groups[r.CPT][r.TRS] = { 
+                d: 0, 
+                c: 0, 
+                lib: r["INTITULE TIERS"] || ""
+            };
+            groups[r.CPT][r.TRS].d += r.D; 
+            groups[r.CPT][r.TRS].c += r.C;
+        });
+        
+        // Calculer le nombre total d'items (tiers) pour tous les comptes
+        const linesPerPage = 30;
+        let totalItems = 0;
+        
+        Object.values(groups).forEach(compte => {
+            totalItems += Object.keys(compte).length;
+        });
+        
+        totalDocPages = Math.max(1, Math.ceil(totalItems / linesPerPage));
+        
+        // Générer chaque section
+        Object.keys(groups).sort().forEach(cg => {
+            if (cancelGeneration) throw new Error("Generation cancelled");
+            
+            const comptes = groups[cg];
+            const innerTotalPages = Math.max(1, Math.ceil(Object.keys(comptes).length / linesPerPage));
+            
+            for (let page = 0; page < innerTotalPages; page++) {
+                if (cancelGeneration) throw new Error("Generation cancelled");
+                
+                const pageTiers = Object.keys(comptes).slice(page * linesPerPage, (page + 1) * linesPerPage);
+                
+                // Format complet : "COMPTE - INTITULE COMPTE"
+                const libelleCompte = rawData.find(r => r.CPT === cg && r["INTITULE COMPTE"])?.["INTITULE COMPTE"] || "";
+                const cptLabel = libelleCompte ? `${cg} - ${libelleCompte}` : cg;
+                
+                let html = getPrintHeader("BALANCE AUXILIAIRE", currentPageNum, totalDocPages, `Compte général : ${cptLabel}`);
+                
+                html += `<table>
+                    <thead>
+                        <tr>
+                            <th rowspan="2" class="col-compte-aux">Tiers</th>
+                            <th rowspan="2" class="ba-lib-fix">Intitulé</th>
+                            <th colspan="2" class="text-center">Mouvements</th>
+                            <th colspan="2" class="text-center">Soldes</th>
+                        </tr>
+                        <tr>
+                            <th class="ba-mnt-header">Débit</th>
+                            <th class="ba-mnt-header">Crédit</th>
+                            <th class="ba-mnt-header">Débit</th>
+                            <th class="ba-mnt-header">Crédit</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+                    
+                let sd = 0, sc = 0;
+                pageTiers.forEach(t => {
+                    if (cancelGeneration) throw new Error("Generation cancelled");
+                    const s = comptes[t], sol = s.d - s.c;
+                    sd += s.d; sc += s.c;
+                    html += `<tr>
+                        <td class="col-compte-aux text-center">${t}</td>
+                        <td class="ba-lib-fix">${s.lib}</td>
+                        <td class="text-right ba-mnt-value">${fmt(s.d)}</td>
+                        <td class="text-right ba-mnt-value">${fmt(s.c)}</td>
+                        <td class="text-right ba-solde">${fmt(sol > 0 ? sol : 0)}</td>
+                        <td class="text-right ba-solde">${fmt(sol < 0 ? -sol : 0)}</td>
+                    </tr>`;
+                });
+                
+                // Dernière page pour ce compte : ajouter le total
+                if (page === innerTotalPages - 1) {
+                    const tsol = sd - sc;
+                    // Format complet pour le total : "TOTAL COMPTE - INTITULE COMPTE"
+                    html += `<tr class="bg-grey bold no-border">
+                        <td colspan="2">TOTAL ${cptLabel}</td>
+                        <td class="text-right ba-mnt-value">${fmt(sd)}</td>
+                        <td class="text-right ba-mnt-value">${fmt(sc)}</td>
+                        <td class="text-right ba-solde">${fmtBalance(tsol > 0 ? tsol : 0)}</td>
+                        <td class="text-right ba-solde">${fmtBalance(tsol < 0 ? -tsol : 0)}</td>
+                    </tr>`;
+                }
+                
+                area.innerHTML += html + `</tbody></table></div>`;
+                currentPageNum++;
+            }
+        });
+    }
+
+    function renderGrandLivre(data, area, type, totalDocPages) {
+        if (cancelGeneration) {
+            document.getElementById('printArea').innerHTML = "";
+            return;
+        }
+        
+        const isA = (type === 'GLA');
+        const groups = {};
+        const linesPerPage = 33;
+        
+        // Calculer le nombre total de pages pour le document
+        data.forEach(r => {
+            if (cancelGeneration) throw new Error("Generation cancelled");
+            const k = isA ? `${r.CPT}___${r.TRS}` : r.CPT;
+            if(!groups[k]) groups[k] = [];
+            groups[k].push(r);
+        });
+        
+        // Générer chaque section
+        Object.keys(groups).sort().forEach(k => {
+            if (cancelGeneration) throw new Error("Generation cancelled");
+            
+            const rows = groups[k];
+            const totalPages = Math.max(1, Math.ceil(rows.length / linesPerPage));
+            
+            for (let page = 0; page < totalPages; page++) {
+                if (cancelGeneration) throw new Error("Generation cancelled");
+                
+                // Calculer la position dynamique des sous-totaux (99% de la page)
+                const dynamicBreakPoint = Math.floor(linesPerPage * 0.99);
+                const pageStart = page * linesPerPage;
+                const pageEnd = (page === totalPages - 1) ? rows.length : Math.min((page + 1) * linesPerPage, pageStart + dynamicBreakPoint);
+                const pageRows = rows.slice(pageStart, pageEnd);
+                
+                let curD = 0, curC = 0;
+                
+                // Calculer le solde cumulé jusqu'à la page précédente
+                if (page > 0) {
+                    for (let i = 0; i < page * linesPerPage; i++) {
+                        if (cancelGeneration) throw new Error("Generation cancelled");
+                        curD += rows[i].D;
+                        curC += rows[i].C;
+                    }
+                }
+                
+                // Vérification des montants REPORT
+                if (page > 0) {
+                    // Calculer ce que devrait être le report de la page précédente
+                    let expectedD = 0;
+                    let expectedC = 0;
+                    
+                    for (let i = 0; i < page * linesPerPage; i++) {
+                        expectedD += rows[i].D;
+                        expectedC += rows[i].C;
+                    }
+                    
+                    // Vérifier si les montants correspondent
+                    if (Math.abs(curD - expectedD) > 0.001 || Math.abs(curC - expectedC) > 0.001) {
+                        // Bloquer la génération avec message d'erreur
+                        document.getElementById('printArea').innerHTML = "";
+                        isGenerating = false;
+                        document.removeEventListener('keydown', handleEscape);
+                        
+                        // Afficher les détails des montants en erreur
+                        alert(`Erreur de cohérence dans le Grand-Livre pour ${k}\nPage ${page+1}:\nREPORT PAGE PRÉCÉDENTE ne correspond pas à À REPORTER de la page ${page}\n\nDétails:\n- Solde attendu: D=${fmt(expectedD)}, C=${fmt(expectedC)}\n- Solde calculé: D=${fmt(curD)}, C=${fmt(curC)}`);
+                        throw new Error("Incohérence des reports");
+                    }
+                }
+                
+                // Entête de page
+                const [compte, tiers] = k.split('___');
+                
+                // Format complet : "N° COMPTE - INTITULE COMPTE"
+                const libelleCompte = rawData.find(r => r.CPT === compte && r["INTITULE COMPTE"])?.["INTITULE COMPTE"] || "";
+                const cptLabel = libelleCompte ? `${compte} - ${libelleCompte}` : compte;
+                
+                let cptInfo = "";
+                if (isA) {
+                    const libelleTiers = rawData.find(r => r.TRS === tiers && r["INTITULE TIERS"])?.["INTITULE TIERS"] || tiers;
+                    cptInfo = `Compte : ${cptLabel} | TIERS: ${tiers} - ${libelleTiers}`;
+                } else {
+                    cptInfo = `Compte : ${cptLabel}`;
+                }
+                    
+                let html = getPrintHeader(
+                    isA ? "GRAND-LIVRE AUXILIAIRE" : "GRAND-LIVRE GÉNÉRAL", 
+                    GLOBAL_PAGE_COUNT, 
+                    totalDocPages,
+                    cptInfo
+                );
+                
+                // Structure du tableau
+                html += `<table>
+                    <colgroup>
+                        <col class="gl-date">
+                        <col class="gl-jl">
+                        <col class="gl-nfac">
+                        <col class="gl-ref">
+                        <col class="gl-piece">
+                        <col class="gl-lib">
+                        <col class="gl-let">
+                        <col class="gl-debit">
+                        <col class="gl-credit">
+                        <col class="gl-solde">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>JL</th>
+                            <th>N° Fac</th>
+                            <th>Réf</th>
+                            <th>Pièce</th>
+                            <th>Libellé</th>
+                            <th>Let</th>
+                            <th>Débit</th>
+                            <th>Crédit</th>
+                            <th>Solde</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+                    
+                // Ligne de report de la page précédente
+                if (page > 0) {
+                    // Fusion de Date à Let (7 colonnes)
+                    html += `<tr class="bg-grey bold no-border">
+                        <td colspan="7">REPORT PAGE PRÉCÉDENTE</td>
+                        <td class="text-right ba-mnt-value">${fmt(curD)}</td>
+                        <td class="text-right ba-mnt-value">${fmt(curC)}</td>
+                        <td class="text-right bold">${fmtBalance(curD - curC)}</td>
+                    </tr>`;
+                }
+                
+                // Lignes du Grand-Livre
+                pageRows.forEach(r => {
+                    if (cancelGeneration) throw new Error("Generation cancelled");
+                    curD += r.D;
+                    curC += r.C;
+                    const solde = curD - curC;
+                    
+                    html += `<tr>
+                        <td class="text-center">${fmtD(r.DATE_OBJ)}</td>
+                        <td class="text-center">${r.JOURNAL || ''}</td>
+                        <td class="text-center">${r["N° FAC"] || ''}</td>
+                        <td class="text-center gl-ref">${r.REF || ''}</td>
+                        <td class="text-center">${r["N° PIECE"] || ''}</td>
+                        <td style="text-align:left; padding-left:5px">${r.LIBELLE || ''}</td>
+                        <td class="text-center">${r.LET || ''}</td>
+                        <td class="text-right ba-mnt-value">${fmt(r.D)}</td>
+                        <td class="text-right ba-mnt-value">${fmt(r.C)}</td>
+                        <td class="text-right bold">${fmtBalance(solde)}</td>
+                    </tr>`;
+                });
+                
+                // Ligne de report à la page suivante ou total final
+                if (page < totalPages - 1) {
+                    // Calculer le solde à la fin de cette page
+                    let reportD = curD;
+                    let reportC = curC;
+                    
+                    // Fusion de Date à Let (7 colonnes)
+                    html += `<tr class="bg-grey bold no-border">
+                        <td colspan="7">À REPORTER</td>
+                        <td class="text-right ba-mnt-value">${fmt(reportD)}</td>
+                        <td class="text-right ba-mnt-value">${fmt(reportC)}</td>
+                        <td class="text-right bold">${fmtBalance(reportD - reportC)}</td>
+                    </tr>`;
+                } else {
+                    if (isA) {
+                        // Format spécifié : "TOTAL [Compte] : [COMPTE TIERS] - [INTITULE]"
+                        const libelleTiers = rawData.find(r => r.TRS === tiers && r["INTITULE TIERS"])?.["INTITULE TIERS"] || tiers;
+                        html += `<tr class="bg-grey bold no-border">
+                            <td colspan="7">TOTAL ${compte} : ${tiers} - ${libelleTiers}</td>
+                            <td class="text-right ba-mnt-value">${fmt(curD)}</td>
+                            <td class="text-right ba-mnt-value">${fmt(curC)}</td>
+                            <td class="text-right bold">${fmtBalance(curD - curC)}</td>
+                        </tr>`;
+                    } else {
+                        // Format pour GLG
+                        html += `<tr class="bg-grey bold no-border">
+                            <td colspan="7">TOTAL COMPTE : ${cptLabel}</td>
+                            <td class="text-right ba-mnt-value">${fmt(curD)}</td>
+                            <td class="text-right ba-mnt-value">${fmt(curC)}</td>
+                            <td class="text-right bold">${fmtBalance(curD - curC)}</td>
+                        </tr>`;
+                    }
+                }
+                
+                area.innerHTML += html + "</tbody></table></div>";
+                GLOBAL_PAGE_COUNT++;
+            }
+        });
+    }
+
+    function isRanDate(date) {
+        if (!date) return false;
+        const d = new Date(date);
+        return d.getMonth() === 0 && d.getDate() === 1; // 01/01
+    }
+    
+    // --- NOUVELLE FONCTION : runSilentAudit ---
+    function runSilentAudit(data) {
+        const totalD = data.reduce((s, r) => s + (r.D || 0), 0);
+        const totalC = data.reduce((s, r) => s + (r.C || 0), 0);
+        const diff = Math.abs(totalD - totalC);
+        
+        let statusBar = document.getElementById('status-bar');
+        if (!statusBar) {
+            // Créer le bandeau d'audit silencieux s'il n'existe pas
+            statusBar = document.createElement('div');
+            statusBar.id = 'status-bar';
+            document.body.appendChild(statusBar);
+        }
+        
+        statusBar.style.display = 'block';
+        
+        if (diff > AUDIT_THRESHOLD) {
+            statusBar.style.backgroundColor = 'var(--err)';
+            statusBar.innerHTML = `⚠️ Écart de cohérence détecté : ${diff.toFixed(3)} TND`;
+        } else {
+            statusBar.style.backgroundColor = 'var(--ok)';
+            statusBar.innerHTML = `✅ Données équilibrées (Cohérence GL/Balance)`;
+        }
+    }
+
+    (function() {
+        const n1 = new Date().getFullYear() - 1;
+        document.getElementById('exercice').value = n1;
+        syncDates(n1);
+        
+        // Initialiser les gestionnaires d'événements pour la visualisation
+        document.querySelectorAll('.data-table th').forEach(th => {
+            th.addEventListener('click', () => {
+                const column = th.getAttribute('data-sort');
+                if (column) {
+                    sortData(column);
+                }
+            });
+        });
+        
+        // Initialiser les filtres de visualisation
+        document.getElementById('filterCD').addEventListener('change', handleCompteSelection);
+    })();
+</script>
+</body>
+</html>

@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Journal Report à Nouveau - Compta Pro</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --secondary-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --success-color: #22c55e;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f3f4f6;
+        }
+        
+        .step-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+        }
+        
+        .step-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .step-header {
+            background: linear-gradient(135deg, var(--primary-color), #2563eb);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px 12px 0 0;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .table-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+        
+        th {
+            background-color: #f3f4f6;
+            font-weight: 600;
+            text-align: left;
+            padding: 0.75rem 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        td {
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+        
+        tr:hover {
+            background-color: #f9fafb;
+        }
+        
+        tr.selected {
+            background-color: #dbeafe;
+        }
+        
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .badge-success { background-color: #d1fae5; color: #065f46; }
+        .badge-warning { background-color: #fef3c7; color: #92400e; }
+        .badge-danger { background-color: #fee2e2; color: #991b1b; }
+        .badge-info { background-color: #dbeafe; color: #1e40af; }
+        
+        .stat-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+        
+        /* Classe locked-row */
+        .locked-row {
+            opacity: 0.5;
+        }
+        
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .alert-success { background-color: #d1fae5; color: #065f46; border-left: 4px solid #10b981; }
+        .alert-warning { background-color: #fef3c7; color: #92400e; border-left: 4px solid #f59e0b; }
+        .alert-error { background-color: #fee2e2; color: #991b1b; border-left: 4px solid #ef4444; }
+        .alert-info { background-color: #dbeafe; color: #1e40af; border-left: 4px solid #3b82f6; }
+        
+        .hidden { display: none !important; }
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Animation sablier */
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary { background-color: var(--primary-color); color: white; border: none; }
+        .btn-primary:hover { background-color: #2563eb; transform: translateY(-1px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .btn-secondary { background-color: white; color: var(--primary-color); border: 1px solid var(--border-color); }
+        .btn-secondary:hover { background-color: #f3f4f6; }
+        .btn-success { background-color: var(--success-color); color: white; border: none; }
+        .btn-success:hover { background-color: #16a34a; }
+        .btn-warning { background-color: var(--warning-color); color: white; border: none; }
+        .btn-warning:hover { background-color: #d97706; }
+        .btn-danger { background-color: var(--danger-color); color: white; border: none; }
+        .btn-danger:hover { background-color: #dc2626; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        
+        .radio-group { display: flex; gap: 1rem; align-items: center; }
+        .radio-option { display: flex; align-items: center; gap: 0.25rem; cursor: pointer; }
+        .checkbox-custom { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary-color); }
+        
+        /* Style overlay loading */
+        .paste-wrapper {
+            position: relative;
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            border-radius: 8px;
+            backdrop-filter: blur(2px);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-4 shadow-lg">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <span class="material-icons text-3xl">account_balance_wallet</span>
+                <h1 class="text-2xl font-bold">Journal Report à Nouveau - Compta Pro</h1>
+                <span class="bg-white text-blue-600 px-3 py-1 rounded-full text-sm font-semibold">V01 Avril 2026</span>
+            </div>
+            <div class="flex gap-2">
+                <button class="btn btn-secondary" onclick="resetApp()">
+                    <span class="material-icons">refresh</span>
+                    <span>Reset</span>
+                </button>
+                <button class="btn btn-success" onclick="exportResults()">
+                    <span class="material-icons">file_download</span>
+                    <span>Export Excel</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-6 space-y-6">
+        <!-- STEP 1 -->
+        <section class="step-card fade-in">
+            <div class="step-header">
+                <span class="material-icons">content_paste</span>
+                <span>ÉTAPE 1 : COLLER VOTRE GRAND LIVRE N-1 (depuis Excel)</span>
+            </div>
+            <div class="p-6">
+                <div class="mb-4">
+                    <p class="text-gray-600 mb-2">📋 <strong>Instructions :</strong> Copiez votre Grand Livre depuis Excel et collez-le directement dans la zone ci-dessous (Ctrl+V ou Cmd+V)</p>
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
+                        <p class="text-sm text-blue-800">ℹ️ Format attendu : 15 colonnes (Date, Mois, JL, N° FAC, REF, N PIECE, FOLIO, COMPTE, TIERS, LIBELLE, ECH, LET, Débit, Crédit, Solde)</p>
+                    </div>
+                </div>
+                
+                <!-- Wrapper avec overlay pour sablier -->
+                <div class="mb-4 paste-wrapper">
+                    <textarea id="pasteArea" rows="6" class="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-all" 
+                        placeholder="Collez ici votre Grand Livre Excel (15 colonnes)..."></textarea>
+                    
+                    <!-- Overlay sablier animé -->
+                    <div id="loadingOverlay" class="loading-overlay hidden">
+                        <div class="text-center">
+                            <span class="material-icons animate-spin text-5xl text-blue-600">hourglass_top</span>
+                            <p class="mt-3 text-gray-700 font-semibold text-lg">Traitement en cours...</p>
+                            <p class="text-sm text-gray-500 mt-1">Analyse des données en cours</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <!-- Champ dynamique modifiable à la main -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Exercice N détecté</label>
+                        <input type="number" id="exerciceN" class="w-full p-2 border rounded-lg" value="2025">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Date RAN</label>
+                        <input type="text" id="dateRAN" value="01/01/2026" class="w-full p-2 border rounded-lg font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Journal</label>
+                        <input type="text" id="journalRAN" value="RAN" class="w-full p-2 border rounded-lg font-mono text-center font-bold text-blue-600">
+                    </div>
+                </div>
+                
+                <!-- Message informatif Date RAN -->
+                <div id="dateRANInfo" class="hidden mb-4 p-3 bg-blue-50 border-l-4 border-blue-500 rounded text-sm text-blue-800 fade-in">
+                    <span class="material-icons inline-block align-middle mr-1">info</span>
+                    <strong>📅 Date RAN :</strong> Cette valeur a été calculée automatiquement à partir de l'exercice N détecté. Vous pouvez la modifier manuellement si nécessaire.
+                </div>
+                
+                <button id="btnParse" class="btn btn-primary w-full py-3 text-lg">
+                    <span class="material-icons">auto_fix_high</span>
+                    <span>Analyser et Valider les Données</span>
+                </button>
+                
+                <div id="controlsResult" class="mt-4 hidden">
+                    <div class="alert alert-success">
+                        <span class="material-icons">check_circle</span>
+                        <strong>✅ Contrôles réussis !</strong> 
+                        <span id="controlsSummary"></span>
+                    </div>
+                    <div id="alertsContainer" class="space-y-2"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- STEP 2 -->
+        <section id="step2" class="step-card hidden fade-in">
+            <div class="step-header">
+                <span class="material-icons">settings</span>
+                <span>ÉTAPE 2 : CONFIGURATION DES COMPTES (Plan Comptable Tunisien)</span>
+            </div>
+            <div class="p-6">
+                <div class="mb-4 flex justify-between items-center">
+                    <div>
+                        <button id="btnApplyRules" class="btn btn-warning">
+                            <span class="material-icons">history</span>
+                            <span>Règles PCT par Défaut</span>
+                        </button>
+                        <button id="btnToggleLock" class="btn btn-secondary ml-2">
+                            <span class="material-icons" id="lockIcon">lock</span>
+                            <span>Verrouiller</span>
+                        </button>
+                    </div>
+                    <div class="text-sm text-gray-600">
+                        <span class="material-icons inline-block align-middle mr-1">info</span>
+                        <span>Espace = Cocher | Tab = Navigation</span>
+                    </div>
+                </div>
+
+                <!-- Filtres -->
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
+                    <input type="text" id="filterCompte" placeholder="Filtrer Compte" class="w-full p-2 border rounded-lg" oninput="filterConfigTable()">
+                    <input type="text" id="filterIntitule" placeholder="Filtrer Intitulé" class="w-full p-2 border rounded-lg" oninput="filterConfigTable()">
+                    <select id="filterReport" class="w-full p-2 border rounded-lg" onchange="filterConfigTable()">
+                        <option value="tous">Tous (Report)</option>
+                        <option value="oui">Oui</option>
+                        <option value="non">Non</option>
+                    </select>
+                    <select id="filterType" class="w-full p-2 border rounded-lg" onchange="filterConfigTable()">
+                        <option value="tous">Tous (Type)</option>
+                        <option value="Détail">Détail</option>
+                        <option value="Solde">Solde</option>
+                        <option value="-">-</option>
+                    </select>
+                    <select id="filterLettrage" class="w-full p-2 border rounded-lg" onchange="filterConfigTable()">
+                        <option value="tous">Tous (Lettrage)</option>
+                        <option value="avec">Avec Lettrage</option>
+                        <option value="sans">Sans Lettrage</option>
+                    </select>
+                </div>
+                
+                <div class="table-container">
+                    <table id="configTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">Compte</th>
+                                <th style="width: 250px;">Intitulé PCT</th>
+                                <th style="width: 100px; text-align: center;">Report</th>
+                                <th style="width: 120px;">Type</th>
+                                <th style="width: 80px;">Lignes</th>
+                                <th style="width: 120px;">Solde</th>
+                            </tr>
+                        </thead>
+                        <tbody id="configTableBody"></tbody>
+                    </table>
+                </div>
+                
+                <div class="mt-4 p-4 bg-blue-50 rounded-lg">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                            <span class="text-sm text-gray-600">Total Comptes</span>
+                            <div class="stat-value" id="totalComptes">0</div>
+                        </div>
+                        <div>
+                            <span class="text-sm text-gray-600">À Reporter</span>
+                            <div class="stat-value text-green-600" id="totalReporter">0</div>
+                        </div>
+                        <div>
+                            <span class="text-sm text-gray-600">Report Détail</span>
+                            <div class="stat-value text-blue-600" id="totalDetail">0</div>
+                        </div>
+                        <div>
+                            <span class="text-sm text-gray-600">Report Solde</span>
+                            <div class="stat-value text-orange-600" id="totalSolde">0</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button id="btnGenerateRAN" class="btn btn-success w-full py-3 text-lg mt-4">
+                    <span class="material-icons">bolt</span>
+                    <span>Générer le Journal RAN</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- STEP 3 -->
+        <section id="step3" class="step-card hidden fade-in">
+            <div class="step-header">
+                <span class="material-icons">receipt_long</span>
+                <span>ÉTAPE 3 : JOURNAL REPORT À NOUVEAU GÉNÉRÉ</span>
+            </div>
+            <div class="p-6">
+                <div class="mb-4">
+                    <div class="alert alert-info">
+                        <span class="material-icons">info</span>
+                        <strong>Résultat :</strong> 
+                        <span id="resultSummary"></span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div class="stat-card">
+                            <div class="stat-value text-blue-600" id="totalEcritures">0</div>
+                            <div class="stat-label">Écritures générées</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value text-green-600" id="totalDebit">0,000</div>
+                            <div class="stat-label">Total Débit</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value text-red-600" id="totalCredit">0,000</div>
+                            <div class="stat-label">Total Crédit</div>
+                        </div>
+                    </div>
+                    <!-- Encadré vert avec contrepartie résultat -->
+                    <div id="contrepartieInfo" class="bg-green-50 border-l-4 border-green-500 p-3 rounded"></div>
+                </div>
+                
+                <div class="table-container">
+                    <table id="resultTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 90px;">Date</th>
+                                <th style="width: 50px;">Mois</th>
+                                <th style="width: 60px;">JL</th>
+                                <th style="width: 100px;">N° FAC</th>
+                                <th style="width: 80px;">REF</th>
+                                <th style="width: 80px;">N PIECE</th>
+                                <th style="width: 60px;">FOLIO</th>
+                                <th style="width: 80px;">COMPTE</th>
+                                <th style="width: 150px;">TIERS</th>
+                                <th style="width: 200px;">LIBELLE</th>
+                                <th style="width: 90px;">ECH</th>
+                                <th style="width: 60px;">LET</th>
+                                <th style="width: 100px;">Débit</th>
+                                <th style="width: 100px;">Crédit</th>
+                                <th style="width: 100px;">Solde</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultTableBody"></tbody>
+                    </table>
+                </div>
+                
+                <div class="mt-4 flex gap-2">
+                    <button class="btn btn-success flex-1" onclick="exportResults()">
+                        <span class="material-icons">file_download</span>
+                        <span>Exporter Excel</span>
+                    </button>
+                    <button class="btn btn-secondary flex-1" onclick="copyToClipboard()">
+                        <span class="material-icons">content_copy</span>
+                        <span>Copier Tableau</span>
+                    </button>
+                    <button class="btn btn-primary flex-1" onclick="resetToStep1()">
+                        <span class="material-icons">refresh</span>
+                        <span>Nouveau Calcul</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-800 text-white p-4 mt-8">
+        <div class="max-w-7xl mx-auto text-center text-sm">
+            <p>Application Journal Report à Nouveau - Plan Comptable Tunisien | Développé avec ❤️ pour les professionnels de la comptabilité</p>
+            <p class="mt-2 text-gray-400">© 2026 - Conforme aux normes comptables tunisiennes</p>
+        </div>
+    </footer>
+
+    <script>
+        // ==================== VARIABLES GLOBALES ====================
+        let parsedData = [];
+        let parsedDataBrut = []; // Données BRUTES avant nettoyage des lettrages
+        let accountsConfig = [];
+        let ranJournal = [];
+        let isLocked = true;
+        // Variable pour stocker le résultat brut AVANT nettoyage
+        let rawResultat = 0;
+
+        // ==================== ÉVÉNEMENTS ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+            setupKeyboardNavigation();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('btnParse').addEventListener('click', parseAndValidate);
+            document.getElementById('btnApplyRules').addEventListener('click', applyDefaultRules);
+            document.getElementById('btnToggleLock').addEventListener('click', toggleLock);
+            document.getElementById('btnGenerateRAN').addEventListener('click', generateRAN);
+            document.getElementById('pasteArea').addEventListener('paste', handlePaste);
+        }
+
+        // ==================== FONCTION DE COLLAGE ====================
+        function handlePaste(e) {
+            // Afficher l'overlay sablier (sans disabled pour ne pas bloquer le paste natif)
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            loadingOverlay.classList.remove('hidden');
+            
+            setTimeout(() => {
+                const text = document.getElementById('pasteArea').value.trim();
+                if (text && !document.getElementById('btnParse').disabled) {
+                    parseAndValidate();
+                } else {
+                    // Rétablir si vide
+                    loadingOverlay.classList.add('hidden');
+                }
+            }, 50);
+        }
+
+        // ==================== PARSING ET VALIDATION ====================
+        function parseAndValidate() {
+            const text = document.getElementById('pasteArea').value.trim();
+            if (!text) {
+                alert('⚠️ Veuillez coller les données du Grand Livre');
+                return;
+            }
+
+            showLoading(true);
+            
+            try {
+                // 1. Parser les données
+                const dataParsed = parseExcelData(text);
+                
+                if (dataParsed.length === 0) {
+                    throw new Error('Aucune donnée valide trouvée');
+                }
+
+                // Sauvegarder les données BRUTES avant tout nettoyage
+                parsedDataBrut = [...dataParsed];
+                
+                // Calcul du résultat BRUT (7 - 6) sur données brutes
+                let rawCharges = 0, rawProduits = 0;
+                parsedDataBrut.forEach(row => {
+                    if (row['COMPTE'].startsWith('6')) rawCharges += row['Débit'] - row['Crédit'];
+                    if (row['COMPTE'].startsWith('7')) rawProduits += row['Crédit'] - row['Débit'];
+                });
+                rawResultat = rawProduits - rawCharges;
+
+                // Détection automatique de l'année majoritaire
+                const yearCounts = {};
+                let maxCount = 0;
+                let majorityYear = new Date().getFullYear().toString();
+                parsedDataBrut.forEach(row => {
+                    if (row['Date']) {
+                        const y = row['Date'].getFullYear().toString();
+                        yearCounts[y] = (yearCounts[y] || 0) + 1;
+                        if (yearCounts[y] > maxCount) {
+                            maxCount = yearCounts[y];
+                            majorityYear = y;
+                        }
+                    }
+                });
+                document.getElementById('exerciceN').value = majorityYear;
+
+                // Calcul automatique de la Date RAN (modifiable manuellement après)
+                document.getElementById('dateRAN').value = '01/01/' + (parseInt(majorityYear) + 1);
+                
+                // 2. Contrôles préliminaires (qui va nettoyer les lettrages)
+                const controls = runControls(dataParsed);
+                
+                // 3. Afficher résultats contrôles
+                displayControlsResult(controls);
+                
+                // Afficher le message informatif Date RAN
+                document.getElementById('dateRANInfo').classList.remove('hidden');
+                
+                // 4. Préparer configuration comptes (utilise parsedDataBrut pour détection lettrage)
+                prepareAccountsConfig();
+                
+                // 5. Passer à l'étape 2
+                document.getElementById('step2').classList.remove('hidden');
+                document.getElementById('step2').scrollIntoView({ behavior: 'smooth' });
+                
+            } catch (error) {
+                showError(`Erreur lors de l'analyse : ${error.message}`);
+            } finally {
+                showLoading(false);
+                // Masquer l'overlay sablier
+                document.getElementById('loadingOverlay').classList.add('hidden');
+            }
+        }
+
+        function parseExcelData(text) {
+            const lines = text.split('\n').filter(line => line.trim());
+            const result = [];
+            const separator = text.includes('\t') ? '\t' : (text.includes(';') ? ';' : ',');
+            const headers = ['Date', 'Mois', 'JL', 'N° FAC', 'REF', 'N PIECE', 'FOLIO', 'COMPTE', 'TIERS', 'LIBELLE', 'ECH', 'LET', 'Débit', 'Crédit', 'Solde'];
+            
+            for (let i = 0; i < lines.length; i++) {
+                const cells = lines[i].split(separator).map(cell => cell.trim());
+                
+                if (cells.length >= 13) {
+                    const row = {};
+                    headers.forEach((header, idx) => {
+                        row[header] = cells[idx] || '';
+                    });
+                    
+                    // Ignorer la ligne d'en-tête
+                    if (row['COMPTE'].toUpperCase() === 'COMPTE') continue;
+                    
+                    // Nettoyage des montants
+                    row['Débit'] = parseFloat((row['Débit'] || '').replace(/\s/g, '').replace(',', '.')) || 0;
+                    row['Crédit'] = parseFloat((row['Crédit'] || '').replace(/\s/g, '').replace(',', '.')) || 0;
+                    row['Solde'] = parseFloat((row['Solde'] || '').replace(/\s/g, '').replace(',', '.')) || (row['Débit'] - row['Crédit']);
+                    
+                    // Supprimer les lignes vides (solde 0)
+                    if (row['Débit'] === 0 && row['Crédit'] === 0) continue;
+                    
+                    row['Date'] = parseDate(row['Date']);
+                    result.push(row);
+                }
+            }
+            
+            // Tri multiple en cascade (Compte -> Tiers -> Date)
+            result.sort((a, b) => {
+                let cmp = a['COMPTE'].localeCompare(b['COMPTE']);
+                if (cmp !== 0) return cmp;
+                cmp = (a['TIERS'] || '').localeCompare(b['TIERS'] || '');
+                if (cmp !== 0) return cmp;
+                return (a['Date']?.getTime() || 0) - (b['Date']?.getTime() || 0);
+            });
+            
+            return result;
+        }
+
+        function parseDate(dateStr) {
+            if (!dateStr) return null;
+            const match = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+            if (match) {
+                let day = parseInt(match[1]);
+                let month = parseInt(match[2]) - 1;
+                let year = parseInt(match[3]);
+                if (year < 100) year += 2000;
+                return new Date(year, month, day);
+            }
+            return null;
+        }
+
+        function runControls(data) {
+            const alerts = [];
+            const stats = { totalLines: data.length, afterCleaning: 0, balanced: true, totalDebit: 0, totalCredit: 0 };
+
+            stats.totalDebit = data.reduce((sum, row) => sum + row['Débit'], 0);
+            stats.totalCredit = data.reduce((sum, row) => sum + row['Crédit'], 0);
+            
+            const diff = Math.abs(stats.totalDebit - stats.totalCredit);
+            if (diff > 0.001) {
+                alerts.push({ type: 'error', message: `⚠️ Déséquilibre GL : Débit ${stats.totalDebit.toFixed(3)} ≠ Crédit ${stats.totalCredit.toFixed(3)} (diff: ${diff.toFixed(3)})` });
+                stats.balanced = false;
+            }
+
+            // Contrôle 2 : Dates hors exercice
+            const exerciceYear = parseInt(document.getElementById('exerciceN').value);
+            const outOfRange = data.filter(row => {
+                if (!row['Date']) return false; // Ne pas alerter si pas de date
+                return row['Date'].getFullYear() !== exerciceYear;
+            });
+            if (outOfRange.length > 0) {
+                alerts.push({ type: 'warning', message: `⚠️ ${outOfRange.length} lignes avec dates hors exercice ${exerciceYear}` });
+            }
+
+            const missingLibelle = data.filter(row => !row['LIBELLE'] || row['LIBELLE'].trim() === '');
+            if (missingLibelle.length > 0) alerts.push({ type: 'warning', message: `⚠️ ${missingLibelle.length} lignes sans libellé` });
+
+            const missingTiers = data.filter(row => {
+                const compte = row['COMPTE'];
+                return (compte.startsWith('401') || compte.startsWith('411')) && (!row['TIERS'] || row['TIERS'].trim() === '');
+            });
+            if (missingTiers.length > 0) alerts.push({ type: 'error', message: `⚠️ ${missingTiers.length} lignes 401/411 sans tiers spécifié` });
+
+            const cleanedData = cleanLettragedBalanced(data);
+            stats.afterCleaning = cleanedData.length;
+            parsedData = cleanedData;
+
+            // Alerte volumétrie - seulement si ANOMALIE (volumineux SANS lettrage → solde)
+            const accountLines = {};
+            cleanedData.forEach(row => {
+                const key = `${row['COMPTE']}_${row['TIERS'] || ''}`;
+                accountLines[key] = (accountLines[key] || 0) + 1;
+            });
+            
+            // Regrouper par compte pour check lettrage global du compte sur DONNÉES BRUTES
+            const compteHasLettrage = {};
+            parsedDataBrut.forEach(row => {
+                if (row['LET'] && row['LET'].trim() !== '') {
+                    compteHasLettrage[row['COMPTE']] = true;
+                }
+            });
+            
+            Object.entries(accountLines).forEach(([key, count]) => {
+                if (count > 50) {
+                    const compte = key.split('_')[0];
+                    const firstDigit = compte.charAt(0);
+                    const isBilan = ['1', '2', '3', '4', '5'].includes(firstDigit);
+                    const hasLettrage = compteHasLettrage[compte] || false;
+                    
+                    // Alerte seulement si anomalie (volumineux MAIS sans lettrage → solde)
+                    if (isBilan && !hasLettrage) {
+                        alerts.push({ type: 'warning', message: `⚠️ Anomalie : Compte ${compte} très volumineux (${count} lignes) mais RAN par solde (pas de lettrage détecté)` });
+                    }
+                }
+            });
+
+            return { stats, alerts, cleanedData: parsedData };
+        }
+
+        function cleanLettragedBalanced(data) {
+            const groups = {};
+            data.forEach(row => {
+                if (row['LET'] && row['LET'].trim() !== '') {
+                    const key = `${row['COMPTE']}_${row['TIERS'] || ''}_${row['LET']}`;
+                    if (!groups[key]) groups[key] = { rows: [], debit: 0, credit: 0 };
+                    groups[key].rows.push(row);
+                    groups[key].debit += row['Débit'];
+                    groups[key].credit += row['Crédit'];
+                }
+            });
+            
+            const soldedLetters = Object.entries(groups)
+                .filter(([key, group]) => Math.abs(group.debit - group.credit) < 0.001)
+                .map(([key]) => key);
+            
+            return data.filter(row => {
+                if (!row['LET'] || row['LET'].trim() === '') return true;
+                const key = `${row['COMPTE']}_${row['TIERS'] || ''}_${row['LET']}`;
+                return !soldedLetters.includes(key);
+            });
+        }
+
+        function displayControlsResult(controls) {
+            const container = document.getElementById('controlsResult');
+            const summary = document.getElementById('controlsSummary');
+            const alertsContainer = document.getElementById('alertsContainer');
+            
+            summary.textContent = `${controls.stats.totalLines} lignes → ${controls.stats.afterCleaning} après nettoyage | Équilibre: ${controls.stats.balanced ? '✅ OK' : '❌ KO'}`;
+            
+            alertsContainer.innerHTML = '';
+            controls.alerts.forEach(alert => {
+                const div = document.createElement('div');
+                div.className = `alert alert-${alert.type === 'error' ? 'error' : 'warning'}`;
+                div.innerHTML = `<span class="material-icons">${alert.type === 'error' ? 'error' : 'warning'}</span> ${alert.message}`;
+                alertsContainer.appendChild(div);
+            });
+            container.classList.remove('hidden');
+        }
+
+        // ==================== CONFIGURATION COMPTES ====================
+        
+        // Fonction pour détecter le lettrage sur les données BRUTES
+        function detecterTypeRANParLettrage(compte, donneesBrutes) {
+            // Chercher TOUTES les lignes de ce compte dans les données brutes
+            const lignesCompte = donneesBrutes.filter(row => row['COMPTE'] === compte);
+            
+            // Vérifier s'il y a AU MOINS UNE ligne avec lettrage non vide
+            const aDuLettrage = lignesCompte.some(line => line['LET'] && line['LET'].trim() !== '');
+            
+            return aDuLettrage;  // true = Détail, false = Solde
+        }
+        
+        function prepareAccountsConfig() {
+            const accountMap = {};
+            parsedData.forEach(row => {
+                const compte = row['COMPTE'];
+                if (!accountMap[compte]) {
+                    accountMap[compte] = { compte: compte, intitule: getAccountLabel(compte), lines: [], totalDebit: 0, totalCredit: 0, solde: 0 };
+                }
+                accountMap[compte].lines.push(row);
+                accountMap[compte].totalDebit += row['Débit'];
+                accountMap[compte].totalCredit += row['Crédit'];
+            });
+            
+            accountsConfig = Object.values(accountMap).map(acc => {
+                acc.solde = acc.totalDebit - acc.totalCredit;
+                const firstDigit = acc.compte.charAt(0);
+
+                // Attribution dynamique du type selon lettrage sur DONNÉES BRUTES
+                if (firstDigit === '6' || firstDigit === '7') {
+                    acc.report = false;
+                    acc.type = '-';
+                } else {
+                    acc.report = true;
+                    
+                    // NOUVELLE LOGIQUE COMBINÉE
+                    // Règle 1 : Classe 4 → TOUJOURS Détail (prioritaire)
+                    // Règle 2 : Autre bilan (1,2,3,5) → selon lettrage sur données brutes
+                    const isClasse4 = acc.compte.startsWith('4');
+                    const hasLettrage = detecterTypeRANParLettrage(acc.compte, parsedDataBrut);
+                    
+                    if (isClasse4) {
+                        acc.type = 'Détail';  // Classe 4 forcée en Détail
+                    } else {
+                        acc.type = hasLettrage ? 'Détail' : 'Solde';  // Selon lettrage pour autres
+                    }
+                }
+                return acc;
+            });
+            
+            accountsConfig.sort((a, b) => a.compte.localeCompare(b.compte));
+            renderConfigTable();
+            updateStats();
+        }
+
+        // Refonte totale des libellés PCT
+        function getAccountLabel(compte) {
+            if (compte.startsWith('10')) return 'Capital';
+            if (compte.startsWith('11')) return 'Réserves et primes liées au capital';
+            if (compte.startsWith('12')) return 'Résultats reportés';
+            if (compte.startsWith('13')) return 'Résultat de l\'exercice';
+            if (compte.startsWith('14')) return 'Autres capitaux propres';
+            if (compte.startsWith('15')) return 'Provisions pour risques & charges';
+            if (compte.startsWith('16')) return 'Emprunts & dettes assimilées';
+            if (compte.startsWith('17')) return 'Comptes de liaison des établissements & succursales';
+            if (compte.startsWith('18')) return 'Autres Passifs non courants';
+            if (compte.startsWith('21')) return 'Immobilisations incorporelles';
+            if (compte.startsWith('22')) return 'Immobilisations corporelles';
+            if (compte.startsWith('23')) return 'Immobilisations en cours';
+            if (compte.startsWith('24')) return 'Immobilisations à statut juridique particulier';
+            if (compte.startsWith('25')) return 'Participations & créances liées à des participations';
+            if (compte.startsWith('26')) return 'Autres immobilisations financières';
+            if (compte.startsWith('27')) return 'Autres actifs non courants';
+            if (compte.startsWith('28')) return 'Amortissements des immobilisations';
+            if (compte.startsWith('29')) return 'Provisions pour dépréciation des actifs immobilisés';
+            if (compte.startsWith('31')) return 'Matières premières & fournitures liées';
+            if (compte.startsWith('32')) return 'Autres approvisionnements';
+            if (compte.startsWith('33')) return 'En-cours de production de biens';
+            if (compte.startsWith('34')) return 'En-cours de production de services';
+            if (compte.startsWith('35')) return 'Stocks de produits';
+            if (compte.startsWith('37')) return 'Stocks de marchandises';
+            if (compte.startsWith('39')) return 'Provisions pour dépréciation des stocks';
+            if (compte.startsWith('40')) return 'Fournisseurs & comptes rattachés';
+            if (compte.startsWith('41')) return 'Clients & comptes rattachés';
+            if (compte.startsWith('42')) return 'Personnel & comptes rattachés';
+            if (compte.startsWith('43')) return 'Etat & collectivités publiques';
+            if (compte.startsWith('44')) return 'Sociétés du groupe & associés';
+            if (compte.startsWith('45')) return 'Débiteurs divers & créditeurs divers';
+            if (compte.startsWith('46')) return 'Comptes transitoires ou d\'attente';
+            if (compte.startsWith('47')) return 'Comptes de régularisation';
+            if (compte.startsWith('48')) return 'Provisions courantes pour risques et charges';
+            if (compte.startsWith('49')) return 'Provisions pour dépréciation des comptes de tiers';
+            if (compte.startsWith('50')) return 'Emprunts et autres dettes financières courants';
+            if (compte.startsWith('51')) return 'Prêts et autres créances financières courants';
+            if (compte.startsWith('52')) return 'Placements courants';
+            if (compte.startsWith('53')) return 'Banques, établissements financiers et assimilés';
+            if (compte.startsWith('54')) return 'Caisse';
+            if (compte.startsWith('55')) return 'Régies d\'avances & accréditifs';
+            if (compte.startsWith('58')) return 'Virements internes';
+            if (compte.startsWith('59')) return 'Provisions pour dépréciation des comptes financiers';
+            if (compte.startsWith('60') && !compte.startsWith('603')) return 'Achats (sauf 603)';
+            if (compte.startsWith('603')) return 'Variation des stocks (approvisionnements et marchandises)';
+            if (compte.startsWith('61')) return 'Services extérieurs';
+            if (compte.startsWith('62')) return 'Autres services extérieurs';
+            if (compte.startsWith('63')) return 'Charges diverses ordinaires';
+            if (compte.startsWith('64')) return 'Charges de personnel';
+            if (compte.startsWith('65')) return 'Charges financières';
+            if (compte.startsWith('66')) return 'Impôts, taxes et versement assimilés';
+            if (compte.startsWith('67')) return 'Pertes extraordinaires';
+            if (compte.startsWith('68')) return 'Dotations aux amortissements et aux provisions';
+            if (compte.startsWith('69')) return 'Impôts sur les bénéfices';
+            if (compte.startsWith('70')) return 'Ventes de produits fabriqués, prestations de services, marchandises';
+            if (compte.startsWith('71')) return 'Production stockée (ou destockage)';
+            if (compte.startsWith('72')) return 'Production immobilisée';
+            if (compte.startsWith('73')) return 'Produits divers ordinaires';
+            if (compte.startsWith('74')) return 'Subventions d\'exploitation et d\'équilibre';
+            if (compte.startsWith('75')) return 'Produits financiers';
+            if (compte.startsWith('77')) return 'Gains extraordinaires';
+            if (compte.startsWith('78')) return 'Reprises sur amortissements et provisions';
+            if (compte.startsWith('79')) return 'Transferts de charges';
+            return 'Compte';
+        }
+
+        function renderConfigTable() {
+            const tbody = document.getElementById('configTableBody');
+            tbody.innerHTML = '';
+            
+            accountsConfig.forEach((acc, index) => {
+                const row = document.createElement('tr');
+                row.dataset.index = index;
+                
+                // Style visuel si pas de report (grisé mais reste cliquable)
+                if (!acc.report) {
+                    row.style.opacity = '0.5';
+                } else {
+                    row.style.opacity = '1';
+                }
+                
+                row.innerHTML = `
+                    <td class="font-mono font-bold">${acc.compte}</td>
+                    <td title="${acc.intitule}">${acc.intitule}</td>
+                    <td style="text-align: center;">
+                        <!-- Checkbox avec disabled si verrouillé -->
+                        <input type="checkbox" class="checkbox-custom" 
+                               ${acc.report ? 'checked' : ''} 
+                               data-index="${index}" 
+                               onchange="toggleReport(${index})"
+                               ${isLocked ? 'disabled' : ''}>
+                    </td>
+                    <td>
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <input type="radio" name="type_${index}" value="Détail" ${acc.type === 'Détail' ? 'checked' : ''} ${!acc.report || isLocked ? 'disabled' : ''} onchange="changeType(${index}, 'Détail')">
+                                <span>Détail</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="type_${index}" value="Solde" ${acc.type === 'Solde' ? 'checked' : ''} ${!acc.report || isLocked ? 'disabled' : ''} onchange="changeType(${index}, 'Solde')">
+                                <span>Solde</span>
+                            </label>
+                        </div>
+                    </td>
+                    <td style="text-align: center;">${acc.lines.length}</td>
+                    <td style="text-align: right; font-weight: bold; color: ${acc.solde >= 0 ? '#10b981' : '#ef4444'}">
+                        ${Math.abs(acc.solde).toFixed(3)} ${acc.solde >= 0 ? 'D' : 'C'}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            // Appliquer les filtres après rendu
+            filterConfigTable();
+        }
+
+        // Logique des filtres
+        function filterConfigTable() {
+            const fCompte = document.getElementById('filterCompte').value.toLowerCase();
+            const fIntitule = document.getElementById('filterIntitule').value.toLowerCase();
+            const fReport = document.getElementById('filterReport').value;
+            const fType = document.getElementById('filterType').value;
+            const fLettrage = document.getElementById('filterLettrage').value;
+
+            const rows = document.querySelectorAll('#configTableBody tr');
+            rows.forEach(row => {
+                const idx = row.dataset.index;
+                const acc = accountsConfig[idx];
+                if (!acc) return;
+                
+                const matchCompte = acc.compte.toLowerCase().includes(fCompte);
+                const matchIntitule = acc.intitule.toLowerCase().includes(fIntitule);
+                const matchReport = (fReport === 'tous') || (fReport === 'oui' && acc.report) || (fReport === 'non' && !acc.report);
+                const matchType = (fType === 'tous') || (fType === acc.type);
+                
+                // NOUVEAU : Filtre lettrage sur données BRUTES
+                let matchLettrage = true;
+                if (fLettrage !== 'tous') {
+                    const hasLettrage = detecterTypeRANParLettrage(acc.compte, parsedDataBrut);
+                    matchLettrage = (fLettrage === 'avec' && hasLettrage) || (fLettrage === 'sans' && !hasLettrage);
+                }
+
+                row.style.display = (matchCompte && matchIntitule && matchReport && matchType && matchLettrage) ? '' : 'none';
+            });
+        }
+
+        // Autoriser activation/désactivation (possible quand déverrouillé)
+        function toggleReport(index) {
+            accountsConfig[index].report = !accountsConfig[index].report;
+            renderConfigTable(); // Re-render pour mettre à jour le visuel
+            updateStats();
+        }
+
+        // Le verrouillage affecte le Type ET le Report
+        function changeType(index, type) {
+            if (isLocked) return;
+            accountsConfig[index].type = type;
+            renderConfigTable();
+        }
+
+        function applyDefaultRules() {
+            accountsConfig.forEach((acc, index) => {
+                const firstDigit = acc.compte.charAt(0);
+                if (firstDigit === '6' || firstDigit === '7') {
+                    acc.report = false; acc.type = '-';
+                } else {
+                    acc.report = true;
+                    
+                    // Même logique combinée ici
+                    const isClasse4 = acc.compte.startsWith('4');
+                    const hasLettrage = detecterTypeRANParLettrage(acc.compte, parsedDataBrut);
+                    
+                    if (isClasse4) {
+                        acc.type = 'Détail';  // Classe 4 forcée en Détail
+                    } else {
+                        acc.type = hasLettrage ? 'Détail' : 'Solde';  // Selon lettrage pour autres
+                    }
+                }
+            });
+            renderConfigTable();
+            updateStats();
+        }
+
+        function toggleLock() {
+            isLocked = !isLocked;
+            document.getElementById('btnToggleLock').innerHTML = `
+                <span class="material-icons">${isLocked ? 'lock' : 'lock_open'}</span>
+                <span>${isLocked ? 'Verrouiller' : 'Déverrouiller'}</span>
+            `;
+            renderConfigTable(); // Re-render pour appliquer disabled sur checkbox ET radios
+        }
+
+        function updateStats() {
+            const total = accountsConfig.length;
+            const reporter = accountsConfig.filter(a => a.report).length;
+            const detail = accountsConfig.filter(a => a.report && a.type === 'Détail').length;
+            const solde = accountsConfig.filter(a => a.report && a.type === 'Solde').length;
+            
+            document.getElementById('totalComptes').textContent = total;
+            document.getElementById('totalReporter').textContent = reporter;
+            document.getElementById('totalDetail').textContent = detail;
+            document.getElementById('totalSolde').textContent = solde;
+        }
+
+        // ==================== GÉNÉRATION RAN ====================
+        function generateRAN() {
+            showLoading(true);
+            try {
+                ranJournal = [];
+                
+                // 2. Générer les écritures de report
+                accountsConfig.filter(acc => acc.report).forEach(acc => {
+                    if (acc.type === 'Détail') generateDetailLines(acc);
+                    else generateSoldeLine(acc);
+                });
+                
+                // 3. Ajouter la contrepartie résultat avec rawResultat
+                addResultatContrepartie();
+                
+                // 4. Afficher
+                displayRANResults();
+                document.getElementById('step3').classList.remove('hidden');
+                document.getElementById('step3').scrollIntoView({ behavior: 'smooth' });
+            } catch (error) {
+                showError(`Erreur génération RAN : ${error.message}`);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function generateDetailLines(account) {
+            const dateRAN = document.getElementById('dateRAN').value;
+            const journal = document.getElementById('journalRAN').value;
+            account.lines.forEach(line => {
+                ranJournal.push({
+                    'Date': dateRAN, 'Mois': '01', 'JL': journal,
+                    'N° FAC': line['N° FAC'] || '', 'REF': line['REF'] || '', 'N PIECE': '1', 'FOLIO': '',
+                    'COMPTE': account.compte, 'TIERS': line['TIERS'] || '',
+                    'LIBELLE': line['LIBELLE'] || `RAN ${account.intitule}`,
+                    'ECH': line['ECH'] || '', 'LET': '',
+                    'Débit': line['Débit'] || 0, 'Crédit': line['Crédit'] || 0,
+                    'Solde': (line['Débit'] || 0) - (line['Crédit'] || 0)
+                });
+            });
+        }
+
+        function generateSoldeLine(account) {
+            const dateRAN = document.getElementById('dateRAN').value;
+            const journal = document.getElementById('journalRAN').value;
+            const solde = account.solde;
+            ranJournal.push({
+                'Date': dateRAN, 'Mois': '01', 'JL': journal,
+                'N° FAC': '', 'REF': '', 'N PIECE': '1', 'FOLIO': '',
+                'COMPTE': account.compte, 'TIERS': '',
+                // Libellé avec Date RAN formatée avec points
+                'LIBELLE': 'AN ' + dateRAN.replace(/\//g, '.'),
+                'ECH': '', 'LET': '',
+                'Débit': solde > 0 ? solde : 0, 'Crédit': solde < 0 ? -solde : 0, 'Solde': solde
+            });
+        }
+
+        // Contrepartie basée strictement sur rawResultat avec NOUVEAU libellé RESULTAT BENEFICIAIRE/DEFICITAIRE
+        function addResultatContrepartie() {
+            if (Math.abs(rawResultat) > 0.001) {
+                const dateRAN = document.getElementById('dateRAN').value;
+                const exercice = document.getElementById('exerciceN').value; // Récupérer l'exercice détecté
+                
+                ranJournal.push({
+                    'Date': dateRAN, 'Mois': '01', 'JL': document.getElementById('journalRAN').value,
+                    'N° FAC': '', 'REF': '', 'N PIECE': '1', 'FOLIO': '',
+                    'COMPTE': rawResultat >= 0 ? '131000' : '135000', 'TIERS': '',
+                    // POINT 1 : NOUVEAU libellé - RESULTAT BENEFICIAIRE ou DEFICITAIRE + Exercice N
+                    'LIBELLE': rawResultat >= 0 
+                        ? 'RESULTAT BENEFICIAIRE ' + exercice   // Compte 131000 - Bénéfice
+                        : 'RESULTAT DEFICITAIRE ' + exercice,     // Compte 135000 - Déficit
+                    'ECH': '', 'LET': '',
+                    'Débit': rawResultat < 0 ? -rawResultat : 0,
+                    'Crédit': rawResultat > 0 ? rawResultat : 0,
+                    'Solde': -rawResultat
+                });
+            }
+        }
+
+        function displayRANResults() {
+            const tbody = document.getElementById('resultTableBody');
+            tbody.innerHTML = '';
+            
+            ranJournal.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="font-mono">${row['Date']}</td>
+                    <td class="font-mono">${row['Mois']}</td>
+                    <td class="font-mono font-bold text-blue-600">${row['JL']}</td>
+                    <td class="font-mono">${row['N° FAC']}</td>
+                    <td class="font-mono">${row['REF']}</td>
+                    <td class="font-mono">${row['N PIECE']}</td>
+                    <td class="font-mono">${row['FOLIO']}</td>
+                    <td class="font-mono font-bold">${row['COMPTE']}</td>
+                    <td>${row['TIERS']}</td>
+                    <td>${row['LIBELLE']}</td>
+                    <td class="font-mono">${row['ECH']}</td>
+                    <td class="font-mono">${row['LET']}</td>
+                    <td style="text-align: right; font-weight: bold; color: ${row['Débit'] > 0 ? '#10b981' : 'inherit'}">
+                        ${row['Débit'] > 0 ? row['Débit'].toFixed(3) : ''}
+                    </td>
+                    <td style="text-align: right; font-weight: bold; color: ${row['Crédit'] > 0 ? '#ef4444' : 'inherit'}">
+                        ${row['Crédit'] > 0 ? row['Crédit'].toFixed(3) : ''}
+                    </td>
+                    <td style="text-align: right; font-weight: bold; color: ${row['Solde'] >= 0 ? '#10b981' : '#ef4444'}">
+                        ${row['Solde'].toFixed(3)}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            const totalDebit = ranJournal.reduce((sum, row) => sum + row['Débit'], 0);
+            const totalCredit = ranJournal.reduce((sum, row) => sum + row['Crédit'], 0);
+            
+            document.getElementById('totalEcritures').textContent = ranJournal.length;
+            document.getElementById('totalDebit').textContent = totalDebit.toFixed(3);
+            document.getElementById('totalCredit').textContent = totalCredit.toFixed(3);
+            document.getElementById('resultSummary').textContent = `${ranJournal.length} écritures générées - Débit: ${totalDebit.toFixed(3)} | Crédit: ${totalCredit.toFixed(3)}`;
+            
+            // Affichage du montant avec signe (+/-) selon le type de résultat
+            const resultLine = ranJournal.find(row => row['COMPTE'].startsWith('131') || row['COMPTE'].startsWith('135'));
+            if (resultLine) {
+                let montantAffiche;
+                if (resultLine['COMPTE'].startsWith('131')) {
+                    // Bénéfice (créditeur) → afficher avec signe +
+                    montantAffiche = '+' + rawResultat.toFixed(3);
+                } else {
+                    // Déficit (débiteur) → afficher avec signe -
+                    montantAffiche = rawResultat.toFixed(3); // déjà négatif
+                }
+                
+                document.getElementById('contrepartieInfo').innerHTML = `
+                    <strong>Contrepartie Résultat :</strong> ${resultLine['COMPTE']} - ${resultLine['LIBELLE']} : 
+                    <strong>${montantAffiche}</strong>
+                `;
+            }
+        }
+
+        // ==================== EXPORT ====================
+        function exportResults() {
+            if (ranJournal.length === 0) { alert('⚠️ Aucun journal généré'); return; }
+            
+            const ws = XLSX.utils.json_to_sheet(ranJournal);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Journal_RAN");
+
+            const headers = ['Date', 'Mois', 'JL', 'N° FAC', 'REF', 'N PIECE', 'FOLIO', 'COMPTE', 'TIERS', 'LIBELLE', 'ECH', 'LET', 'Débit', 'Crédit', 'Solde'];
+            const debitCol = headers.indexOf('Débit');
+            const creditCol = headers.indexOf('Crédit');
+            const soldeCol = headers.indexOf('Solde');
+
+            for (let R = 1; R <= ranJournal.length; R++) {
+                const cellDebit = ws[XLSX.utils.encode_cell({r: R, c: debitCol})];
+                const cellCredit = ws[XLSX.utils.encode_cell({r: R, c: creditCol})];
+                const cellSolde = ws[XLSX.utils.encode_cell({r: R, c: soldeCol})];
+                if (cellDebit) cellDebit.z = '0.000';
+                if (cellCredit) cellCredit.z = '0.000';
+                if (cellSolde) cellSolde.z = '0.000';
+            }
+            
+            XLSX.writeFile(wb, `Journal_RAN_${document.getElementById('exerciceN').value}.xlsx`);
+        }
+
+        function copyToClipboard() {
+            if (ranJournal.length === 0) { alert('⚠️ Aucun journal généré'); return; }
+            const headers = ['Date', 'Mois', 'JL', 'N° FAC', 'REF', 'N PIECE', 'FOLIO', 'COMPTE', 'TIERS', 'LIBELLE', 'ECH', 'LET', 'Débit', 'Crédit', 'Solde'];
+            const rows = ranJournal.map(row => 
+                headers.map(h => typeof row[h] === 'number' ? row[h].toFixed(3).replace('.', ',') : (row[h] || '')).join('\t')
+            );
+            const tsv = [headers.join('\t'), ...rows].join('\n');
+            navigator.clipboard.writeText(tsv).then(() => alert('✅ Tableau copié !'));
+        }
+
+        // ==================== UTILITAIRES ====================
+        function showLoading(show) {
+            const btn = document.getElementById('btnParse');
+            if (show) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="material-icons">hourglass_empty</span><span>Chargement...</span>';
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = '<span class="material-icons">auto_fix_high</span><span>Analyser et Valider les Données</span>';
+            }
+        }
+
+        function showError(message) { alert(`❌ ${message}`); }
+
+        function resetApp() {
+            if (confirm('Voulez-vous réinitialiser l\'application ?')) {
+                document.getElementById('pasteArea').value = '';
+                document.getElementById('step2').classList.add('hidden');
+                document.getElementById('step3').classList.add('hidden');
+                document.getElementById('controlsResult').classList.add('hidden');
+                // Masquer aussi le message Date RAN
+                document.getElementById('dateRANInfo').classList.add('hidden');
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function resetToStep1() {
+            document.getElementById('step3').classList.add('hidden');
+            document.getElementById('step2').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function setupKeyboardNavigation() {
+            let currentRow = 0;
+            const maxRows = () => accountsConfig.length;
+            document.addEventListener('keydown', (e) => {
+                if (document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'INPUT') return;
+                if (e.key === 'ArrowDown') { e.preventDefault(); currentRow = Math.min(currentRow + 1, maxRows() - 1); highlightRow(currentRow); }
+                else if (e.key === 'ArrowUp') { e.preventDefault(); currentRow = Math.max(currentRow - 1, 0); highlightRow(currentRow); }
+                else if (e.key === ' ') { e.preventDefault(); if (currentRow < maxRows()) { toggleReport(currentRow); highlightRow(currentRow); } }
+                else if (e.key === 'l' || e.key === 'L') { e.preventDefault(); toggleLock(); }
+            });
+        }
+
+        function highlightRow(index) {
+            const rows = document.querySelectorAll('#configTableBody tr');
+            rows.forEach(row => row.classList.remove('selected'));
+            if (rows[index]) { rows[index].classList.add('selected'); rows[index].scrollIntoView({ block: 'center' }); }
+        }
+    </script>
+</body>
+</html>

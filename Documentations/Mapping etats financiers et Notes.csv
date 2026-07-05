@@ -1,0 +1,41 @@
+Etat;NEF;Rubrique;Catégorie;Sous Catégorie
+Bilan;A.01;1. Actifs;1.1. Actifs non courants;1.1.1. Immobilisations incorporelles
+Bilan;A.02;1. Actifs;1.1. Actifs non courants;1.1.2. Moins : amortissements
+Bilan;A.03;1. Actifs;1.1. Actifs non courants;1.1.3. Immobilisations corporelles
+Bilan;A.04;1. Actifs;1.1. Actifs non courants;1.1.4. Moins : amortissements
+Bilan;A.05;1. Actifs;1.1. Actifs non courants;1.1.5. Immobilisations financières
+Bilan;A.06;1. Actifs;1.1. Actifs non courants;1.1.6. Moins : provisions
+Bilan;A.07;1. Actifs;1.1. Actifs non courants;1.1.7. Autres actifs non courants
+Bilan;A.08;1. Actifs;1.2. Actifs courants;1.2.1. Stocks
+Bilan;A.09;1. Actifs;1.2. Actifs courants;1.2.2. Moins : provisions
+Bilan;A.10;1. Actifs;1.2. Actifs courants;1.2.3. Clients et comptes rattachés
+Bilan;A.11;1. Actifs;1.2. Actifs courants;1.2.4. Moins : provisions
+Bilan;A.12;1. Actifs;1.2. Actifs courants;1.2.5. Autres actifs courants
+Bilan;A.13;1. Actifs;1.2. Actifs courants;1.2.6. Placements et autres actifs financiers
+Bilan;A.14;1. Actifs;1.2. Actifs courants;1.2.7. Liquidités et équivalents de liquidités
+Bilan;CP.01;2. Capitaux Propres et Passifs;2.1. Capitaux propres;2.1.1. Capital social
+Bilan;CP.01;2. Capitaux Propres et Passifs;2.1. Capitaux propres;2.1.1. Compte de l'exploitant
+Bilan;CP.02;2. Capitaux Propres et Passifs;2.1. Capitaux propres;2.1.2. Réserves
+Bilan;CP.03;2. Capitaux Propres et Passifs;2.1. Capitaux propres;2.1.3. Autres capitaux propres
+Bilan;CP.04;2. Capitaux Propres et Passifs;2.1. Capitaux propres;2.1.4. Résultats reportés
+Bilan;P.01;3. Passifs;3.1. Passifs non courants;3.1.1. Emprunts
+Bilan;P.02;3. Passifs;3.1. Passifs non courants;3.1.2. Autres passifs financiers
+Bilan;P.03;3. Passifs;3.1. Passifs non courants;3.1.3. Provisions
+Bilan;P.04;3. Passifs;3.2. Passifs courants;3.2.4. Fournisseurs et comptes rattachés
+Bilan;P.05;3. Passifs;3.2. Passifs courants;3.2.5. Autres passifs courants
+Bilan;P.06;3. Passifs;3.2. Passifs courants;3.2.6. Concours bancaires et autres passifs financiers
+Résultat;R.01;1. Résultat d'exploitation;1.1. Produits d’exploitation;1.1.1. Revenus
+Résultat;R.02;1. Résultat d'exploitation;1.1. Produits d’exploitation;1.1.2. Autres produits d'exploitation
+Résultat;R.03;1. Résultat d'exploitation;1.1. Produits d’exploitation;1.1.3. Production immobilisée
+Résultat;R.04;1. Résultat d'exploitation;1.2. Charges d'exploitation;1.2.1. Variation des stocks des produits finis et des encours (en+ou-)
+Résultat;R.05;1. Résultat d'exploitation;1.2. Charges d'exploitation;1.2.2. Achats de marchandises consommés
+Résultat;R.06;1. Résultat d'exploitation;1.2. Charges d'exploitation;1.2.3. Achats d'approvisionnements consommés
+Résultat;R.07;1. Résultat d'exploitation;1.2. Charges d'exploitation;1.2.4. Charges de personnel
+Résultat;R.08;1. Résultat d'exploitation;1.2. Charges d'exploitation;1.2.5. Dotations aux amortissements et aux provisions
+Résultat;R.09;1. Résultat d'exploitation;1.2. Charges d'exploitation;1.2.6. Autres charges d'exploitation
+Résultat;R.10;2. Résultat des activités ordinaires;2.1. Résultat des activités ordinaires;2.1.1. Charges financières nettes
+Résultat;R.11;2. Résultat des activités ordinaires;2.1. Résultat des activités ordinaires;2.1.2. Produits des placements
+Résultat;R.12;2. Résultat des activités ordinaires;2.1. Résultat des activités ordinaires;2.1.3. Autres gains ordinaires
+Résultat;R.13;2. Résultat des activités ordinaires;2.1. Résultat des activités ordinaires;2.1.4. Autres pertes ordinaires
+Résultat;R.14;3. Impôt sur les bénéfices;3.1. Impôt sur les bénéfices;3.1.1. Impôt sur les bénéfices
+Résultat;R.15;4. Eléments extraordinaires (Gains/Pertes);4.1. Eléments extraordinaires (Gains/Pertes);4.1.1. Eléments extraordinaires (Gains/Pertes)

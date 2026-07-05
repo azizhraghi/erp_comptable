@@ -1,0 +1,849 @@
+====================================================================================================================================
+                              ARCHITECTURE APPLICATIVE — ERP COMPTAEXPERT
+====================================================================================================================================
+Version courante    : V58
+Dernière mise à jour: 01/06/2026 — 18:00
+Nombre de modules   : 12
+====================================================================================================================================
+
+====================================================================================================================================
+CHANGELOG ARCHITECTURE
+====================================================================================================================================
+V58 — 01/06/2026 : SAISIE — Module Saisie/Import avec onglets (Saisie Manuelle + Import Excel). Grille dynamique avec lignes débit/crédit, sélection compte/tiers, vérification équilibre temps réel. Import Excel avec validation et rapport. Design: cadre Analyse Charges uniforme 4 côtés, cadre entête onglet gemini-card, animation titre ralentie 10s. Migration V57→V58.
+V57 — 01/06/2026 : PCE | EDITIONS | LETTRAGE — Module Plan Comptable complet (recherche, filtre classe, ajout/modif/blocage). Module Éditions ajouté (Balance Générale, Balance Auxiliaire, Grand-Livre). Lettrage amélioré avec moteur 4 niveaux (N1-N4). Tiers enrichi avec balance âgée et plafond crédit. Migration V56→V57.
+V56 — 29/05/2026 : DESIGN — Header wrap gemini-card, titre page animé (linear-gradient shimmer + background-clip text + font-weight 900), centrage vertical donut "Analyse Charges". Migration V55→V56.
+V55 — 28/05/2026 : DESIGN — Refonte bordure Gemini : passage de ::before CSS automatique à wrapper HTML explicite sur les 4 conteneurs .card du Dashboard. Suppression règle .card::before. Migration V54→V55.
+V54 — 28/05/2026 : DESIGN — Effet de bordure animée "Gemini" (conic-gradient) ajouté à tous les conteneurs .card via ::before. Classes optionnelles gemini-card/gemini-border/gemini-body pour login. Migration V53→V54.
+V53 — 28/05/2026 : TIERS | PCE | NAVIGATION | CSS — Création initiale du fichier d'architecture.
+====================================================================================================================================
+
+====================================================================================================================================
+PARTIE 1 — ARCHITECTURE GLOBALE
+====================================================================================================================================
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+1.1 CARTOGRAPHIE DES MODULES ET LEURS LIAISONS
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+                              ┌─────────────────────────────────────────────────────┐
+                              │                   state {}                          │
+                               │  (LocalStorage clé compta_v56_backup)               │
+                              └──┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬──┬──┘
+                                 │   │   │   │   │   │   │   │   │   │   │   │
+               ┌─────────────────┘  ┌┘  ┌┘  │   │   │   │   │   │   │   │   │
+               ▼                    ▼   ▼   ▼   ▼   ▼   ▼   ▼   ▼   ▼   ▼   ▼
+  ┌──────────────┐  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐
+  │  DASHBOARD   │  │ DOS- │ │ EXER-│ │ PCE  │ │JOUR- │ │ SAIS-│ │ LET- │ │ EDI- │
+  │  (V01→V55)   │  │ SIER │ │ CICES│ │V17→54│ │NAUX  │ │ IE   │ │ TRAGE│ │ TIONS│
+  └──────┬───────┘  └──────┘ └──────┘ └──────┘ └──────┘ └──────┘ └──────┘ └──────┘
+         │                              │                  ▲       ▲
+         │              ┌───────────────┘                  │       │
+         │              ▼                                  │       │
+         │   ┌──────────────┐  ┌──────────┐  ┌─────────┐  │       │
+         │   │   TIERS      │  │  UTILI-  │  │ DEVISES │  │       │
+         │   │  V53 (NOUVEAU)│  │ SAT.EURS │  │ (V25→30)│  │       │
+         │   └──────────────┘  └──────────┘  └─────────┘  │       │
+         │                                                │       │
+         └──────────────────┬─────────────────────────────┘       │
+                            ▼                                   │
+                    ┌──────────────┐                            │
+                    │  AUDIT LOG   │◄───────────────────────────┘
+                    │  (V31→V53)   │◄──── addAuditLog() — tous les modules
+                    └──────────────┘
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+1.2 CARTOGRAPHIE DES LIAISONS ENTRE ONGLETS / PAGES
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+Page (showPage)      | Modules appelés dans le handler
+---------------------|-----------------------------------------------------------
+dashboard            | renderDashboard() + initCharts()
+exercices            | renderExercices()
+users                | renderUsers()
+settings             | loadDossierTab()
+pce                  | renderPCE()
+tiers                | renderTiers()   ← NOUVEAU V53
+journaux             | renderJournaux()
+saisie               | renderSaisie() + loadJournalFilter()
+lettrage             | renderCyclesTree() + renderRevGrid()
+editions             | renderEditions()
+audit                | renderAuditLog()
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+1.3 SCHEMA DES FLUX DE DONNEES ENTRE MODULES
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+state.exercices ────► Dashboard (sélection exercice courant)
+                    ► Saisie (filtre exercice)
+                    ► Lettrage (soldes par exercice)
+
+state.pce ──────────► Saisie (validation compte)
+                    ► TIERS (comptes associés, compte collectif)
+                    ► Lettrage (grille comptes)
+                    ► Dashboard (agrégats par famille)
+
+state.tiers ────────► (Nouveau V53) autonome — pas de dépendance sortante
+                    ◄ PCE (compte collectif, comptes associés)
+                    ◄ Ecritures (indicateurs mouvement N/N-1)
+
+state.ecritures ────► Dashboard (KPI, graphiques)
+                    ► Lettrage (solde N/N-1/N-2)
+                    ► TIERS (mouvementé ?)
+
+state.auditLog ─────◄ Tous les modules via addAuditLog()
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+1.4 FONCTIONS TRANSVERSES (CROSS-CUTTING)
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+Nom fonction        | Modules appelants            | Rôle
+--------------------|------------------------------|-----------------------------
+saveToStorage()     | Tous                         | Persistance localStorage
+loadFromStorage()   | Tous (init)                  | Chargement état
+addAuditLog()       | Tous                         | Traçabilité actions CRUD
+showToast()         | Tous                         | Notifications UI
+showPage()          | Sidebar                      | Routeur principal (rendu)
+markModified()      | Tous (save)                  | Flag modification en cours
+openModal()         | Tous                         | Modale générique
+closeModal()        | Tous                         | Fermeture modale
+formatDate()        | Dashboard, Exercices         | Format JJ/MM/AAAA
+formatK()           | Dashboard                    | Format monétaire milliers
+generateId()        | Tous (CRUD)                  | Génération ID unique
+confirmAction()     | Tiers, Exercices, Users      | Confirmation suppression
+lucide.createIcons()| Tous (render)                | Raffraîchissement icônes
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+1.5 FLUX DE NAVIGATION
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+Login ──► Dashboard (page par défaut)
+           │
+           ├──► Exercices
+           ├──► Dossier / Société
+           ├──► PCE (Plan Comptable)
+           ├──► TIERS ← NOUVEAU V53
+           ├──► Journaux
+           ├──► Saisie
+           ├──► Lettrage / Revue
+           ├──► Éditions
+           ├──► Utilisateurs
+           ├──► Audit
+           └──► Paramétrage
+
+showPage(pageId)
+  │
+  ├── 1. Désactiver tous les .sidebar-link
+  ├── 2. Activer le lien correspondant
+  ├── 3. Cacher toutes les pages (#page-container > div)
+  ├── 4. Afficher #page-{pageId}
+  ├── 5. Mettre à jour #page-title
+  └── 6. Appeler le render spécifique (renderTiers(), renderDashboard(), etc.)
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+1.6 ANOMALIES / POINTS D'ATTENTION
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+[ ] TIERS : Les comptes associés sont dérivés automatiquement du PCE par préfixe
+    3 chiffres — pas de CRUD manuel. Si le PCE a des comptes hors gestion_tiers
+    dans la même famille, ils seront inclus.
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+1.7 DIAGRAMME D'ARCHITECTURE DETAILLE (vue d'ensemble)
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                      NAVIGATEUR (index.html → COMPTAEXPERT_V53.html)            │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  ┌──────────────────────────────────────────────────────────────────────────┐  │
+│  │                         SIDEBAR (left nav)                               │  │
+│  │  Principal : Dashboard | Exercices | Dossier | PCE | Tiers | Journal    │  │
+│  │  Saisie    : Saisie | Lettrage/Revue                                     │  │
+│  │  Éditions  : BG | GL | États Financiers | Liasse Fiscale                │  │
+│  │  Système   : Utilisateurs | Audit | Paramétrage                         │  │
+│  └──────────────────────────────────────────────────────────────────────────┘  │
+│                                                                                 │
+│  ┌──────────────────────────────────────────────────────────────────────────┐  │
+│  │                      PAGE CONTAINER (content area)                        │  │
+│  │  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐│  │
+│  │  │DASH  │ │EXERC │ │DOSSI │ │ PCE  │ │TIERS │ │JOURN │ │SAISIE│ │LETTR ││  │
+│  │  │BOARD │ │ INCES│ │  ER  │ │      │ │V53 ◄─│ │  AUX │ │      │ │ AGE  ││  │
+│  │  └──────┘ └──────┘ └──────┘ └──────┘ └──────┘ └──────┘ └──────┘ └──────┘│  │
+│  │  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐                                    │  │
+│  │  │EDIT  │ │UTILI │ │AUDIT │ │PARAM │                                    │  │
+│  │  │ IONS │ │SATRS │ │  LOG │ │  ÈTRE│                                    │  │
+│  │  └──────┘ └──────┘ └──────┘ └──────┘                                    │  │
+│  └──────────────────────────────────────────────────────────────────────────┘  │
+│                                                                                 │
+│  DÉPENDANCES EXTERNES :                                                        │
+│  ├── Tailwind CSS (CDN) — Framework CSS utilitaire                             │
+│  ├── Lucide Icons (CDN) — Bibliothèque d'icônes SVG                           │
+│  ├── ApexCharts (CDN) — Graphiques                                            │
+│  ├── SheetJS / xlsx (CDN) — Export/Import Excel ← V53                         │
+│  └── html2pdf (CDN) — Export PDF                                              │
+│                                                                                 │
+│  PERSISTANCE : localStorage (clé compta_v56_backup)                            │
+│  EXPORT : JSON (.json) + XLSX (.xlsx) ← V53                                    │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+====================================================================================================================================
+PARTIE 2 — MODULES
+====================================================================================================================================
+
+====================================================================================================================================
+MODULE : DASHBOARD
+Depuis : V01       Dernière MAJ : V55 — 28/05/2026
+====================================================================================================================================
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+DASHBOARD — 1. LAYOUT DE L'INTERFACE
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+┌────────────────────────────────────────────────────────────────┐
+│  HEADER : Titre "Dashboard" | Sélecteur exercice | Sauvegarde   │
+├──────────────────┬─────────────────────────────────────────────┤
+│  KPI ROW 1       │  CA | Achats | Personnel | Impôts |         │
+│   (6 cards)      │  Serv.Ext | Autres | Résultat               │
+├──────────────────┼─────────────────────────────────────────────┤
+│  KPI ROW 2       │  Trésorerie | Clients | Fournisseurs |      │
+│   (6 cards)      │  Stocks | Emprunts                          │
+├──────────────────┴─────────────────────────────────────────────┤
+│  GRAPHIQUES (2 colonnes)                                       │
+│  ┌─────────────────────────┐ ┌──────────────────────────────┐  │
+│  │  Area : CA vs Charges   │ │  Donut : Analyse Charges     │  │
+│  └─────────────────────────┘ └──────────────────────────────┘  │
+│  ┌─────────────────────────┐ ┌──────────────────────────────┐  │
+│  │  Barres : Mensuel       │ │  Comparatif N vs N-1         │  │
+│  └─────────────────────────┘ └──────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────┘
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+DASHBOARD — 2. MODELE DE DONNEES
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+Pas de state.dedicated — données calculées dynamiquement depuis state.ecritures
+Fonction calculateDashboard(exerciseId) → { achats, personnel, impots, ... }
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+DASHBOARD — 3. LIAISONS ENTRANTES / SORTANTES
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+Lecture : state.ecritures, state.exercices, state.pce
+Écriture : aucune (read-only)
+Export : via menu contextuel (JSON / XLSX)
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+DASHBOARD — 4. ARBRE D'APPELS DES FONCTIONS
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+showPage('dashboard')
+  └── renderDashboard()
+        ├── calculateDashboard(exId)
+        │     ├── Lecture state.ecritures filtré par exId
+        │     ├── Agrégation par famille de compte (60x, 64x, etc.)
+        │     ├── Comparaison N vs N-1
+        │     └── Retour { achats, personnel, ..., ca, treso, ... }
+        └── Mise à jour DOM des 12 cartes KPI
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+DASHBOARD — 5. FLUX DE DONNEES DETAILLE
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+calculateDashboard(exId)
+  │
+  ├── 1. Filtrer state.ecritures par exerciseId === exId
+  │
+  ├── 2. Parcourir chaque écriture, catégoriser par préfixe compte :
+  │       60x → achats
+  │       64x → personnel
+  │       61x/62x → servExt
+  │       66x → impots
+  │       70x → ca
+  │       5xx → treso/clients/fourn/stock/emprunt
+  │
+  ├── 3. Si pas d'écritures → fallback mockData généré
+  │
+  ├── 4. Calculer totalCharges = achats + personnel + impots + servExt + autres
+  │
+  ├── 5. Calculer resultat = ca - totalCharges
+  │
+  └── 6. Retourner tous les agrégats + données mensuelles
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+DASHBOARD — 6. MAPPING DES COULEURS ET STYLES
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+Élément               | Classe CSS / Style                | Condition / Rôle
+----------------------|-----------------------------------|---------------------------
+Carte KPI             | .kpi-card bg-surface/10           | Fond transparent glass
+Valeur KPI            | .kpi-value font-mono              | JetBrains Mono (V53)
+Variation positive    | .kpi-var.positive text-success    | Vert (#50C878)
+Variation négative    | .kpi-var.negative text-danger     | Rouge (#E53935)
+Chart Area            | ApexCharts stroke: cyan           | CA vs Charges
+Chart Donut           | ApexCharts 55% taille             | Analyse Charges
+Chart Barres          | ApexCharts borderRadius: 6        | Mensuel
+Bordure carte .card   | .gemini-card > .gemini-border   | V55 : wrapper explicite (plus de ::before)
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+DASHBOARD — 7. INTEGRATION FUTURE (prevue)
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+[ ] Filtrage des KPIs par période personnalisée (pas seulement exercice)
+[ ] Indicateurs de tendance sur 12 mois glissants
+
+====================================================================================================================================
+FIN MODULE : DASHBOARD
+====================================================================================================================================
+
+====================================================================================================================================
+MODULE : EXERCICES
+Depuis : V09       Dernière MAJ : V51 — 28/05/2026
+====================================================================================================================================
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+EXERCICES — 1. LAYOUT DE L'INTERFACE
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+Tableau listant tous les exercices avec colonnes : Année, Début, Fin,
+Statut (Actif/Clôturé), RAN, Volume Écritures. Boutons : + Nouvel exercice,
+Modifier, Supprimer.
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+EXERCICES — 2. MODELE DE DONNEES
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+state.exercices[]
+{
+  id: number,
+  label: string,         // ex "2026"
+  dateDebut: string,     // JJ/MM/AAAA
+  dateFin: string,       // JJ/MM/AAAA
+  isCurrent: boolean,    // exercice courant (étoile)
+  statut: string,        // actif | cloture
+  ranGenerated: boolean, // RAN généré ?
+  ranDate: string|null   // date de génération RAN
+}
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+EXERCICES — 3. LIAISONS ENTRANTES / SORTANTES
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+Lu par : Dashboard, Saisie, Lettrage, TIERS (mouvement)
+Écrit par : CRUD exercices
+Dépend de : Aucun
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+EXERCICES — 4. ARBRE D'APPELS DES FONCTIONS
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+showPage('exercices') → renderExercices()
+openExerciceModal() / saveExercice() / deleteExercice()
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+EXERCICES — 5. FLUX DE DONNEES DETAILLE
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+Création : modal → validation dates → state.exercices.push → saveToStorage()
+Suppression : vérification écritures liées → confirmation → state.exercices.filter
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+EXERCICES — 6. MAPPING DES COULEURS ET STYLES
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+Statut Actif  | text-success | Vert
+Statut Clôturé| text-warning | Amber
+isCurrent     | bg-primary/10 | Bordure cyan
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+EXERCICES — 7. INTEGRATION FUTURE (prevue)
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+[ ] Report à nouveau automatique à la clôture
+[ ] Duplication d'exercice depuis le précédent
+
+====================================================================================================================================
+FIN MODULE : EXERCICES
+====================================================================================================================================
+
+====================================================================================================================================
+MODULE : PCE (PLAN COMPTABLE)
+Depuis : V17       Dernière MAJ : V54 — 28/05/2026
+====================================================================================================================================
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+PCE — 1. LAYOUT DE L'INTERFACE
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+Tableau liste des comptes (numéro, libellé, classe). Filtre par classe (1-8).
+Boutons : + Nouveau compte, Modifier, Supprimer, Import/Export.
+← V53 : colonnes gestion_tiers et type_tiers visibles.
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+PCE — 2. MODELE DE DONNEES
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+state.pce[]
+{
+  id: number,
+  num: string,           // ex "401000" — 6 chiffres
+  label: string,         // ex "Fournisseurs"
+  class: string,         // "1" à "8"
+  gestion_tiers: boolean,// ← V53 : true si compte utilisable comme collectif tiers
+  type_tiers: string|null// ← V53 : "fournisseur" | "client" | "salarie" | null
+}
+
+Valeurs autorisées (type_tiers) : fournisseur | client | salarie | null
+Comptes à gestion_tiers=true : 401000 (Fournisseurs), 411000 (Clients), 425000 (Personnel) ← V53
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+PCE — 3. LIAISONS ENTRANTES / SORTANTES
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+                          ┌──────────────────────┐
+                          │     state.pce         │
+                          └──────┬──────┬─────────┘
+                                 │      │
+                    ┌────────────┘      └────────────┐
+                    ▼                                 ▼
+┌────────────────────────────┐    ┌────────────────────────────┐
+│       LECTURE (read)       │    │      ECRITURE (write)      │
+├────────────────────────────┤    ├────────────────────────────┤
+│ Dashboard (agrégats)       │    │ openPceModal()             │
+│ Saisie (validation compte) │    │ savePce()                  │
+│ TIERS (comptes associés)   │    │ deletePce()                │
+│ TIERS (sélection collectif)│    │ importPCEexcel()           │
+│ Lettrage (grille)          │    │                            │
+└────────────────────────────┘    └────────────────────────────┘
+
+DEPENDANCES EXTERNES DU MODULE PCE
+═══════════════════════════════════════
+┌──────────────┐    comptes collectifs    ┌──────────────────┐
+│  MODULE PCE  │ ──────────────────────►  │  MODULE TIERS    │
+│  (gestion    │                          │  (V53)           │
+│   tiers)     │                          └──────────────────┘
+└──────────────┘
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+PCE — 4. ARBRE D'APPELS DES FONCTIONS
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+showPage('pce') → renderPCE()
+  └── Filtrer par classe + recherche texte
+
+openPceModal(id)
+  ├── Modal édition (num, label, classe)
+  ├── ← V53 : checkbox gestion_tiers + select type_tiers
+  └── state.pce.push/assign
+
+exportPCEexcel() / importPCEexcel()
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+PCE — 5. FLUX DE DONNEES DETAILLE
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+getTierComptesAssocies(compteCollectif)   ← NOUVEAU V53
+  │
+  ├── 1. Extraire préfixe 3 premiers chiffres (ex: "411" pour "411000")
+  │
+  ├── 2. Filtrer state.pce où num.startsWith(prefixe) && gestion_tiers
+  │
+  └── 3. Retourner liste des numéros de comptes associés
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+PCE — 6. MAPPING DES COULEURS ET STYLES
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+Élément               | Classe CSS / Style                | Condition / Rôle
+----------------------|-----------------------------------|---------------------------
+Compte standard       | —                                 | —
+Compte gestion_tiers  | bg-primary/5                      | ← V53 : surlignage bleu
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+PCE — 7. INTEGRATION FUTURE (prevue)
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+[ ] Validation automatique des comptes associés tiers (cohérence famille)
+[ ] Arborescence complète du plan comptable (niveaux hiérarchiques)
+
+====================================================================================================================================
+FIN MODULE : PCE
+====================================================================================================================================
+
+====================================================================================================================================
+MODULE : TIERS (NOUVEAU V53)
+Depuis : V53       Dernière MAJ : V53 — 28/05/2026
+====================================================================================================================================
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+TIERS — 1. LAYOUT DE L'INTERFACE
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+┌───────────────────────────────────────────────────────────────────┐
+│  Barre d'outils : Recherche | [+] Nouveau | Export | Import      │
+├──────────────────────┬────────────────────────────────────────────┤
+│  FILTRES             │                                            │
+│  ┌──────────────────┐│  FICHE TIERS (détail)                     │
+│  │ Nature :         ││  ┌──────────────────────────────────────┐ │
+│  │ Clients          ││  │ Code | Intitulé                      │ │
+│  │ Fournisseurs     ││  │ Nature | Compte Collectif [🔍]      │ │
+│  │ Salarié          ││  │ Actif | Lettrage Auto | Échéances   │ │
+│  │ Autres           ││  │ MF | RC | Adresse | Contact         │ │
+│  └──────────────────┘│  │ Tél | Email | Notes                  │ │
+│  ┌──────────────────┐│  │ Comptes Associés : 411xxx...         │ │
+│  │ Statut :         ││  │                                      │ │
+│  │ Actifs | Bloqués ││  │ [💾 Enregistrer] [🗑️ Supprimer]    │ │
+│  │ Tous             ││  └──────────────────────────────────────┘ │
+│  └──────────────────┘│                                            │
+│                      │                                            │
+│  LISTE TIERS         │                                            │
+│  ┌──────────────────┐│                                            │
+│  │ CL001 — Tunisie  ││                                            │
+│  │   Télécom  ● MvtN││                                            │
+│  ├──────────────────┤│                                            │
+│  │ FR001 — STEG     ││                                            │
+│  │   ● MvtN         ││                                            │
+│  ├──────────────────┤│                                            │
+│  │ EMP001 — Najd    ││                                            │
+│  │   Salarié ○ Inac.││                                            │
+│  └──────────────────┘│                                            │
+└──────────────────────┴────────────────────────────────────────────┘
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+TIERS — 2. MODELE DE DONNEES
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+state.tiers[]
+═══════════════════════════════════════
+{
+  id: 't' + timestamp,              // String — ID unique
+  code: string,                      // ex "CL001" — obligatoire, unique
+  intitule: string,                  // ex "Tunisie Telecom" — obligatoire
+  nature: string,                    // client | fournisseur | salarie | autre
+  statut: string,                    // actif | bloque
+  compte_collectif: string,          // ex "411000" — réf. state.pce[].num
+  lettrage_auto: boolean,            // default true
+  gestion_echeances: boolean,        // default true
+  actif: boolean,                    // default true
+  mf: string,                        // Matricule Fiscal Tunisie
+  rc: string,                        // Registre de Commerce
+  adresse: string,
+  contact: string,
+  telephone: string,
+  email: string,
+  notes: string
+}
+
+Valeurs autorisées :
+  nature  : client | fournisseur | salarie | autre
+  statut  : actif | bloque
+  compte_collectif : doit exister dans state.pce avec gestion_tiers=true
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+TIERS — 3. LIAISONS ENTRANTES / SORTANTES
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+                          ┌──────────────────────┐
+                          │   state.tiers (V53)   │
+                          └──────┬──────┬─────────┘
+                                 │      │
+                    ┌────────────┘      └────────────┐
+                    ▼                                 ▼
+┌────────────────────────────┐    ┌────────────────────────────┐
+│       LECTURE (read)       │    │      ECRITURE (write)      │
+├────────────────────────────┤    ├────────────────────────────┤
+│ renderTiers()              │    │ saveTier() (create + edit) │
+│ selectTier(id)             │    │ deleteTier()               │
+│ isTierMvt()                │    │ exportTiersExcel()         │
+│ getTierComptesAssocies()   │    │ importTiersExcel()         │
+└────────────────────────────┘    └────────────────────────────┘
+
+DEPENDANCES EXTERNES DU MODULE TIERS
+═══════════════════════════════════════
+┌──────────────┐    compte_collectif     ┌──────────────────┐
+│  MODULE PCE  │ ◄─────────────────────  │  MODULE TIERS    │
+│              │    comptes_associés      │                  │
+└──────────────┘                          └──────────────────┘
+                                                    │
+                                                    │ addAuditLog()
+                                                    ▼
+                                            ┌──────────────────┐
+                                            │   AUDIT LOG      │
+                                            └──────────────────┘
+                                                    │
+                                                    │ saveToStorage()
+                                                    ▼
+                                            ┌──────────────────┐
+                                            │  localStorage    │
+                                            │ compta_v53_backup│
+                                            └──────────────────┘
+
+DEPENDANCES EXTERNES (runtime) :
+  ┌──────────────┐    XLSX.utils          ┌──────────────────┐
+  │  SheetJS CDN │ ◄───────────────────   │ exportTiersExcel │
+  │  (xlsx)      │                        │ importTiersExcel │
+  └──────────────┘                        └──────────────────┘
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+TIERS — 4. ARBRE D'APPELS DES FONCTIONS
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+showPage('tiers')
+  └── renderTiers()
+        ├── Filtrer state.tiers selon tierFilter + tierStatus + recherche
+        ├── Pour chaque tier :
+        │     ├── isTierMvt(tier, exId)     → mouvementé N ?
+        │     │     └── getTierComptesAssocies(compteCollectif)
+        │     │           └── state.pce.filter(num.startsWith(prefix))
+        │     └── isTierMvt(tier, exPrevId) → mouvementé N-1 ?
+        └── Render HTML cartes + dot + badge + indicateur mvt
+
+selectTier(id)
+  ├── Remplir formulaire fiche détail (tous les champs)
+  ├── renderTierAssociatedAccounts(compteCollectif)
+  └── Vérifier mouvement pour activer/désactiver bouton Supprimer
+
+openTierModal(id)            [nouveau tiers]
+  ├── Réinitialiser formulaire
+  └── onTierNatureChange()   → pré-remplir compte collectif par défaut
+
+saveTier()
+  ├── Validation : code obligatoire, intitulé obligatoire, pas de doublon
+  ├── Compte collectif doit exister dans state.pce
+  ├── state.tiers.push (création) ou Object.assign (modification)
+  ├── addAuditLog()
+  ├── saveToStorage()
+  └── renderTiers() + selectTier(editingTierId)
+
+deleteTier()
+  ├── Vérifier mouvement N (bloquant si écritures liées)
+  ├── confirm() utilisateur
+  ├── state.tiers.filter()
+  ├── addAuditLog()
+  ├── saveToStorage()
+  └── cancelTierEdit()
+
+openTierPceSearch()
+  ├── Filtrer state.pce par nature (client → 411000, etc.)
+  └── Modal générique avec recherche temps réel
+
+exportTiersExcel()
+  ├── state.tiers → JSON → XLSX.utils.json_to_sheet()
+  └── XLSX.writeFile()
+
+importTiersExcel()
+  ├── File input → XLSX.read() → sheet_to_json()
+  └── Pour chaque ligne : créer tier si code unique
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+TIERS — 5. FLUX DE DONNEES DETAILLE
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+getTierComptesAssocies(compteCollectif)
+  │
+  ├── 1. Extraire préfixe 3 premiers chiffres de compteCollectif
+  │         Ex: "411000" → "411"
+  │
+  ├── 2. Filtrer state.pce
+  │         Condition : num.startsWith(prefix) && gestion_tiers == true
+  │
+  └── 3. Retourner string[] des numéros de comptes
+
+isTierMvt(tier, exId)
+  │
+  ├── 1. Construire liste des comptes = [tier.compte_collectif, ...comptes_associés]
+  │
+  ├── 2. Vérifier state.ecritures
+  │         Condition : compte ∈ liste && exerciseId === exId
+  │
+  └── 3. Retourner boolean
+
+onTierNatureChange()
+  │
+  ├── 1. Lire la nature sélectionnée (client|fournisseur|salarie|autre)
+  │
+  ├── 2. Mapping automatique compte collectif par défaut :
+  │        client      → 411000
+  │        fournisseur → 401000
+  │        salarie     → 425000
+  │        autre       → (vide)
+  │
+  └── 3. renderTierAssociatedAccounts() si compte trouvé
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+TIERS — 6. MAPPING DES COULEURS ET STYLES
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+Élément               | Classe CSS / Style                | Condition / Rôle
+----------------------|-----------------------------------|---------------------------
+Dot nature Client     | .tier-dot.client                  | Bleu #3b82f6
+Dot nature Fourn.    | .tier-dot.fournisseur              | Jaune #f59e0b
+Dot nature Salarié   | .tier-dot.salarie                  | Vert #10b981
+Dot nature Autre     | .tier-dot.autre                    | Violet #8b5cf6
+Carte tier            | .tier-card                        | Fond surface, bordure subtile
+Carte sélectionnée   | .tier-card.selected                | Bordure cyan + glow
+Code tiers            | .tier-code font-mono              | JetBrains Mono bold 11px
+Badge Bloqué          | .tier-badge bg-danger/15          | Texte rouge
+Mouvement N           | .tier-mvt-ok                      | Texte cyan (#00f2ff)
+Mouvement N-1         | .tier-mvt-dormant                 | Texte orange (#FF8C42)
+Input                 | .tier-input font-mono             | Input sombre avec bordure
+Switch toggle         | .tier-switch .slider              | Toggle arrondi cyan
+Bouton filtre actif   | .tier-filter-btn.active           | Fond cyan
+Conteneur liste       | flex-col gap-0.5                  | Liste compacte scrollable
+Panel détail          | flex-1 p-6 overflow-y-auto        | Partie droite scindée
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+TIERS — 7. INTEGRATION FUTURE (prevue)
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+[ ] Module d'échéancier : vue calendrier des échéances par tiers
+[ ] Module de relance : lettres de relance automatiques (export PDF)
+[ ] Historique des mouvements par tiers (lien vers Saisie)
+[ ] Centralisation des risques clients (encours, dépassement)
+[ ] Import depuis fichier client existant (CSV)
+
+====================================================================================================================================
+FIN MODULE : TIERS
+====================================================================================================================================
+
+====================================================================================================================================
+MODULE : JOURNAUX
+Depuis : V17       Dernière MAJ : V49 — 28/05/2026
+====================================================================================================================================
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+JOURNAUX — 1. LAYOUT DE L'INTERFACE
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+Layout scindé : 1/3 liste journaux + 2/3 édition. Filtres : Tous/Actifs/Verrouillés.
+Histogramme mensuel. Natures : AN, Achat, Vente, Trésorerie, OD, Situ/Inv.
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+JOURNAUX — 2. MODELE DE DONNEES
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+state.journaux[] — { id, code, libelle, nature, tresorerie, verrouillage, compteTresorerie }
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+JOURNAUX — 3. LIAISONS
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+Lecture : state.journaux, state.ecritures (volume)
+Écriture : CRUD journaux
+Dépend de : PCE (compte trésorerie)
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+JOURNAUX — 4. ARBRE D'APPELS
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+showPage('journaux') → renderJournaux()
+renderJournalVolumes() → calcul volumétrique par exercice
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+JOURNAUX — 7. INTEGRATION FUTURE
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+[ ] Rapprochement bancaire automatique (prévu V52)
+[ ] Édition papier des journaux
+
+====================================================================================================================================
+FIN MODULE : JOURNAUX
+====================================================================================================================================
+
+====================================================================================================================================
+MODULE : SAISIE
+Depuis : V17       Dernière MAJ : V49 — 28/05/2026
+====================================================================================================================================
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+SAISIE — 1. LAYOUT DE L'INTERFACE
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+Grille d'écritures : Date, Compte, Libellé, Débit, Crédit, Journal, Devise.
+Filtre par journal + exercice. Boutons : + Nouvelle ligne, Enregistrer, Supprimer.
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+SAISIE — 2. MODELE DE DONNEES
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+state.ecritures[] — { id, exerciseId, journalId, date, compte, libelle, debit, credit,
+                      mntDevise, devise, cours, lettrage, revStatut }
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+SAISIE — 3. LIAISONS
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+Lu par : Dashboard (agrégats), Lettrage (soldes), TIERS (mouvement V53)
+Écrit par : CRUD écritures
+Dépend de : PCE (validation compte), Journaux (filtre), Exercices (filtre)
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+SAISIE — 7. INTEGRATION FUTURE
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+[ ] Saisie rapide avec autocomplétion PCE
+[ ] Contrôle de cohérence (équilibre débit/crédit en temps réel)
+
+====================================================================================================================================
+FIN MODULE : SAISIE
+====================================================================================================================================
+
+====================================================================================================================================
+MODULE : LETTRAGE / REVUE
+Depuis : V37       Dernière MAJ : V51 — 28/05/2026
+====================================================================================================================================
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+LETTRAGE — 1. LAYOUT DE L'INTERFACE
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+Grille comptes solde N/N-1/N-2. Cycles de révision avec arbre progression.
+Filtres : Financier/Fiscal/Social, évitement comptes soldés/révisés.
+Notes et points en suspens avec historique.
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+LETTRAGE — 2. MODELE DE DONNEES
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+state.cycles[] — { id, cycle, compte, label, nature, soldeN, soldeN1, soldeN2, collab, superv, notes }
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+LETTRAGE — 7. INTEGRATION FUTURE
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+[ ] Lettrage automatique par rapprochement
+[ ] Édition papier de la feuille de révision
+
+====================================================================================================================================
+FIN MODULE : LETTRAGE
+====================================================================================================================================
+
+====================================================================================================================================
+MODULE : UTILISATEURS
+Depuis : V10       Dernière MAJ : V51 — 28/05/2026
+====================================================================================================================================
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+UTILISATEURS — 1. LAYOUT
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+Tableau : Login, Nom, Profil, Statut (Actif/Inactif). Modale création avec
+13 permissions granulaires. Profils : Junior, Senior, Expert, Administrateur.
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+UTILISATEURS — 2. MODELE
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+state.users[] — { id, login, name, profile, role, status, permissions[] }
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+UTILISATEURS — 7. INTEGRATION FUTURE
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+[ ] Authentification avec mot de passe haché (localStorage)
+[ ] Sessions utilisateur avec timeout
+
+====================================================================================================================================
+FIN MODULE : UTILISATEURS
+====================================================================================================================================
+
+====================================================================================================================================
+MODULE : AUDIT LOG
+Depuis : V31       Dernière MAJ : V53 — 28/05/2026
+====================================================================================================================================
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+AUDIT — 1. LAYOUT
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+Tableau antichronologique : Date, Utilisateur, Action, Détails.
+Filtre par texte (utilisateur, action). 100 entrées max.
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+AUDIT — 2. MODELE
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+state.auditLog[] — { ts, user, action, details }  (max 100)
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+AUDIT — 3. LIAISONS
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+Entrées : Tous les modules via addAuditLog() — y compris TIERS (V53)
+
+====================================================================================================================================
+FIN MODULE : AUDIT LOG
+====================================================================================================================================
+
+====================================================================================================================================
+MODULE : DEVISES
+Depuis : V25       Dernière MAJ : V30 — 17/05/2026
+====================================================================================================================================
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+DEVISES — 1. LAYOUT
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+Toggle multidevise (activation). Grille 30 devises BCT avec checkboxes.
+Recherche modale. Devises personnalisées.
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+DEVISES — 2. MODELE
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+state.multidevise: boolean
+state.devises: string[] — codes ISO des devises actives
+state.devisesPersonnalisees[] — { code, nom, taux }
+
+====================================================================================================================================
+FIN MODULE : DEVISES
+====================================================================================================================================
+
+====================================================================================================================================
+FIN DU FICHIER D'ARCHITECTURE — ERP COMPTAEXPERT — © 2026 ACO NAJD
+====================================================================================================================================

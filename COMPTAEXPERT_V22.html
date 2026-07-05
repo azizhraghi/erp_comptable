@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COMPTAEXPERT V22 — ERP Comptable Tunisien</title>
+    
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'bg-base': 'var(--bg-base)',
+                        'bg-surface': 'var(--bg-surface)',
+                        'bg-card': 'var(--bg-card)',
+                        'primary': '#6C63FF',
+                        'success': '#00D4AA',
+                        'warning': '#FDCB6E',
+                        'danger': '#FF6B6B',
+                        'info': '#74B9FF',
+                        'text-main': 'var(--text-main)',
+                        'text-dim': 'var(--text-dim)',
+                        'border-dim': 'var(--border-dim)',
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --bg-base: #0D0F1A;
+            --bg-surface: #141726;
+            --bg-card: #1C1F33;
+            --text-main: #F1F5F9;
+            --text-dim: #94A3B8;
+            --border-dim: rgba(255, 255, 255, 0.08);
+        }
+
+        .light {
+            --bg-base: #F8FAFC;
+            --bg-surface: #FFFFFF;
+            --bg-card: #FFFFFF;
+            --text-main: #0F172A;
+            --text-dim: #64748B;
+            --border-dim: #E2E8F0;
+        }
+
+        body { background-color: var(--bg-base); color: var(--text-main); transition: all 0.3s ease; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #6C63FF44; border-radius: 10px; }
+
+        .kpi-card {
+            height: 120px;
+            padding: 1.25rem;
+            border-radius: 1.25rem;
+            border: 1px solid var(--border-dim);
+            background: var(--bg-card);
+        }
+        
+        .kpi-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); }
+        .kpi-value { font-weight: 700; color: var(--text-main); }
+
+        .sidebar-link.active { background: rgba(108, 99, 255, 0.1); color: #6C63FF; border-right: 3px solid #6C63FF; font-weight: 600; }
+        .glass { background: rgba(var(--bg-card-rgb), 0.8); backdrop-filter: blur(12px); border: 1px solid var(--border-dim); }
+        
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-up { animation: fadeInUp 0.4s ease-out forwards; }
+
+        .modal-overlay { background: rgba(0,0,0,0.8); backdrop-filter: blur(12px); }
+        
+        .input-base { 
+            background-color: #FFFFFF !important; 
+            color: #000000 !important; 
+            border: 1px solid #E2E8F0;
+            border-radius: 1rem;
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            width: 100%;
+        }
+        .input-base::placeholder { color: #475569 !important; font-weight: 500; }
+        
+        .label-indication { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #94A3B8; margin-left: 0.5rem; margin-bottom: 0.25rem; display: block; }
+        
+        .btn-primary { @apply bg-primary text-white font-bold py-3 px-6 rounded-2xl hover:brightness-110 active:scale-95 transition-all shadow-lg flex items-center justify-center gap-2; }
+        
+        .perm-checkbox { accent-color: var(--primary); width: 1rem; height: 1rem; cursor: pointer; }
+    </style>
+</head>
+<body class="font-sans antialiased overflow-hidden">
+
+    <!-- LOGIN -->
+    <div id="login-screen" class="fixed inset-0 z-[100] flex items-center justify-center bg-bg-base text-text-main">
+        <div class="w-full max-w-md p-10 bg-bg-card rounded-3xl border border-border-dim shadow-2xl animate-fade-up text-center">
+            <div class="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-primary/20"><i data-lucide="shield-check" class="w-8 h-8 text-white"></i></div>
+            <h1 class="text-2xl font-bold mb-8">COMPTAEXPERT V22</h1>
+            <form id="login-form" class="space-y-6 text-left">
+                <div class="space-y-2">
+                    <label class="label-indication">Identifiant</label>
+                    <input type="text" id="login-username" value="admin" class="input-base">
+                </div>
+                <button type="submit" class="btn-primary w-full py-4 shadow-primary/20">Se Connecter</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL -->
+    <div id="generic-modal" class="hidden fixed inset-0 z-[200] flex items-center justify-center p-4 modal-overlay">
+        <div id="modal-container" class="bg-bg-card w-full max-w-lg rounded-3xl border border-border-dim p-8 shadow-2xl animate-fade-up">
+            <div id="modal-content" class="space-y-6"></div>
+        </div>
+    </div>
+
+    <!-- SHELL -->
+    <div id="app-shell" class="hidden h-screen flex overflow-hidden">
+        
+        <aside class="w-64 glass flex-shrink-0 flex flex-col border-r border-border-dim">
+            <div class="p-8 flex items-center gap-3">
+                <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg"><i data-lucide="box" class="w-6 h-6 text-white"></i></div>
+                <span class="font-bold text-lg tracking-tighter">ComptaExpert</span>
+            </div>
+            
+            <nav class="flex-1 px-4 space-y-1 overflow-y-auto no-scrollbar pb-10">
+                <div class="text-[10px] font-bold text-text-dim uppercase tracking-widest px-4 py-4">Principal</div>
+                <a href="#" onclick="showPage('dashboard')" class="sidebar-link active flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all"><i data-lucide="layout-dashboard" class="w-5 h-5"></i><span>Tableau de bord</span></a>
+                <a href="#" onclick="showPage('pce')" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all"><i data-lucide="list-tree" class="w-5 h-5"></i><span>Plan Comptable</span></a>
+                <a href="#" onclick="showPage('tiers')" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all"><i data-lucide="users-2" class="w-5 h-5"></i><span>Plan Tiers</span></a>
+                <a href="#" onclick="showPage('journaux')" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all"><i data-lucide="book-open" class="w-5 h-5"></i><span>Journaux</span></a>
+                <a href="#" onclick="showPage('devise')" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all"><i data-lucide="circle-dollar-sign" class="w-5 h-5"></i><span>Devises (€/$)</span></a>
+
+                <div class="text-[10px] font-bold text-text-dim uppercase tracking-widest px-4 py-4 mt-2">Saisie & Analyse</div>
+                <a href="#" onclick="showPage('saisie')" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all"><i data-lucide="file-input" class="w-5 h-5"></i><span>Saisie/Import Écritures</span></a>
+                <a href="#" onclick="showPage('lettrage')" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all"><i data-lucide="link" class="w-5 h-5"></i><span>Revue / Lettrage</span></a>
+                <a href="#" onclick="showPage('controles')" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all"><i data-lucide="check-square" class="w-5 h-5"></i><span>Contrôles Cycle</span></a>
+                
+                <div class="text-[10px] font-bold text-text-dim uppercase tracking-widest px-4 py-4 mt-2">États</div>
+                <a href="#" onclick="showPage('editions')" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all"><i data-lucide="printer" class="w-5 h-5"></i><span>Éditions (BG/GL)</span></a>
+                <a href="#" onclick="showPage('etats')" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all"><i data-lucide="bar-chart-big" class="w-5 h-5"></i><span>États Financiers</span></a>
+                <a href="#" onclick="showPage('liasse')" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all"><i data-lucide="landmark" class="w-5 h-5"></i><span>Liasse Fiscale</span></a>
+                
+                <div class="text-[10px] font-bold text-text-dim uppercase tracking-widest px-4 py-4 mt-2">Système</div>
+                <a href="#" id="link-settings" onclick="showPage('settings')" class="sidebar-link hidden flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all"><i data-lucide="settings" class="w-5 h-5"></i><span>Paramétrage</span></a>
+                <a href="#" onclick="showPage('profile')" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all"><i data-lucide="user-cog" class="w-5 h-5"></i><span>Mon Profil</span></a>
+            </nav>
+
+            <div class="p-6">
+                <div class="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-border-dim">
+                    <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center border border-white/10 shadow-lg"><span id="user-initials" class="text-xs font-bold text-white">--</span></div>
+                    <div class="flex-1 min-w-0"><p id="user-display-name" class="text-sm font-bold truncate">--</p><p id="user-display-role" class="text-[9px] font-bold text-text-dim uppercase">--</p></div>
+                    <button onclick="logoutPrompt()" class="text-text-dim hover:text-danger p-1"><i data-lucide="log-out" class="w-5 h-5"></i></button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col min-w-0 bg-bg-base">
+            <header class="h-20 glass flex items-center justify-between px-8 z-10 border-b border-border-dim">
+                <div class="flex items-center gap-6">
+                    <h2 id="page-title" class="text-2xl font-bold tracking-tight">Tableau de bord</h2>
+                    
+                    <div id="dossier-drop-zone" class="flex flex-col items-center justify-center px-6 py-1.5 rounded-xl border-2 border-success/40 bg-success/10 text-success shadow-sm transition-all border-dashed cursor-pointer hover:bg-success/20" title="Glissez-déposez votre sauvegarde JSON n'importe où sur l'écran">
+                        <span id="current-societe-name" class="text-sm font-black mb-0.5">Aucun</span>
+                        <div class="flex items-center gap-2 opacity-80">
+                            <span id="dossier-status-dot" class="w-2 h-2 rounded-full bg-success animate-pulse"></span>
+                            <span class="text-[9px] font-bold uppercase tracking-widest">Dossier Actif</span>
+                        </div>
+                    </div>
+
+                    <select id="exercise-selector" onchange="changeExercise(this.value)" class="bg-primary/10 border border-primary/20 px-6 py-2.5 rounded-full text-sm font-black text-primary uppercase focus:outline-none cursor-pointer tracking-wider shadow-sm">
+                        <option value="">Exercice --</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button id="btn-save-db" onclick="exportData()" class="flex items-center gap-2 bg-success text-white px-5 py-2.5 rounded-2xl text-xs font-bold hover:brightness-110 shadow-lg shadow-success/20 transition-all">
+                        <i data-lucide="save" class="w-4 h-4"></i><span id="btn-save-text">Enregistré</span>
+                    </button>
+                    <button onclick="toggleTheme()" class="w-11 h-11 rounded-2xl glass flex items-center justify-center hover:bg-white/5 text-text-dim transition-all"><i data-lucide="moon" id="theme-icon" class="w-5 h-5"></i></button>
+                </div>
+            </header>
+
+            <div id="page-container" class="flex-1 overflow-y-auto p-10 no-scrollbar relative">
+                
+                <div id="page-dashboard" class="animate-fade-up space-y-8">
+                    <!-- Row 1 -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-7 gap-4">
+                        <div class="kpi-card relative flex flex-col justify-center items-center">
+                            <div class="absolute top-4 left-4"><i data-lucide="wallet" class="w-5 h-5 text-success"></i></div>
+                            <div class="absolute top-4 right-4"><span id="var-resultat" class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-white/5">-</span></div>
+                            <p class="kpi-value text-2xl mt-4" id="kpi-resultat">0</p>
+                            <p class="kpi-label mt-1">Résultat</p>
+                        </div>
+                        <div class="kpi-card relative flex flex-col justify-center items-center">
+                            <div class="absolute top-4 left-4"><i data-lucide="trending-up" class="w-5 h-5 text-primary"></i></div>
+                            <div class="absolute top-4 right-4"><span id="var-ca" class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-white/5">-</span></div>
+                            <p class="kpi-value text-2xl mt-4" id="kpi-ca">0</p>
+                            <p class="kpi-label mt-1">CA (70x)</p>
+                        </div>
+                        <div class="kpi-card relative flex flex-col justify-center items-center">
+                            <div class="absolute top-4 left-4"><i data-lucide="receipt" class="w-5 h-5 text-danger"></i></div>
+                            <div class="absolute top-4 right-4"><span id="var-charges" class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-white/5">-</span></div>
+                            <p class="kpi-value text-2xl mt-4" id="kpi-charges">0</p>
+                            <p class="kpi-label mt-1">Charges (6x)</p>
+                        </div>
+                        <div class="kpi-card relative flex flex-col justify-center items-center">
+                            <div class="absolute top-4 left-4"><i data-lucide="banknote" class="w-5 h-5 text-secondary"></i></div>
+                            <div class="absolute top-4 right-4"><span class="text-[9px] font-bold text-success bg-success/10 px-2 py-0.5 rounded-full">+12.4%</span></div>
+                            <p class="kpi-value text-2xl mt-4">126.3 k</p>
+                            <p class="kpi-label mt-1">Trésorerie (5x)</p>
+                        </div>
+                        <div class="kpi-card relative flex flex-col justify-center items-center">
+                            <div class="absolute top-4 left-4"><i data-lucide="users" class="w-5 h-5 text-info"></i></div>
+                            <div class="absolute top-4 right-4"><span class="text-[9px] font-bold text-success bg-success/10 px-2 py-0.5 rounded-full">+5.2%</span></div>
+                            <p class="kpi-value text-2xl mt-4">87.3 k</p>
+                            <p class="kpi-label mt-1">Clients (42j)</p>
+                        </div>
+                        <div class="kpi-card relative flex flex-col justify-center items-center">
+                            <div class="absolute top-4 left-4"><i data-lucide="truck" class="w-5 h-5 text-primary"></i></div>
+                            <div class="absolute top-4 right-4"><span class="text-[9px] font-bold text-success bg-success/10 px-2 py-0.5 rounded-full">-3.1%</span></div>
+                            <p class="kpi-value text-2xl mt-4">64.1 k</p>
+                            <p class="kpi-label mt-1">Fournisseurs (38j)</p>
+                        </div>
+                        <div class="kpi-card relative flex flex-col justify-center items-center">
+                            <div class="absolute top-4 left-4"><i data-lucide="shield-alert" class="w-5 h-5 text-warning"></i></div>
+                            <p class="kpi-value text-2xl mt-4 text-warning">8</p>
+                            <p class="kpi-label mt-1">Alertes</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Row 2 -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                        <div class="kpi-card relative flex flex-col justify-center items-center">
+                            <div class="absolute top-4 left-4"><i data-lucide="package" class="w-5 h-5 text-warning"></i></div>
+                            <div class="absolute top-4 right-4"><span class="text-[9px] font-bold text-success bg-success/10 px-2 py-0.5 rounded-full">+8.0%</span></div>
+                            <p class="kpi-value text-2xl mt-4">74.5 k</p>
+                            <p class="kpi-label mt-1">Stock (3x)</p>
+                        </div>
+                        <div class="kpi-card relative flex flex-col justify-center items-center">
+                            <div class="absolute top-4 left-4"><i data-lucide="building-2" class="w-5 h-5 text-danger"></i></div>
+                            <div class="absolute top-4 right-4"><span class="text-[9px] font-bold text-success bg-success/10 px-2 py-0.5 rounded-full">-12.5%</span></div>
+                            <p class="kpi-value text-2xl mt-4">215.8 k</p>
+                            <p class="kpi-label mt-1">Emprunt (16x+50x)</p>
+                        </div>
+                        <div class="kpi-card relative flex flex-col justify-center items-center">
+                            <div class="absolute top-4 left-4"><i data-lucide="shopping-cart" class="w-5 h-5 text-primary"></i></div>
+                            <div class="absolute top-4 right-4"><span id="var-achats" class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-white/5">-</span></div>
+                            <p class="kpi-value text-2xl mt-4" id="kpi-achats">0</p>
+                            <p class="kpi-label mt-1">Achats 60x</p>
+                        </div>
+                        <div class="kpi-card relative flex flex-col justify-center items-center">
+                            <div class="absolute top-4 left-4"><i data-lucide="users" class="w-5 h-5 text-success"></i></div>
+                            <div class="absolute top-4 right-4"><span id="var-personnel" class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-white/5">-</span></div>
+                            <p class="kpi-value text-2xl mt-4" id="kpi-personnel">0</p>
+                            <p class="kpi-label mt-1">Personnel 64x</p>
+                        </div>
+                        <div class="kpi-card relative flex flex-col justify-center items-center">
+                            <div class="absolute top-4 left-4"><i data-lucide="landmark" class="w-5 h-5 text-warning"></i></div>
+                            <div class="absolute top-4 right-4"><span id="var-impots" class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-white/5">-</span></div>
+                            <p class="kpi-value text-2xl mt-4" id="kpi-impots">0</p>
+                            <p class="kpi-label mt-1">Impôts 66/69</p>
+                        </div>
+                        <div class="kpi-card relative flex flex-col justify-center items-center">
+                            <div class="absolute top-4 left-4"><i data-lucide="external-link" class="w-5 h-5 text-info"></i></div>
+                            <div class="absolute top-4 right-4"><span id="var-servext" class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-white/5">-</span></div>
+                            <p class="kpi-value text-2xl mt-4" id="kpi-servext">0</p>
+                            <p class="kpi-label mt-1">Serv. Ext. 61/62</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                        <div class="bg-bg-card p-10 rounded-[2.5rem] border border-border-dim shadow-sm"><h3 class="text-xs font-bold mb-10 uppercase tracking-widest text-text-dim">Évolution CA vs Charges</h3><div id="chart-area" style="height: 300px;"></div></div>
+                        <div class="bg-bg-card p-10 rounded-[2.5rem] border border-border-dim shadow-sm"><h3 class="text-xs font-bold mb-10 uppercase tracking-widest text-text-dim">Analyse Charges</h3><div id="chart-donut" style="height: 300px;"></div></div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                        <div class="bg-bg-card p-10 rounded-[2.5rem] border border-border-dim shadow-sm"><h3 class="text-xs font-bold mb-10 uppercase tracking-widest text-text-dim">Répartition Charges par mois</h3><div id="chart-bar-5" style="height: 300px;"></div></div>
+                        <div class="bg-bg-card p-10 rounded-[2.5rem] border border-border-dim shadow-sm"><h3 class="text-xs font-bold mb-10 uppercase tracking-widest text-text-dim">Comparatif CA & Charges N-1 vs N</h3><div id="chart-bar-comp" style="height: 300px;"></div></div>
+                    </div>
+                </div>
+
+                <!-- Devises -->
+                <div id="page-devise" class="hidden animate-fade-up">
+                    <h3 class="text-3xl font-bold tracking-tight mb-8">Gestion des Devises</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl">
+                        <div class="bg-bg-card p-8 rounded-[2.5rem] border border-border-dim shadow-sm relative overflow-hidden">
+                            <div class="absolute -right-6 -top-6 text-primary opacity-10"><i data-lucide="euro" class="w-40 h-40"></i></div>
+                            <h4 class="font-bold text-xs mb-6 uppercase tracking-widest text-text-dim">Taux de change Euro</h4>
+                            <div class="flex justify-between items-center mb-8">
+                                <span class="text-4xl font-black">Euro (€)</span>
+                                <span class="text-2xl font-bold text-success bg-success/10 px-4 py-2 rounded-2xl">3.350 TND</span>
+                            </div>
+                            <div class="flex gap-4">
+                                <input type="number" placeholder="Nouveau taux..." class="input-base flex-1" value="3.350" step="0.001">
+                                <button class="btn-primary" onclick="showToast('Taux Euro mis à jour', 'success'); markModified()">Appliquer</button>
+                            </div>
+                        </div>
+                        <div class="bg-bg-card p-8 rounded-[2.5rem] border border-border-dim shadow-sm relative overflow-hidden">
+                            <div class="absolute -right-6 -top-6 text-primary opacity-10"><i data-lucide="dollar-sign" class="w-40 h-40"></i></div>
+                            <h4 class="font-bold text-xs mb-6 uppercase tracking-widest text-text-dim">Taux de change Dollar</h4>
+                            <div class="flex justify-between items-center mb-8">
+                                <span class="text-4xl font-black">Dollar ($)</span>
+                                <span class="text-2xl font-bold text-success bg-success/10 px-4 py-2 rounded-2xl">3.120 TND</span>
+                            </div>
+                            <div class="flex gap-4">
+                                <input type="number" placeholder="Nouveau taux..." class="input-base flex-1" value="3.120" step="0.001">
+                                <button class="btn-primary" onclick="showToast('Taux Dollar mis à jour', 'success'); markModified()">Appliquer</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings -->
+                <div id="page-settings" class="hidden space-y-12 animate-fade-up pb-32">
+                    <h3 class="text-3xl font-bold tracking-tight">Configuration Système</h3>
+                    
+                    <div class="bg-bg-card p-10 rounded-[2.5rem] border border-border-dim shadow-sm">
+                        <h4 class="font-bold text-xs mb-8 uppercase tracking-widest text-primary">Fiche du Dossier</h4>
+                        <div id="societe-form-container" class="grid grid-cols-1 md:grid-cols-2 gap-8"></div>
+                    </div>
+
+                    <div class="bg-bg-card rounded-[2.5rem] border border-border-dim overflow-hidden shadow-sm">
+                        <div class="px-10 py-8 border-b border-border-dim bg-white/5 flex justify-between items-center">
+                            <span class="font-bold text-xs uppercase tracking-widest">Gestion des Exercices</span>
+                            <button onclick="openExerciseModal()" class="btn-primary text-xs !py-2 !px-5">+ Nouvel Exercice</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="text-[10px] text-text-dim uppercase bg-white/5 font-bold tracking-widest"><tr><th class="px-10 py-5">Année</th><th class="px-10 py-5">Date Début</th><th class="px-10 py-5">Date Fin</th><th class="px-10 py-5 text-center">Statut</th><th class="px-10 py-5 text-right">Actions</th></tr></thead>
+                                <tbody id="ex-table-body" class="divide-y divide-border-dim"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="bg-bg-card rounded-[2.5rem] border border-border-dim overflow-hidden shadow-sm">
+                        <div class="px-10 py-8 border-b border-border-dim bg-white/5 flex justify-between items-center">
+                            <span class="font-bold text-xs uppercase tracking-widest">Utilisateurs & Profils</span>
+                            <button onclick="openUserModal()" class="btn-primary text-xs !py-2 !px-5">+ Nouvel Utilisateur</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="text-[10px] text-text-dim uppercase bg-white/5 font-bold tracking-widest"><tr><th class="px-10 py-5">Nom Complet</th><th class="px-10 py-5">Identifiant</th><th class="px-10 py-5 text-center">Profil</th><th class="px-10 py-5 text-center">Statut</th><th class="px-10 py-5 text-right">Actions</th></tr></thead>
+                                <tbody id="user-table-body" class="divide-y divide-border-dim"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile -->
+                <div id="page-profile" class="hidden max-w-2xl mx-auto animate-fade-up">
+                    <div class="bg-bg-card p-12 rounded-[2.5rem] border border-border-dim shadow-2xl text-center">
+                        <div class="w-24 h-24 rounded-full bg-primary flex items-center justify-center mx-auto mb-8 text-4xl font-bold text-white shadow-2xl" id="prof-avatar">--</div>
+                        <h3 class="text-3xl font-bold mb-3 text-text-main" id="prof-name">Admin</h3>
+                        <p class="text-text-dim text-xs font-bold uppercase tracking-[0.2em]" id="prof-role">Administrateur</p>
+                        <div class="mt-12 pt-12 border-t border-border-dim space-y-8 text-left">
+                            <div class="space-y-3">
+                                <label class="label-indication">Sécurité : Nouveau mot de passe</label>
+                                <input type="password" id="prof-pass" placeholder="••••••••" class="input-base">
+                            </div>
+                            <button onclick="updateProfPass()" class="btn-primary w-full py-5">Appliquer</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast-container" class="fixed bottom-8 right-8 z-[500] flex flex-col gap-3"></div>
+
+    <script>
+        let savedState = localStorage.getItem('compta_v22_backup') || localStorage.getItem('compta_v21_backup');
+        let state = savedState ? JSON.parse(savedState) : {
+            societe: { name: '', mf: '' },
+            exercices: [], ecritures: [],
+            users: [{ id: 1, login: 'admin', name: 'Administrateur', role: 'Administrateur', pass: '', status: 'Actif', permissions: ['all'] }],
+            user: null, currentEx: null, theme: localStorage.getItem('theme') || 'dark', isModified: false
+        };
+        // Reset user session on reload for security
+        state.user = null;
+
+        const ALL_PERMS = ['saisie', 'importation', 'consultation', 'lettrage', 'révision', 'plan_comptable', 'journaux', 'devise', 'audit', 'états', 'exportation', 'clôture', 'sauvegarde', 'parametrage'];
+        const PERMS = { 
+            'Administrateur': ['all'], 
+            'Senior': ['saisie','importation','consultation','lettrage','révision','plan_comptable','journaux','audit','états','exportation'], 
+            'Junior': ['saisie','consultation','lettrage'] 
+        };
+
+        window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal('generic-modal'); });
+
+        // GLOBALLY PREVENT BROWSER FROM OPENING JSON FILE
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            window.addEventListener(eventName, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
+        });
+
+        // DRAG & DROP JSON IMPORT
+        window.addEventListener('drop', (e) => {
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                const file = e.dataTransfer.files[0];
+                if (file.name.endsWith('.json')) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        try {
+                            const imported = JSON.parse(ev.target.result);
+                            if (imported.societe) {
+                                state = imported;
+                                // Auto login as admin for seamless reloadless experience
+                                state.user = state.users.find(u => u.role === 'Administrateur') || state.users[0];
+                                localStorage.setItem('compta_v22_backup', JSON.stringify(state));
+                                showToast(`Base [${state.societe.name || 'Aucune'}] importée avec succès !`, 'success');
+                                
+                                // Direct UI Refresh without reload
+                                document.getElementById('login-screen').classList.add('hidden');
+                                document.getElementById('app-shell').classList.remove('hidden');
+                                document.getElementById('user-display-name').innerText = state.user.name;
+                                document.getElementById('user-display-role').innerText = state.user.role;
+                                document.getElementById('user-initials').innerText = state.user.name.substring(0, 2).toUpperCase();
+                                if (state.user.role === 'Administrateur' || (state.user.permissions && state.user.permissions.includes('parametrage'))) document.getElementById('link-settings').classList.remove('hidden');
+                                
+                                updateDossierUI();
+                                updateExerciseSelect();
+                                initCharts();
+                                renderSocieteForm();
+                                renderSettings();
+                                const btn = document.getElementById('btn-save-db');
+                                if(btn) {
+                                    btn.className = "flex items-center gap-2 bg-success text-white px-5 py-2.5 rounded-2xl text-xs font-bold hover:brightness-110 shadow-lg shadow-success/20 transition-all";
+                                    document.getElementById('btn-save-text').innerText = "Enregistré";
+                                }
+                            } else showToast('Fichier invalide', 'danger');
+                        } catch(err) { showToast('Erreur de lecture', 'danger'); }
+                    };
+                    reader.readAsText(file);
+                } else showToast('Veuillez glisser un fichier JSON', 'warning');
+            }
+        });
+
+        function renderPermCheckboxes(selectedPerms) {
+            let html = '<div class="grid grid-cols-2 lg:grid-cols-3 gap-3 mt-2">';
+            const isAdmin = selectedPerms.includes('all');
+            ALL_PERMS.forEach(p => {
+                const checked = isAdmin || selectedPerms.includes(p) ? 'checked' : '';
+                html += `<label class="flex items-center gap-2 text-sm text-text-main cursor-pointer"><input type="checkbox" class="perm-checkbox form-checkbox h-4 w-4 text-primary rounded border-border-dim bg-bg-base" value="${p}" ${checked}> <span class="capitalize text-xs font-bold">${p.replace('_', ' ')}</span></label>`;
+            });
+            html += '</div>';
+            return html;
+        }
+
+        function updateNewUserPerms(role) {
+            document.getElementById('u-new-perms-container').innerHTML = renderPermCheckboxes(PERMS[role] || []);
+        }
+
+        function updateEditUserPerms(role) {
+            document.getElementById('u-edit-perms-container').innerHTML = renderPermCheckboxes(PERMS[role] || []);
+        }
+
+        function getSelectedPerms(containerId) {
+            const checkboxes = document.querySelectorAll(`#${containerId} .perm-checkbox`);
+            const perms = [];
+            checkboxes.forEach(cb => { if(cb.checked) perms.push(cb.value); });
+            return perms;
+        }
+
+        function syncTheme() {
+            document.documentElement.className = state.theme;
+            lucide.createIcons();
+            if (state.user) initCharts();
+        }
+
+        function toggleTheme() {
+            state.theme = state.theme === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('theme', state.theme);
+            syncTheme();
+        }
+
+        function markModified() { 
+            state.isModified = true; 
+            localStorage.setItem('compta_v22_backup', JSON.stringify(state)); 
+            const btn = document.getElementById('btn-save-db');
+            if(btn) {
+                btn.className = "flex items-center gap-2 bg-warning text-white px-5 py-2.5 rounded-2xl text-xs font-bold hover:brightness-110 shadow-lg shadow-warning/20 transition-all";
+                document.getElementById('btn-save-text').innerText = "Enregistrer";
+            }
+        }
+
+        document.getElementById('login-form').onsubmit = (e) => {
+            e.preventDefault();
+            const u = document.getElementById('login-username').value;
+            const found = state.users.find(x => x.login === u);
+            if (found) { state.user = found; loginSuccess(); }
+            else showToast('Accès restreint', 'danger');
+        };
+
+        function loginSuccess() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('app-shell').classList.remove('hidden');
+            document.getElementById('user-display-name').innerText = state.user.name;
+            document.getElementById('user-display-role').innerText = state.user.role;
+            document.getElementById('user-initials').innerText = state.user.name.substring(0, 2).toUpperCase();
+            if (state.user.role === 'Administrateur' || (state.user.permissions && state.user.permissions.includes('parametrage'))) document.getElementById('link-settings').classList.remove('hidden');
+            renderSocieteForm(); updateDossierUI(); initCharts(); lucide.createIcons();
+        }
+
+        function renderSocieteForm() {
+            const container = document.getElementById('societe-form-container');
+            if (!state.societe.name) {
+                container.innerHTML = `
+                    <div class="space-y-1"><label class="label-indication">Raison Sociale</label><input type="text" id="setup-name" placeholder="SOCIETE EXEMPLE SARL" class="input-base"></div>
+                    <div class="space-y-1"><label class="label-indication">Matricule Fiscal</label><input type="text" id="setup-mf" placeholder="Ex: 0123456/A/M/000" class="input-base"></div>
+                    <button onclick="createDossier()" class="btn-primary md:col-span-2 py-4 mt-2">Créer le Dossier</button>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="space-y-1"><label class="label-indication">Raison Sociale</label><input type="text" id="dossier-name" value="${state.societe.name}" class="input-base"></div>
+                    <div class="space-y-1"><label class="label-indication">Matricule Fiscal</label><input type="text" id="dossier-mf" value="${state.societe.mf}" class="input-base"></div>
+                    <button onclick="updateDossier()" class="btn-primary md:col-span-2 py-4 mt-2"><i data-lucide="check" class="w-4 h-4"></i> Mettre à jour</button>
+                `;
+                lucide.createIcons();
+            }
+        }
+
+        function createDossier() {
+            const n = document.getElementById('setup-name').value;
+            if (!n) return showToast('Nom requis', 'danger');
+            state.societe.name = n;
+            state.societe.mf = document.getElementById('setup-mf').value;
+            const y = new Date().getFullYear();
+            state.exercices = [{ id: Date.now(), year: y, start: `${y}-01-01`, end: `${y}-12-31`, status: 'Actif' }];
+            state.currentEx = state.exercices[0];
+            markModified(); renderSocieteForm(); renderSettings(); updateDossierUI(); updateExerciseSelect();
+        }
+
+        function updateDossier() {
+            state.societe.name = document.getElementById('dossier-name').value;
+            state.societe.mf = document.getElementById('dossier-mf').value;
+            markModified(); updateDossierUI(); showToast('Fiche mise à jour', 'success');
+        }
+
+        function formatDate(str) {
+            const d = new Date(str);
+            return String(d.getDate()).padStart(2,'0') + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + d.getFullYear();
+        }
+
+        function renderSettings() {
+            const exBody = document.getElementById('ex-table-body');
+            exBody.innerHTML = state.exercices.map(ex => `
+                <tr class="hover:bg-white/5 transition-colors">
+                    <td class="px-10 py-6 font-bold text-text-main">${ex.year}</td>
+                    <td class="px-10 py-6 text-xs text-text-dim font-bold">${formatDate(ex.start)}</td>
+                    <td class="px-10 py-6 text-xs text-text-dim font-bold">${formatDate(ex.end)}</td>
+                    <td class="px-10 py-6 text-center"><button onclick="toggleExStatus(${ex.id})" class="px-3 py-1 rounded-full text-[10px] font-bold ${ex.status === 'Actif' ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'} uppercase border ${ex.status === 'Actif' ? 'border-success/20' : 'border-danger/20'}">${ex.status}</button></td>
+                    <td class="px-10 py-6 text-right flex justify-end gap-3">
+                        <button onclick="editEx(${ex.id})" class="text-text-dim hover:text-primary"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                        <button onclick="deleteEx(${ex.id})" class="text-text-dim hover:text-danger"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+
+            const uBody = document.getElementById('user-table-body');
+            uBody.innerHTML = state.users.map(u => `
+                <tr class="hover:bg-white/5 transition-colors">
+                    <td class="px-10 py-6 font-bold text-text-main">${u.name}</td>
+                    <td class="px-10 py-6 text-xs font-mono text-text-dim">${u.login}</td>
+                    <td class="px-10 py-6 text-center text-[10px] font-bold uppercase"><span class="bg-primary/10 text-primary px-3 py-1.5 rounded-lg border border-primary/20">${u.role}</span></td>
+                    <td class="px-10 py-6 text-center"><button onclick="toggleUserStatus(${u.id})" class="px-3 py-1 rounded-full text-[10px] font-bold ${u.status === 'Actif' ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'} uppercase border ${u.status === 'Actif' ? 'border-success/20' : 'border-danger/20'}">${u.status || 'Actif'}</button></td>
+                    <td class="px-10 py-6 text-right flex justify-end gap-3">
+                        <button onclick="editUser(${u.id})" class="text-text-dim hover:text-primary"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                        <button onclick="deleteUser(${u.id})" class="text-text-dim hover:text-danger"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function deleteEx(id) {
+            if (state.ecritures.some(e => e.exerciseId === id)) return showToast('Blocage : exercice mouvementé.', 'danger');
+            if (confirm('Supprimer cet exercice ?')) { state.exercices = state.exercices.filter(e => e.id !== id); markModified(); renderSettings(); updateExerciseSelect(); }
+        }
+
+        function deleteUser(id) {
+            const u = state.users.find(x => x.id === id);
+            if (state.ecritures.some(e => e.createdBy === u.login)) return showToast('Blocage : historique existant pour cet utilisateur.', 'danger');
+            if (confirm('Supprimer ce compte ?')) { state.users = state.users.filter(x => x.id !== id); markModified(); renderSettings(); }
+        }
+
+        function handleYearChange(year) { if (year.length === 4) { document.getElementById('ex-new-start').value = `${year}-01-01`; document.getElementById('ex-new-end').value = `${year}-12-31`; } }
+
+        function openExerciseModal() {
+            const m = document.getElementById('modal-content');
+            const year = new Date().getFullYear();
+            m.innerHTML = `
+                <h3 class="text-2xl font-bold mb-8 text-text-main text-center">Nouvel Exercice</h3>
+                <div class="space-y-6 text-left">
+                    <div class="space-y-1"><label class="label-indication">Année</label><input type="number" id="ex-new-year" value="${year}" class="input-base text-xl" oninput="handleYearChange(this.value)"></div>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="space-y-1"><label class="label-indication">Date début</label><input type="date" id="ex-new-start" value="${year}-01-01" class="input-base"></div>
+                        <div class="space-y-1"><label class="label-indication">Date fin</label><input type="date" id="ex-new-end" value="${year}-12-31" class="input-base"></div>
+                    </div>
+                    <button onclick="saveNewExercise()" class="btn-primary w-full py-4 mt-4">Valider</button>
+                    <p class="text-center text-[10px] text-text-dim font-bold uppercase mt-4">Appuyez sur Échap pour fermer</p>
+                </div>
+            `;
+            openModal('generic-modal');
+        }
+
+        function saveNewExercise() {
+            const y = document.getElementById('ex-new-year').value;
+            const s = document.getElementById('ex-new-start').value;
+            const e = document.getElementById('ex-new-end').value;
+            if (!y) return showToast('Année requise', 'danger');
+            state.exercices.push({ id: Date.now(), year: y, start: s, end: e, status: 'Actif' });
+            markModified(); renderSettings(); updateExerciseSelect(); closeModal('generic-modal');
+        }
+
+        function openUserModal() {
+            const m = document.getElementById('modal-content');
+            m.innerHTML = `
+                <h3 class="text-2xl font-bold mb-8 text-text-main text-center">Nouveau Collaborateur</h3>
+                <div class="space-y-6 text-left">
+                    <div class="space-y-1"><label class="label-indication">Nom Complet</label><input type="text" id="u-new-name" placeholder="Skander Mansour" class="input-base"></div>
+                    <div class="space-y-1"><label class="label-indication">Identifiant</label><input type="text" id="u-new-login" placeholder="s.mansour" class="input-base"></div>
+                    <div class="space-y-1"><label class="label-indication">Profil par défaut</label>
+                        <select id="u-new-role" class="input-base font-bold" onchange="updateNewUserPerms(this.value)">
+                            <option value="Junior">Junior</option>
+                            <option value="Senior">Senior</option>
+                            <option value="Administrateur">Administrateur</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1 mt-4">
+                        <label class="label-indication">Habilitations Personnalisées</label>
+                        <div id="u-new-perms-container" class="bg-black/10 p-4 rounded-xl border border-white/5">${renderPermCheckboxes(PERMS['Junior'])}</div>
+                    </div>
+                    <button onclick="saveNewUser()" class="btn-primary w-full py-4 mt-4">Ajouter</button>
+                    <p class="text-center text-[10px] text-text-dim font-bold uppercase mt-4">Appuyez sur Échap pour fermer</p>
+                </div>
+            `;
+            openModal('generic-modal');
+        }
+
+        function saveNewUser() {
+            const n = document.getElementById('u-new-name').value;
+            const l = document.getElementById('u-new-login').value;
+            const r = document.getElementById('u-new-role').value;
+            const perms = getSelectedPerms('u-new-perms-container');
+            if (!n || !l) return showToast('Champs requis', 'danger');
+            state.users.push({ id: Date.now(), name: n, login: l, role: r, pass: '', status: 'Actif', permissions: perms });
+            markModified(); renderSettings(); closeModal('generic-modal');
+        }
+
+        function editUser(id) {
+            const u = state.users.find(x => x.id === id);
+            const m = document.getElementById('modal-content');
+            const currentPerms = u.permissions && u.permissions.includes('all') ? ALL_PERMS : (u.permissions || PERMS[u.role]);
+            m.innerHTML = `
+                <h3 class="text-2xl font-bold mb-8 text-text-main text-center">Modifier le collaborateur</h3>
+                <div class="space-y-6 text-left">
+                    <div class="space-y-1"><label class="label-indication">Nom Complet</label><input type="text" id="edit-u-name" value="${u.name}" class="input-base"></div>
+                    <div class="space-y-1"><label class="label-indication">Profil</label>
+                        <select id="edit-u-role" class="input-base font-bold" onchange="updateEditUserPerms(this.value)">
+                            <option value="Junior" ${u.role==='Junior'?'selected':''}>Junior</option>
+                            <option value="Senior" ${u.role==='Senior'?'selected':''}>Senior</option>
+                            <option value="Administrateur" ${u.role==='Administrateur'?'selected':''}>Administrateur</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1 mt-4">
+                        <label class="label-indication">Habilitations Personnalisées</label>
+                        <div id="u-edit-perms-container" class="bg-black/10 p-4 rounded-xl border border-white/5">${renderPermCheckboxes(currentPerms)}</div>
+                    </div>
+                    <button onclick="saveEditUser(${u.id})" class="btn-primary w-full py-4 mt-4">Mettre à jour</button>
+                </div>
+            `;
+            openModal('generic-modal');
+        }
+
+        function saveEditUser(id) {
+            const u = state.users.find(x => x.id === id);
+            u.name = document.getElementById('edit-u-name').value;
+            u.role = document.getElementById('edit-u-role').value;
+            let perms = getSelectedPerms('u-edit-perms-container');
+            if (u.role === 'Administrateur' && perms.length === ALL_PERMS.length) {
+                perms = ['all'];
+            }
+            u.permissions = perms;
+            markModified(); renderSettings(); closeModal('generic-modal');
+        }
+
+        function toggleExStatus(id) { const ex = state.exercices.find(e => e.id === id); ex.status = ex.status === 'Actif' ? 'Clôturé' : 'Actif'; markModified(); renderSettings(); }
+        function toggleUserStatus(id) { const u = state.users.find(x => x.id === id); u.status = (u.status === 'Actif' || !u.status) ? 'Inactif' : 'Actif'; markModified(); renderSettings(); }
+
+        function showPage(pageId) {
+            document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+            const link = Array.from(document.querySelectorAll('.sidebar-link')).find(l => l.getAttribute('onclick')?.includes(pageId));
+            if (link) link.classList.add('active');
+            document.querySelectorAll('#page-container > div').forEach(d => d.classList.add('hidden'));
+            const target = document.getElementById(`page-${pageId}`);
+            if (target) target.classList.remove('hidden'); else document.getElementById('page-dashboard').classList.remove('hidden');
+        }
+
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        function exportData(exit = false) {
+            const dataStr = JSON.stringify(state, null, 2);
+            const now = new Date();
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth()+1).padStart(2,'0');
+            const dd = String(now.getDate()).padStart(2,'0');
+            const hh = String(now.getHours()).padStart(2,'0');
+            const min = String(now.getMinutes()).padStart(2,'0');
+            const ss = String(now.getSeconds()).padStart(2,'0');
+            const baseName = (state.societe.name && state.societe.name.trim() !== '') ? state.societe.name.replace(/\s+/g,'_') : 'Dossier';
+            const fn = `${baseName}_[${yyyy}.${mm}.${dd}]_[${hh}-${min}-${ss}].json`;
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fn; a.click();
+            state.isModified = false;
+            const btn = document.getElementById('btn-save-db');
+            if(btn) {
+                btn.className = "flex items-center gap-2 bg-success text-white px-5 py-2.5 rounded-2xl text-xs font-bold hover:brightness-110 shadow-lg shadow-success/20 transition-all";
+                document.getElementById('btn-save-text').innerText = "Enregistré";
+            }
+            showToast('Base sauvegardée', 'success');
+            if (exit) window.location.reload();
+        }
+
+        function logoutPrompt() {
+            const m = document.getElementById('modal-content');
+            m.innerHTML = `
+                <h3 class="text-2xl font-bold mb-4 text-center text-text-main">Fermeture</h3>
+                <p class="text-text-dim text-sm text-center mb-10">Souhaitez-vous exporter avant de quitter ?</p>
+                <div class="space-y-4">
+                    <button onclick="exportData(true)" class="btn-primary w-full py-5">Sauvegarder & Quitter</button>
+                    <button onclick="confirmExit()" class="w-full bg-danger/10 text-danger py-4 rounded-3xl font-bold hover:bg-danger hover:text-white transition-all">Ignorer</button>
+                    <button onclick="closeModal('generic-modal')" class="w-full py-2 text-xs font-bold text-text-dim">Annuler</button>
+                </div>
+            `;
+            openModal('generic-modal');
+        }
+
+        function showToast(msg, type = 'info') {
+            const colors = { success: 'bg-success', danger: 'bg-danger', warning: 'bg-warning', info: 'bg-info' };
+            const div = document.createElement('div');
+            div.className = `${colors[type]} text-white px-6 py-4 rounded-2xl shadow-2xl font-bold text-sm flex items-center gap-3 animate-fade-up`;
+            div.innerHTML = `<i data-lucide="info" class="w-5 h-5"></i>${msg}`;
+            document.getElementById('toast-container').appendChild(div);
+            lucide.createIcons();
+            setTimeout(() => { div.style.opacity = '0'; setTimeout(() => div.remove(), 300); }, 3000);
+        }
+
+        function formatK(val) {
+            if (!val || val === 0) return "0";
+            return (val / 1000).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' k';
+        }
+
+        function updateVariation(id, valN, valN1, invertColors = false) {
+            const el = document.getElementById(id);
+            if(!el) return;
+            if(!valN1 || valN1 === 0) { el.innerText = '-'; el.className = 'text-[9px] font-bold text-text-dim bg-white/5 px-2 py-0.5 rounded-full'; return; }
+            const pct = ((valN - valN1) / valN1) * 100;
+            const isPos = pct > 0;
+            const isGood = invertColors ? !isPos : isPos;
+            el.innerText = (isPos ? '+' : '') + pct.toFixed(1) + '%';
+            el.className = `text-[9px] font-bold px-2 py-0.5 rounded-full ${isGood ? 'text-success bg-success/10' : 'text-danger bg-danger/10'}`;
+        }
+
+        function calculateDashboard() {
+            let achats = 0, personnel = 0, impots = 0, servExt = 0, autres = 0, ca = 0;
+            let chargesMensuelles = new Array(12).fill(0).map(() => ({ achats: 0, personnel: 0, impots: 0, servExt: 0, autres: 0 }));
+            let caMensuel = new Array(12).fill(0);
+
+            if (!state.ecritures || state.ecritures.length === 0) {
+                achats = 150000; personnel = 120000; impots = 32150; servExt = 50000; autres = 10000; ca = 458230;
+                const mAchats = [30, 40, 35, 50, 49, 60, 70, 91, 125, 110, 100, 120].map(x => x*1000); 
+                const mPers = [20, 20, 20, 22, 21, 25, 25, 25, 25, 26, 25, 28].map(x => x*1000);
+                const mImpots = [5, 5, 8, 5, 5, 10, 5, 5, 12, 5, 5, 15].map(x => x*1000);
+                const mServ = [10, 15, 12, 18, 15, 20, 15, 18, 22, 15, 18, 25].map(x => x*1000);
+                const mAutres = [5, 3, 4, 2, 5, 3, 5, 2, 5, 4, 3, 5].map(x => x*1000);
+                caMensuel = [31, 40, 28, 51, 42, 109, 100, 120, 135, 140, 125, 150].map(x => x*1000);
+
+                for(let i=0; i<12; i++){
+                    chargesMensuelles[i] = { achats: mAchats[i], personnel: mPers[i], impots: mImpots[i], servExt: mServ[i], autres: mAutres[i] };
+                }
+            } else {
+                state.ecritures.forEach(e => {
+                    if (state.currentEx && e.exerciseId !== state.currentEx.id) return;
+                    
+                    const mnt = (e.debit || 0) - (e.credit || 0);
+                    const caMnt = (e.credit || 0) - (e.debit || 0);
+                    const c = String(e.compte || '');
+                    const date = new Date(e.date);
+                    const month = isNaN(date.getMonth()) ? 0 : date.getMonth();
+
+                    let category = '';
+                    if (c.startsWith('60')) { achats += mnt; category = 'achats'; }
+                    else if (c.startsWith('64')) { personnel += mnt; category = 'personnel'; }
+                    else if (c.startsWith('66') || c.startsWith('69')) { impots += mnt; category = 'impots'; }
+                    else if (c.startsWith('61') || c.startsWith('62')) { servExt += mnt; category = 'servExt'; }
+                    else if (c.startsWith('6')) { autres += mnt; category = 'autres'; }
+                    else if (c.startsWith('70')) { ca += caMnt; caMensuel[month] += caMnt; }
+
+                    if (category) chargesMensuelles[month][category] += mnt;
+                });
+            }
+
+            const totalCharges = achats + personnel + impots + servExt + autres;
+            const resultat = ca - totalCharges;
+
+            // Mock N-1 data for variations
+            const caN1 = 410000, achatsN1 = 140000, persN1 = 110000, impotsN1 = 30000, servExtN1 = 45000, autresN1 = 8000;
+            const chargesN1 = achatsN1 + persN1 + impotsN1 + servExtN1 + autresN1;
+            const resultatN1 = caN1 - chargesN1;
+
+            if(document.getElementById('kpi-resultat')) {
+                document.getElementById('kpi-resultat').innerText = formatK(resultat);
+                updateVariation('var-resultat', resultat, resultatN1, false);
+                
+                document.getElementById('kpi-ca').innerText = formatK(ca);
+                updateVariation('var-ca', ca, caN1, false);
+                
+                document.getElementById('kpi-charges').innerText = formatK(totalCharges);
+                updateVariation('var-charges', totalCharges, chargesN1, true);
+
+                document.getElementById('kpi-achats').innerText = formatK(achats);
+                updateVariation('var-achats', achats, achatsN1, true);
+
+                document.getElementById('kpi-personnel').innerText = formatK(personnel);
+                updateVariation('var-personnel', personnel, persN1, true);
+
+                document.getElementById('kpi-impots').innerText = formatK(impots);
+                updateVariation('var-impots', impots, impotsN1, true);
+
+                document.getElementById('kpi-servext').innerText = formatK(servExt);
+                updateVariation('var-servext', servExt, servExtN1, true);
+            }
+
+            return { achats, personnel, impots, servExt, autres, totalCharges, ca, chargesMensuelles, caMensuel };
+        }
+
+        function initCharts() {
+            const data = calculateDashboard();
+            const isDark = document.documentElement.classList.contains('dark');
+            const colorText = isDark ? '#94A3B8' : '#475569';
+            const colorGrid = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+
+            const sAchats = data.chargesMensuelles.map(m => m.achats);
+            const sPers = data.chargesMensuelles.map(m => m.personnel);
+            const sImpots = data.chargesMensuelles.map(m => m.impots);
+            const sServ = data.chargesMensuelles.map(m => m.servExt);
+            const sAutres = data.chargesMensuelles.map(m => m.autres);
+            const sTotalCharges = data.chargesMensuelles.map(m => m.achats + m.personnel + m.impots + m.servExt + m.autres);
+
+            document.getElementById('chart-area').innerHTML = '';
+            new ApexCharts(document.getElementById('chart-area'), {
+                series: [{ name: 'CA', data: data.caMensuel }, { name: 'Charges', data: sTotalCharges }],
+                chart: { type: 'area', height: 300, toolbar: { show: false }, background: 'transparent', fontFamily: 'Inter' },
+                stroke: { curve: 'smooth', width: 3 }, colors: ['#6C63FF', '#FF6B6B'],
+                xaxis: { categories: ['Janv','Fév','Mars','Avr','Mai','Juin','Juil','Août','Sept','Oct','Nov','Déc'], labels: { style: { colors: colorText, fontWeight: 600 } } },
+                grid: { borderColor: colorGrid }, theme: { mode: isDark ? 'dark' : 'light' }, dataLabels: { enabled: false },
+                yaxis: { labels: { formatter: (val) => val ? formatK(val) : '0' } }
+            }).render();
+
+            document.getElementById('chart-donut').innerHTML = '';
+            new ApexCharts(document.getElementById('chart-donut'), {
+                series: [data.achats, data.personnel, data.impots, data.servExt, data.autres], 
+                chart: { type: 'donut', height: 300, background: 'transparent' },
+                labels: ['Achats', 'Personnel', 'Impôts', 'Serv. Extérieurs', 'Autres'],
+                colors: ['#6C63FF', '#00D4AA', '#FDCB6E', '#74B9FF', '#FF6B6B'],
+                plotOptions: { pie: { donut: { size: '55%', labels: { show: true, total: { show: true, label: 'TOTAL', color: colorText, fontSize: '10px', formatter: () => formatK(data.totalCharges) } } } } },
+                dataLabels: { enabled: true, formatter: (val) => val.toFixed(0) + '%' },
+                stroke: { show: false }, theme: { mode: isDark ? 'dark' : 'light' }, legend: { position: 'bottom', labels: { colors: colorText } }
+            }).render();
+
+            document.getElementById('chart-bar-5').innerHTML = '';
+            new ApexCharts(document.getElementById('chart-bar-5'), {
+                series: [
+                    { name: 'Achats', data: sAchats },
+                    { name: 'Personnel', data: sPers },
+                    { name: 'Impôts', data: sImpots },
+                    { name: 'Serv. Extérieurs', data: sServ },
+                    { name: 'Autres', data: sAutres }
+                ],
+                chart: { type: 'bar', height: 300, stacked: true, toolbar: { show: false }, background: 'transparent' },
+                plotOptions: { bar: { borderRadius: 10, columnWidth: '55%' } },
+                xaxis: { categories: ['Janv','Fév','Mars','Avr','Mai','Juin','Juil','Août','Sept','Oct','Nov','Déc'], labels: { style: { colors: colorText, fontWeight: 600 } } },
+                colors: ['#6C63FF', '#00D4AA', '#FDCB6E', '#74B9FF', '#FF6B6B'],
+                grid: { borderColor: colorGrid }, theme: { mode: isDark ? 'dark' : 'light' }, dataLabels: { enabled: false },
+                yaxis: { labels: { formatter: (val) => val ? formatK(val) : '0' } }
+            }).render();
+
+            // Mock N-1 logic for the comparison
+            const caN1 = 410000, achatsN1 = 140000, persN1 = 110000, impotsN1 = 30000, servExtN1 = 45000, autresN1 = 8000;
+
+            document.getElementById('chart-bar-comp').innerHTML = '';
+            new ApexCharts(document.getElementById('chart-bar-comp'), {
+                series: [
+                    { 
+                        name: '2025 (N)', 
+                        data: [
+                            { x: 'CA', y: data.ca, fillColor: '#00D4AA' },
+                            { x: 'Achats', y: data.achats, fillColor: '#FF6B6B' },
+                            { x: 'Personnel', y: data.personnel, fillColor: '#FF6B6B' },
+                            { x: 'Impôts', y: data.impots, fillColor: '#FF6B6B' },
+                            { x: 'Serv. Ext.', y: data.servExt, fillColor: '#FF6B6B' },
+                            { x: 'Autres', y: data.autres, fillColor: '#FF6B6B' }
+                        ]
+                    }, 
+                    { 
+                        name: '2024 (N-1)', 
+                        data: [
+                            { x: 'CA', y: caN1, fillColor: '#00D4AA55' },
+                            { x: 'Achats', y: achatsN1, fillColor: '#FF6B6B55' },
+                            { x: 'Personnel', y: persN1, fillColor: '#FF6B6B55' },
+                            { x: 'Impôts', y: impotsN1, fillColor: '#FF6B6B55' },
+                            { x: 'Serv. Ext.', y: servExtN1, fillColor: '#FF6B6B55' },
+                            { x: 'Autres', y: autresN1, fillColor: '#FF6B6B55' }
+                        ]
+                    }
+                ],
+                chart: { type: 'bar', height: 300, toolbar: { show: false }, background: 'transparent' },
+                plotOptions: { bar: { borderRadius: 4, columnWidth: '60%' } },
+                xaxis: { type: 'category', labels: { style: { colors: colorText, fontWeight: 600 } } },
+                colors: ['#FF6B6B', '#FF6B6B55'], // The legend will show red for 2025, faint red for 2024
+                grid: { borderColor: colorGrid }, theme: { mode: isDark ? 'dark' : 'light' }, dataLabels: { enabled: false },
+                yaxis: { labels: { formatter: (val) => val ? formatK(val) : '0' } }
+            }).render();
+        }
+
+        function updateDossierUI() {
+            const el = document.getElementById('current-societe-name');
+            if (state.societe.name) el.innerText = state.societe.name;
+            else el.innerText = 'Aucun';
+        }
+
+        function updateExerciseSelect() {
+            const select = document.getElementById('exercise-selector');
+            select.innerHTML = '<option value="">Exercice --</option>' + state.exercices.map(ex => `<option value="${ex.year}" ${state.currentEx?.id == ex.id ? 'selected' : ''}>${ex.year}</option>`).join('');
+        }
+
+        function changeExercise(year) { state.currentEx = state.exercices.find(ex => ex.year == year); initCharts(); }
+
+        window.onload = () => { syncTheme(); lucide.createIcons(); };
+    </script>
+</body>
+</html>

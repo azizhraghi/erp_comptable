@@ -1,0 +1,268 @@
+ETAT / LF;Code Rubrique;D‚signation Rubrique
+F6001;F60010004;Investissement recherche et developpement
+F6001;F60010005;Concess. marque,brevet,licence,marque
+F6001;F60010006;Logiciels
+F6001;F60010007;Fonds commercial
+F6001;F60010008;Droit au bail
+F6001;F60010009;Autres Immobilisations Incorporelles
+F6001;F60010010;Immobilisations Incorporelles en cours
+F6001;F60010011;Av. et Ac. Verses/Cmde.Immob.Incorp.
+F6001;F60010013;Terrains
+F6001;F60010014;Constructions
+F6001;F60010015;Inst. Tech., materiel et outillages Industriels
+F6001;F60010016;Materiel de transport 
+F6001;F60010017;Autres Immobilisations Corporelles 
+F6001;F60010018;Immob. Corporelles en cours
+F6001;F60010019;Av. et Ac. Verses/Commande Immob.Corp.
+F6001;F60010020;Immob. a statut juridique particulier
+F6001;F60010022;Actions
+F6001;F60010023;Autres creances rattach. a des participat.
+F6001;F60010024;Creances rattach. a des stes en participat.
+F6001;F60010025;Vers.a eff./titre de participation non liberes
+F6001;F60010026;Titres immobilises (droit de propriete)
+F6001;F60010027;Titres immobilises (droit de creance)
+F6001;F60010028;Depots et cautionnements verses
+F6001;F60010029;Autres creances immobilisees
+F6001;F60010030;Vers.a eff./Titres immobilises non liberes
+F6001;F60010032;Frais preliminaires
+F6001;F60010033;Charges a repartir
+F6001;F60010034;Frais d'emission et primes de Remb. Empts
+F6001;F60010035;ecarts de conversion
+F6001;F60010038;Stocks Matieres Premieres et Fournit. Liees
+F6001;F60010039;Stocks Autres Approvisionnements
+F6001;F60010040;Stocks En-cours de production de biens
+F6001;F60010041;Stocks En-cours de production services
+F6001;F60010042;Stocks de produits
+F6001;F60010043;Stocks de marchandises
+F6001;F60010045;Clients  et  comptes rattaches
+F6001;F60010046;Clients - effets a recevoir
+F6001;F60010047;Clients douteux ou litigieux
+F6001;F60010048;Creances/travaux non encore facturables
+F6001;F60010049;Clt-pdts non encore factures (pdt a recev.)
+F6001;F60010051;Fournisseurs debiteurs
+F6001;F60010052;Personnel et comptes rattaches
+F6001;F60010053;etat et collectivites publiques
+F6001;F60010054;Societes du groupe  et  associes
+F6001;F60010055;Debiteurs divers et Crediteurs divers
+F6001;F60010056;Comptes transitoires ou d'attente
+F6001;F60010057;Comptes de regularisation
+F6001;F60010058;Prov. / deprec. comptes debiteurs divers
+F6001;F60010060;Prets et autres creances Fin. courants
+F6001;F60010061;Placements courants
+F6001;F60010062;Regies d'avances et accreditifs
+F6001;F60010063;Prov. / deprec. des comptes financiers
+F6001;F60010065;Banques, etabl. Financiers et assimiles
+F6001;F60010066;Caisse
+F6001;F60010067;Autres Postes des Actifs du Bilan
+F6002;F60020002;Capital social
+F6002;F60020003;R‚serves
+F6002;F60020004;Autres capitaux propres
+F6002;F60020005;R‚sultats report‚s
+F6002;F60020007;R‚sultat de l'exercice
+F6002;F60020011;Emprunts obligataires (assortis de s–ret‚s)
+F6002;F60020012;Empts auprŠs d'‚tab.Fin. (assortis de s–ret‚s)
+F6002;F60020013;Empts auprŠs d'‚tab.Fin. (assorti de s–ret‚s)
+F6002;F60020014;Empts et dettes assorties de condit. particuli‚res
+F6002;F60020015;Emprunts non assortis de s–ret‚s
+F6002;F60020016;Dettes rattach‚es … des participations
+F6002;F60020017;D‚p“ts  et  cautionnements re‡us
+F6002;F60020018;Autres emprunts et dettes
+F6002;F60020020;Ecarts de conversion
+F6002;F60020021;Autres passifs financiers
+F6002;F60020023;Provisions pour risques
+F6002;F60020024;Prov.pour charges … r‚partir/plusieurs exercices
+F6002;F60020025;Prov.pour retraites et obligations similaires
+F6002;F60020026;Provisions d'origine r‚glementaire
+F6002;F60020027;Provisions pour imp‚ts
+F6002;F60020028;Prov.pour renouvellement des immobilisations
+F6002;F60020029;Provisions pour amortissement
+F6002;F60020030;Autres provisions pour charges
+F6002;F60020033;Fournisseurs d'exploitation
+F6002;F60020034;Fournisseurs d'exploitation - effets … payer
+F6002;F60020035;Fournisseurs d'immobilisations
+F6002;F60020036;Fournisseurs d'immobilisations - effets … payer
+F6002;F60020037;Fournisseurs - factures non parvenues
+F6002;F60020039;Clients cr‚diteurs
+F6002;F60020040;Personnel & Comptes rattach‚s
+F6002;F60020041;Etat et collectivit‚s publiques
+F6002;F60020042;Soci‚t‚s du groupe  et  associ‚s
+F6002;F60020043;D‚biteurs divers et Cr‚diteurs divers
+F6002;F60020044;Comptes transitoires ou d'attente
+F6002;F60020045;Comptes de r‚gularisation
+F6002;F60020046;Provisions courantes pour risques et charges
+F6002;F60020048;Emprunts et autres dettes financi‚res courants
+F6002;F60020049;Emprunts ‚chus et impay‚s
+F6002;F60020050;Int‚r‚ts courus
+F6002;F60020051;Banques, ‚tablissements financiers et assimil‚s
+F6002;F60020052;Autres Postes des Capitaux Propres et Passifs du Bilan
+F6003;F60030004;Ventes de Marchandises
+F6003;F60030005;Rabais, Remises et Ristournes (3R) accord‚s/ventes de Marchandises
+F6003;F60030007;Ventes de Produits Finis
+F6003;F60030008;Ventes de Produits Interm‚diaires
+F6003;F60030009;Ventes de Produits R‚siduels
+F6003;F60030010;Ventes des Travaux
+F6003;F60030011;Ventes des Etudes et Prestations de Services
+F6003;F60030012;Produits des Activit‚s Annexes
+F6003;F60030013;Rabais, Remises et Ristournes (3R) accord‚s/ventes de la Production
+F6003;F60030014;Production immobilis‚e
+F6003;F60030016;Produits divers ordin.(sans gains/cession immo.)
+F6003;F60030017;Subventions d'exploitation et d'‚quilibre
+F6003;F60030018;Reprises sur amortissements et provisions
+F6003;F60030019;Transferts de charges
+F6003;F60030022;Variations des en-cours de production biens
+F6003;F60030023;Variation des en-cours de production services
+F6003;F60030024;Variation des stocks de produits
+F6003;F60030026;Achats de marchandises
+F6003;F60030027;Rabais, Remises et Ristournes (3R) obtenus sur achats marchandises
+F6003;F60030028;Variation des stocks de marchandises
+F6003;F60030030;Achats stock‚s-Mat.Premi‚res et Fournit. li‚es
+F6003;F60030031;Achats stock‚s - Autres approvisionnements
+F6003;F60030032;Rabais, Remises et Ristournes (3R) obtenus/achats Mat.Premi‚res et Fournit. li‚es
+F6003;F60030033;Rabais, Remises et Ristournes (3R) obtenus/achats autres approvisionnements
+F6003;F60030034;Var.de stocks Mat.Premi‚res et Fournitures
+F6003;F60030035;Var.de stocks des autres approvisionnements
+F6003;F60030037;Salaires et compl‚ments de salaires
+F6003;F60030038;Appointements et compl‚ments d'appoint.
+F6003;F60030039;Indemnit‚s repr‚sentatives de frais
+F6003;F60030040;Commissions au personnel
+F6003;F60030041;R‚mun.des administrateurs, g‚rants et associ‚s
+F6003;F60030042;Ch.connexes sal., appoint., comm. et r‚mun.
+F6003;F60030043;Charges sociales l‚gales
+F6003;F60030044;Ch.PL/Modif.Compt.‚ imputer au R‚slt de l'exerc.ou Activ.abandonn‚e
+F6003;F60030045;Autres charges de PL et autres charges sociales
+F6003;F60030047;Dot.amort. et prov.-Ch.ord.(autres que Fin.)
+F6003;F60030048;Dot. aux r‚sorptions des charges report‚es
+F6003;F60030049;Dot. Prov. Risques et Charges d'exploitation
+F6003;F60030050;Dot.Prov.d‚pr‚c.immob. Incorp. et Corporelles
+F6003;F60030051;Dot.Prov.d‚pr‚c.actifs courants (autres que Val.Mobil.de Placem. et ‚quiv. de liquidit‚s)
+F6003;F60030052;Dot.aux amort. et prov./Modif.Compt. ‚ imputer au R‚slt de l'exerc. ou Activ. abandonn‚e
+F6003;F60030054;Achats d‚‚tudes et prestations services (y compris achat de sous-traitance production)
+F6003;F60030055;Achats de mat‚riel, ‚quipements et travaux
+F6003;F60030056;Achats non stock‚s non rattach‚s
+F6003;F60030057;Services ext‚rieurs
+F6003;F60030058;Autres services ext‚rieurs
+F6003;F60030059;Charges diverses ordinaires
+F6003;F60030060;Imp‚ts, taxes et versements assimil‚s
+F6003;F60030063;Charges financi‚res
+F6003;F60030064;Dot.amort. et provisions - charges financi‚res
+F6003;F60030066;Produits financiers
+F6003;F60030067;Reprise/prov.(‚ inscrire dans les pdts financ.)
+F6003;F60030068;Transferts de charges financi‚res
+F6003;F60030070;Produits nets sur cessions d'immobilisations
+F6003;F60030071;Autres gains/‚l‚m.non r‚currents ou except.
+F6003;F60030073;Charges Nettes/cession immobilisations
+F6003;F60030074;Autres pertes/‚l‚m.non r‚currents ou except.
+F6003;F60030075;R‚duction de valeur
+F6003;F60030078;Imp‚ts/B‚n‚fices calcul‚s/R‚sultat/activ./ ord.
+F6003;F60030079;Autres imp‚ts/B‚n‚fice (r‚gimes particuliers)
+F6003;F60030082;Gains extraordinaires
+F6003;F60030083;Pertes extraordinaires
+F6003;F60030086;Effet positif/Modif.C.affectant R‚slts Report‚s
+F6003;F60030087;Effet n‚gatif/Modif.C.affectant R‚slts Report‚s
+F6003;F60030088;Autres Postes des Comptes de R‚sultat
+F6004;F60040002;R‚sultat net
+F6004;F60040003;Ajustement amortissement et provision
+F6004;F60040004;Variation des stocks
+F6004;F60040005;Variation des cr‚ances
+F6004;F60040006;Variation des autres actifs
+F6004;F60040007;Variation des fournisseurs et autres dettes
+F6004;F60040008;Ajustement plus au moins values de cession
+F6004;F60040009;Ajustement transfert des charges
+F6004;F60040010;Autres(Flux de tr‚sorerie provenant de(affect‚s …) l'exploitation)
+F6004;F60040012;D‚caissements provenant de l'acquisition d'immobilisations corporelles et incorporelles
+F6004;F60040013;Encaissements provenant de l'acquisition d'immobilisations corporelles et incorporelles
+F6004;F60040014;D‚caissements provenant de l'acquisition d'immobilisations financiŠres
+F6004;F60040015;Encaissements provenant de l'acquisition d'immobilisations financiŠres
+F6004;F60040016;Autres(Flux de Tr‚sorerie provenant de (affect‚s aux) activit‚s d'investissement
+F6004;F60040018;Encaissement suite … l'‚mission d'actions
+F6004;F60040019;Dividendes et autres distribution
+F6004;F60040020;Encaissements provenant des emprunts
+F6004;F60040021;Remboursement d'emprunts
+F6004;F60040022;Autres (Flux de Tr‚sorerie provenant des (affect‚s aux) activit‚s de financement)
+F6004;F60040023;Incidences des variations des taux de change/les liquidit‚s  ‚quiv
+F6004;F60040024;Autres Postes des Flux de Tr‚sorerie
+F6004;F60040026;Tr‚sorerie au d‚but de l'exercice
+F6005;F60050004;R‚num‚rations de l'exploitant individuel, ou des associ‚s en nom des soci‚t‚s de personnes et assimil‚s
+F6005;F60050005;Charges relatifs aux ‚tablissements situ‚s … l'‚tranger
+F6005;F60050006;Quote-part des frais de siŠge imputable aux ‚tablissements situ‚s … l'‚tranger ( frais du siŠge x (chiffre d'affaires de l'‚tablissement stable /chiffre d'affaires total))
+F6005;F60050007;Charges relatives aux r‚sidences secondaires, avions et bateaux de plaisance ne faisant pas l'objet de l'exploitation
+F6005;F60050008;Charges relatives aux v‚hicules de tourismes d'une puissance sup‚rieur … 9 CV ne faisant pas l'objet de l'exploitation
+F6005;F60050009;Cadeaux et frais de r‚ception non d‚ductibles
+F6005;F60050010;Cadeaux et frais de r‚ception exc‚dentaires
+F6005;F60050011;Commissions, courtages, ristournes commerciales ou autres, vacations, honoraires er r‚mun‚rations de performance non d‚clar‚s dans la d‚claration de l'employeur
+F6005;F60050012;Dons et subventions non d‚ductibles
+F6005;F60050013;Dons et subventions exc‚dentaires
+F6005;F60050014;Abandon de cr‚ances non d‚ductibles
+F6005;F60050015;Pertes de change non r‚alis‚es
+F6005;F60050016;Gains de change non r‚alis‚s ant‚rieurement non impos‚s
+F6005;F60050017;Int‚rˆts servis … l'exploitant ou aux associ‚s des soci‚t‚s de personnes et assimil‚s
+F6005;F60050018;R‚mun‚ration exc‚dentaires des titres participatifs et des comptes courants associ‚s
+F6005;F60050019;Charges d'une valeur sup‚rieure ou ‚gale … 5.000 dinars pay‚e en espŠces
+F6005;F60050020;Moins values de cession des titres des organismes de placement collectif en valeurs mobiliŠres dans la limite des dividendes r‚alis‚s
+F6005;F60050021;Imp“ts directs support‚s aux lieu et place d'autrui
+F6005;F60050022;Taxe de voyages ()
+F6005;F60050023;Transactions, amendes, confiscations et p‚nalit‚s non d‚ductibles
+F6005;F60050024;D‚penses exc‚dentaires engag‚es  pour la r‚alisation des op‚rations d'essaimage
+F6005;F60050026;Amort. Non d‚ductibles relatifs aux ‚tablissements situ‚s … l'‚tranger
+F6005;F60050027;Amortissements non d‚ductibles relatifs aux r‚sidences secondaires, avions et bateaux de plaisance ne faisant pas l'objet de l'exploitation
+F6005;F60050028;Amortissements non d‚ductibles relatifs aux v‚hicules de tourisme d'une puissance fiscale sup‚rieure … 9 CV ne faisant pas l'objet de l'exploitation
+F6005;F60050029;Amort. Non d‚ductibles relatifs aux terrains et fonds de commerce
+F6005;F60050030;Amort. Non d‚ductibles relatifs aux terrains et fonds de commerce actifs d'une valeur sup‚rieure ou ‚gale … 5000 DT pay‚e en espŠces
+F6005;F60050031;Partie des amort. Ayant d‚pass‚ la limite autoris‚e par la l‚gislation en vigueur
+F6005;F60050032;Partie des amortissements correspondant … une p‚riode inf‚rieure … la p‚riode autoris‚e par la l‚gislation en vigueur, pour les immobilisations acquises dans le cadre d'un contrat de leasing ou d'ijara
+F6005;F60050034;Provisions non d‚ductibles
+F6005;F60050035;Provisions d‚ductibles pour cr‚ances douteuses (autres que celles constitu‚es par les ‚tablissements de cr‚dit)
+F6005;F60050036;Provisions d‚ductibles pour d‚pr‚ciation des actions cot‚es en bourse autres que celles constitu‚es par les soci‚t‚s d'investissement … capital risque)
+F6005;F60050037;provisions d‚ductibles pour d‚pr‚ciation des stocks destin‚s … la vente
+F6005;F60050038;Provisions d‚ductibles pour risque d'exigibilit‚ des engagements techniques (compagnie d'assurance)
+F6005;F60050040;Int‚rˆts non d‚compt‚s relatifs aux comptes courants associ‚s et aux cr‚ances non commerciales
+F6005;F60050041;Int‚rˆts insuffisamment d‚compt‚s relatifs aux comptes courants associ‚s et aux cr‚ance non commerciales
+F6005;F60050042;Plus value de cession des actifs non comptabilis‚e
+F6005;F60050043;Plus value de cession des actifs insuffisammen comptabilis‚e
+F6005;F60050044;Autres r‚int‚grations
+F6005;F60050046;Produits r‚alis‚s par les ‚tablissements situ‚s … l'‚tranger
+F6005;F60050047;Reprise sur provisions r‚int‚gr‚es au r‚sultat fiscal de l'ann‚e de leur constitution
+F6005;F60050048;Amortissements exc‚dentaires r‚int‚gr‚s aux r‚sultats des ann‚es ant‚rieures
+F6005;F60050049;Gains de change r‚int‚gr‚s aux r‚sultats des ann‚es ant‚rieures
+F6005;F60050050;Gains de change non r‚alis‚s
+F6005;F60050051;Pertes de change ant‚rieurement constat‚es
+F6005;F60050052;50% des salaires servis aux demandeurs d'emploi recrut‚s pour la premiŠre fois
+F6005;F60050053;Autres d‚ductions 
+F6005;F60050057;Provisions pour cr‚ances douteuses
+F6005;F60050058;Provisions pour d‚pr‚ciation des stocks destin‚s … la vente
+F6005;F60050059;Prov. pour d‚pr‚ciation de la valeur des actions c“t‚es en bourse
+F6005;F60050060;Provø pour risuqes d'ex‚gibilit‚ des engagements techniques(companies d'assurances)
+F6005;F60050062;D‚duction de la moins value provenant de la lev‚e de l'option par les salari‚s de souscription au capital des soci‚t‚s ou d'acquisition de leurs actions ou parts sociales dans la limite de 5% du r‚sultat fiscal aprŠs d‚duction des provisions (Soci‚t‚ de s
+F6005;F60050064;R‚int‚gration des amortissements d l'exercice
+F6005;F60050065;D‚duction des d‚ficits report‚s
+F6005;F60050066;D‚duction des amortissements de l'exercice
+F6005;F60050067;D‚duction des amortissements diff‚r‚s en p‚riode d‚ficitaire
+F6005;F60050069;Dividendes et assimil‚s distribu‚s par des soci‚t‚s ‚tablis en Tunisie
+F6005;F60050070;Plus-value de cession des actions dans le cadre d'une op‚ration d'introduction en bourse
+F6005;F60050071;Plus-value de cession des actions cot‚es … la bourse des valeurs mobiliŠres de Tunis  c‚d‚es aprŠs l'expiration de l'ann‚e suivant celle de leur acquisition ou de leursouscription
+F6005;F60050072;Plus-value de cession des actions et des parts sociales r‚alis‚e par l'interm‚diaire des soci‚t‚s d'investissement … capital rique (totalement ou dans la limite de 50%)
+F6005;F60050073;Plus-value de cession des parts des fonds communs de placement … risque (totalement ou dans la limite de 50%)
+F6005;F60050074;Plus-value de cession des parts des fonds d'amor‡age
+F6005;F60050075;Plus-value d'apport dans le cadre d'une op‚ration de fusion ou deission totale de soci‚t‚s, ou d'une op‚ration d'apport des entreprises individuelles dans le capital d'une soci‚t‚ (au niveau de la soci‚t‚ absorb‚e,ind‚e ou de la soci‚t‚ ayant fait l'appor
+F6005;F60050076;Plus-value provenant de l'apport d'actions ou de parts sociales au capital de la soci‚t‚ mŠre ou de la soci‚t‚ holding dans le cadre des op‚rations de restructuration des entreprises ayant pour objet l'introduction de la soci‚t‚ mŠre ou de la soci‚t‚ hold
+F6005;F60050077;Plus-value provenant de la cession totale ou partielle des ‚l‚ments de l'actif constituant une unit‚ ind‚pendante et autonome suite au d‚part … la retraite du propri‚taire de l'entreprise ou … cause de l'incapacit‚ de poursuivre la gestion de l'entreprise
+F6005;F60050078;Plus-value provenant de la cession des entreprises en difficult‚s ‚conomiques dans le cadre du rŠglement judiciare pr‚vu par la loi relative au redressemen des entreprises
+F6005;F60050079;int‚rˆts des d‚p“ts et de titres en devises ou en dinars convertibles
+F6005;F60050082;Loyers 
+F6005;F60050083;Revenus de capitaux mobiliers
+F6005;F60050084;Dividendes de source ‚trangŠre
+F6005;F60050085;Autres revenus accessoires
+F6005;F60050087;Plus value de cession des immeubles bƒtis et non bƒtis et des fonds de commerce
+F6005;F60050088;Gains de change non rattach‚s … l'activit‚ principale
+F6005;F60050089;Plus value provenant de la cession des titres
+F6005;F60050090;Autres gains exceptionnels
+F6005;F60050093;Au titre de l'exportation
+F6005;F60050094;Au titre du d‚veloppement r‚gional
+F6005;F60050095;Au titre du d‚veloppement agricole
+F6005;F60050096;Autres d‚ductions
+F6005;F60050099;D‚ductions des revenus r‚investis
+F6005;F60050100;R‚int‚gration du cinquiŠme de la plus-value provenant d?op‚rations de fusion,ission ou d?op‚rations d?apport (dans la limite de 50%) pour la soci‚t‚ absorbante ou la soci‚t‚ b‚n‚ficiaire de laission ou de l?apport d?entreprise individuelle.
+F6005;F60050103;R‚int‚gration des amortissements de l'exercice
+F6005;F60050104;D‚duction des d‚ficits report‚s
+F6005;F60050105;D‚duction des amortissements de l'exrcice
+F6005;F60050106;D‚duction des amortissements dif‚fr‚s en p‚riodes d‚ficitaires

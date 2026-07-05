@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COMPTAEXPERT V09 — ERP Comptable Tunisien</title>
+    
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'bg-base': 'var(--bg-base)',
+                        'bg-surface': 'var(--bg-surface)',
+                        'bg-card': 'var(--bg-card)',
+                        'primary': '#6C63FF',
+                        'success': '#00D4AA',
+                        'warning': '#FDCB6E',
+                        'danger': '#FF6B6B',
+                        'info': '#74B9FF',
+                        'text-main': 'var(--text-main)',
+                        'text-dim': 'var(--text-dim)',
+                        'border-dim': 'var(--border-dim)',
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --bg-base: #0D0F1A;
+            --bg-surface: #13162A;
+            --bg-card: #181B2E;
+            --text-main: #E8EAFF;
+            --text-dim: #8892B0;
+            --border-dim: rgba(255, 255, 255, 0.05);
+        }
+
+        .light {
+            --bg-base: #F8FAFC;
+            --bg-surface: #FFFFFF;
+            --bg-card: #FFFFFF;
+            --text-main: #0F172A;
+            --text-dim: #64748B;
+            --border-dim: rgba(0, 0, 0, 0.08);
+        }
+
+        body { background-color: var(--bg-base); color: var(--text-main); transition: all 0.3s ease; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #6C63FF44; border-radius: 10px; }
+
+        .kpi-card {
+            height: 120px;
+            padding: 1.25rem;
+            border-radius: 1rem;
+            border: 1px solid var(--border-dim);
+            background: var(--bg-card);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.2s ease;
+        }
+        .kpi-card:hover { transform: translateY(-2px); border-color: #6C63FF; }
+        
+        .sidebar-link.active { background: rgba(108, 99, 255, 0.1); color: #6C63FF; border-right: 3px solid #6C63FF; font-weight: 600; }
+        .glass { background: rgba(var(--bg-card-rgb), 0.8); backdrop-filter: blur(12px); border: 1px solid var(--border-dim); }
+        
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-up { animation: fadeInUp 0.4s ease-out forwards; }
+
+        .modal-overlay { background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); }
+        .input-base { @apply bg-bg-surface border border-border-dim rounded-xl px-4 py-3 text-sm focus:border-primary focus:outline-none w-full; }
+        .btn-primary { @apply bg-primary text-white font-bold py-3 px-6 rounded-xl hover:bg-[#9C8FFF] transition-all shadow-lg flex items-center justify-center gap-2; }
+    </style>
+</head>
+<body class="font-sans antialiased overflow-hidden">
+
+    <!-- LOGIN -->
+    <div id="login-screen" class="fixed inset-0 z-[100] flex items-center justify-center bg-[#0D0F1A]">
+        <div class="w-full max-w-md p-8 bg-[#181B2E] rounded-2xl border border-white/5 shadow-2xl animate-fade-up text-center">
+            <div class="w-16 h-16 bg-[#6C63FF] rounded-2xl flex items-center justify-center mx-auto mb-4"><i data-lucide="shield-check" class="w-8 h-8 text-white"></i></div>
+            <h1 class="text-2xl font-bold mb-8">COMPTAEXPERT V09</h1>
+            <form id="login-form" class="space-y-5 text-left">
+                <input type="text" id="login-username" value="admin" class="input-base text-white">
+                <button type="submit" class="btn-primary w-full">Se Connecter</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- DOSSIER SETUP MODAL -->
+    <div id="setup-modal" class="hidden fixed inset-0 z-[250] flex items-center justify-center p-4 modal-overlay">
+        <div class="bg-bg-card w-full max-w-lg rounded-2xl border border-border-dim p-8 shadow-2xl">
+            <h3 class="text-2xl font-bold mb-6">Initialisation du Dossier</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-text-dim uppercase mb-2">Raison Sociale</label>
+                    <input type="text" id="setup-name" placeholder="SOCIETE EXEMPLE SARL" class="input-base">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-text-dim uppercase mb-2">Matricule Fiscal</label>
+                    <input type="text" id="setup-mf" placeholder="1234567/A/M/000" class="input-base">
+                </div>
+                <button onclick="initDossier()" class="btn-primary w-full mt-4">Créer le dossier</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EXIT MODAL -->
+    <div id="exit-modal" class="hidden fixed inset-0 z-[200] flex items-center justify-center p-4 modal-overlay">
+        <div class="bg-bg-card w-full max-w-md rounded-2xl border border-border-dim p-8 shadow-2xl">
+            <h3 class="text-xl font-bold mb-4">Sauvegarder ?</h3>
+            <div class="space-y-3">
+                <button onclick="exportData(true)" class="btn-primary w-full">Sauvegarder & Quitter</button>
+                <button onclick="confirmExit()" class="w-full bg-white/5 py-3 rounded-xl font-bold text-danger hover:bg-danger hover:text-white transition-all">Ignorer</button>
+                <button onclick="closeModal('exit-modal')" class="w-full py-2 text-text-dim text-xs">Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP SHELL -->
+    <div id="app-shell" class="hidden h-screen flex overflow-hidden">
+        
+        <!-- SIDEBAR -->
+        <aside class="w-64 glass flex-shrink-0 flex flex-col border-r border-border-dim">
+            <div class="p-6 flex items-center gap-3">
+                <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg"><i data-lucide="box" class="w-6 h-6 text-white"></i></div>
+                <span class="font-bold text-lg">ComptaExpert</span>
+            </div>
+            
+            <nav class="flex-1 px-3 space-y-1 overflow-y-auto no-scrollbar">
+                <div class="text-[10px] font-bold text-text-dim uppercase tracking-widest px-3 py-4">Principal</div>
+                <a href="#" onclick="showPage('dashboard')" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all"><i data-lucide="layout-dashboard" class="w-5 h-5"></i><span>Tableau de bord</span></a>
+                
+                <div class="text-[10px] font-bold text-text-dim uppercase tracking-widest px-3 py-4 mt-2">Saisie & Analyse</div>
+                <a href="#" onclick="showPage('saisie')" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all"><i data-lucide="file-input" class="w-5 h-5"></i><span>Saisie/Import Écritures</span></a>
+                <a href="#" onclick="showPage('lettrage')" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all"><i data-lucide="link" class="w-5 h-5"></i><span>Revue / Lettrage</span></a>
+                <a href="#" onclick="showPage('controles')" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all"><i data-lucide="check-square" class="w-5 h-5"></i><span>Contrôles Cycle</span></a>
+                <a href="#" onclick="showPage('editions')" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all"><i data-lucide="printer" class="w-5 h-5"></i><span>Éditions (BG/GL)</span></a>
+
+                <div class="text-[10px] font-bold text-text-dim uppercase tracking-widest px-3 py-4 mt-2">États</div>
+                <a href="#" onclick="showPage('etats')" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all"><i data-lucide="bar-chart-big" class="w-5 h-5"></i><span>États Financiers</span></a>
+                <a href="#" onclick="showPage('liasse')" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all"><i data-lucide="landmark" class="w-5 h-5"></i><span>Liasse Fiscale</span></a>
+
+                <div class="text-[10px] font-bold text-text-dim uppercase tracking-widest px-3 py-4 mt-2">Système</div>
+                <a href="#" id="link-settings" onclick="showPage('settings')" class="sidebar-link hidden flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all"><i data-lucide="settings" class="w-5 h-5"></i><span>Paramétrage</span></a>
+                <a href="#" onclick="showPage('profile')" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all"><i data-lucide="user-cog" class="w-5 h-5"></i><span>Mon Profil</span></a>
+            </nav>
+
+            <div class="p-4 border-t border-border-dim">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30"><span id="user-initials" class="text-xs font-bold text-primary">--</span></div>
+                    <div class="flex-1 min-w-0"><p id="user-display-name" class="text-sm font-medium truncate">Nom</p><p id="user-display-role" class="text-[10px] text-text-dim truncate">Rôle</p></div>
+                    <button onclick="openModal('exit-modal')" class="text-text-dim hover:text-danger"><i data-lucide="log-out" class="w-5 h-5"></i></button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN -->
+        <main class="flex-1 flex flex-col min-w-0">
+            <header class="h-16 glass flex items-center justify-between px-8 z-10 border-b border-border-dim">
+                <div class="flex items-center gap-4">
+                    <h2 id="page-title" class="text-xl font-semibold">Tableau de bord</h2>
+                    <div id="dossier-drop-zone" class="flex items-center gap-2 px-3 py-1.5 rounded-full border border-danger/30 bg-danger/5 text-danger transition-all cursor-pointer">
+                        <span id="dossier-status-dot" class="w-2 h-2 rounded-full bg-danger animate-pulse"></span>
+                        <span class="text-[10px] font-bold uppercase uppercase">Dossier: <span id="current-societe-name">Aucun</span></span>
+                    </div>
+                    <select id="exercise-selector" onchange="changeExercise(this.value)" class="bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-full text-[10px] font-bold text-primary uppercase focus:outline-none cursor-pointer">
+                        <option value="">Exercice --</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button onclick="exportData()" class="flex items-center gap-2 bg-success/10 text-success border border-success/30 px-4 py-2 rounded-lg text-xs font-bold hover:bg-success hover:text-white transition-all"><i data-lucide="download" class="w-4 h-4"></i>Sauvegarder</button>
+                    <button onclick="toggleTheme()" class="w-10 h-10 rounded-lg glass flex items-center justify-center hover:bg-white/5 text-text-dim transition-all"><i data-lucide="moon" id="theme-icon" class="w-5 h-5"></i></button>
+                </div>
+            </header>
+
+            <div id="page-container" class="flex-1 overflow-y-auto p-6 no-scrollbar">
+                
+                <!-- DASHBOARD -->
+                <div id="page-dashboard" class="animate-fade-up space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-7 gap-4" id="kpi-row-1">
+                        <div class="kpi-card"><i data-lucide="wallet" class="w-5 h-5 text-success"></i><p class="text-[10px] font-bold text-text-dim uppercase">Résultat</p><p class="text-2xl font-bold">82,450</p></div>
+                        <div class="kpi-card"><i data-lucide="trending-up" class="w-5 h-5 text-primary"></i><p class="text-[10px] font-bold text-text-dim uppercase">CA (70x)</p><p class="text-2xl font-bold">458,230</p></div>
+                        <div class="kpi-card"><i data-lucide="receipt" class="w-5 h-5 text-danger"></i><p class="text-[10px] font-bold text-text-dim uppercase">Charges (6x)</p><p class="text-2xl font-bold">362,150</p></div>
+                        <div class="kpi-card"><i data-lucide="banknote" class="w-5 h-5 text-secondary"></i><p class="text-[10px] font-bold text-text-dim uppercase">Trésorerie (5x)</p><p class="text-2xl font-bold">126,340</p></div>
+                        <div class="kpi-card"><i data-lucide="users" class="w-5 h-5 text-info"></i><p class="text-[10px] font-bold text-text-dim uppercase">Clients</p><div><p class="text-2xl font-bold">87,350</p><p class="text-[10px] text-text-dim">Délai : 42j</p></div></div>
+                        <div class="kpi-card"><i data-lucide="truck" class="w-5 h-5 text-[#9C8FFF]"></i><p class="text-[10px] font-bold text-text-dim uppercase">Fournisseurs</p><div><p class="text-2xl font-bold">64,120</p><p class="text-[10px] text-text-dim">Délai : 38j</p></div></div>
+                        <div class="kpi-card"><i data-lucide="shield-alert" class="w-5 h-5 text-warning"></i><p class="text-[10px] font-bold text-text-dim uppercase">Alertes</p><p class="text-2xl font-bold">8</p></div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                        <div class="kpi-card"><i data-lucide="package" class="w-5 h-5 text-warning"></i><p class="text-[10px] text-text-dim font-bold uppercase">Stock (3x)</p><p class="text-xl font-bold">74,520</p></div>
+                        <div class="kpi-card"><i data-lucide="building-2" class="w-5 h-5 text-danger"></i><p class="text-[10px] text-text-dim font-bold uppercase">Emprunt (16x+50x)</p><p class="text-xl font-bold">215,800</p></div>
+                        <div class="kpi-card"><i data-lucide="shopping-cart" class="w-5 h-5 text-primary"></i><p class="text-[9px] text-text-dim font-bold uppercase">Achats 60x</p><p class="text-sm font-bold">185,420</p></div>
+                        <div class="kpi-card"><i data-lucide="users" class="w-5 h-5 text-success"></i><p class="text-[9px] text-text-dim font-bold uppercase">Personnel 64x</p><p class="text-sm font-bold">142,800</p></div>
+                        <div class="kpi-card"><i data-lucide="landmark" class="w-5 h-5 text-warning"></i><p class="text-[9px] text-text-dim font-bold uppercase">Impôts 66/69</p><p class="text-sm font-bold">38,950</p></div>
+                        <div class="kpi-card"><i data-lucide="external-link" class="w-5 h-5 text-info"></i><p class="text-[9px] text-text-dim font-bold uppercase">Serv. Ext. 61/62</p><p class="text-sm font-bold">54,200</p></div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-bg-card p-6 rounded-2xl border border-border-dim"><h3 class="text-sm font-bold mb-6 flex items-center gap-2"><i data-lucide="line-chart" class="w-4 h-4 text-primary"></i> Évolution (CA vs Charges)</h3><div id="chart-area" style="height: 300px;"></div></div>
+                        <div class="bg-bg-card p-6 rounded-2xl border border-border-dim"><h3 class="text-sm font-bold mb-6 flex items-center gap-2"><i data-lucide="pie-chart" class="w-4 h-4 text-success"></i> Analyse Charges</h3><div id="chart-donut" style="height: 300px;"></div></div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-bg-card p-6 rounded-2xl border border-border-dim"><h3 class="text-sm font-bold mb-6 flex items-center gap-2"><i data-lucide="bar-chart-3" class="w-4 h-4 text-warning"></i> Répartition Charges par mois</h3><div id="chart-bar-monthly" style="height: 300px;"></div></div>
+                        <div class="bg-bg-card p-6 rounded-2xl border border-border-dim"><h3 class="text-sm font-bold mb-6 flex items-center gap-2"><i data-lucide="git-compare" class="w-4 h-4 text-danger"></i> Comparatif Charges 2025 vs 2024</h3><div id="chart-bar-compare" style="height: 300px;"></div></div>
+                    </div>
+                </div>
+
+                <!-- SETTINGS (REFACTORED) -->
+                <div id="page-settings" class="hidden space-y-8 animate-fade-up pb-20">
+                    <h3 class="text-2xl font-bold">Paramétrage Global</h3>
+                    
+                    <!-- FICHE DOSSIER -->
+                    <div class="bg-bg-card p-6 rounded-2xl border border-border-dim">
+                        <h4 class="font-bold text-sm mb-4">Fiche du Dossier</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <input type="text" id="set-societe-name" placeholder="Raison Sociale" class="input-base" onchange="markModified()">
+                            <input type="text" id="set-societe-mf" placeholder="Matricule Fiscal" class="input-base" onchange="markModified()">
+                        </div>
+                    </div>
+
+                    <!-- EXERCICES -->
+                    <div class="bg-bg-card rounded-2xl border border-border-dim overflow-hidden shadow-sm">
+                        <div class="px-6 py-4 border-b border-border-dim bg-white/5 flex justify-between items-center">
+                            <span class="font-bold text-sm">Gestion des Exercices</span>
+                            <button onclick="addExercise()" class="text-xs bg-primary px-3 py-1.5 rounded-lg font-bold text-white shadow-md">+ Nouvel Exercice</button>
+                        </div>
+                        <table class="w-full text-left text-sm">
+                            <thead class="text-[10px] text-text-dim uppercase bg-white/5">
+                                <tr><th class="px-6 py-4">Année</th><th class="px-6 py-4">Début</th><th class="px-6 py-4">Fin</th><th class="px-6 py-4 text-center">Statut</th><th class="px-6 py-4 text-right">Actions</th></tr>
+                            </thead>
+                            <tbody id="exercise-table-body"></tbody>
+                        </table>
+                    </div>
+
+                    <!-- UTILISATEURS -->
+                    <div class="bg-bg-card rounded-2xl border border-border-dim overflow-hidden shadow-sm">
+                        <div class="px-6 py-4 border-b border-border-dim bg-white/5 flex justify-between items-center">
+                            <span class="font-bold text-sm">Utilisateurs & Habilitations</span>
+                            <button onclick="addUser()" class="text-xs bg-primary px-3 py-1.5 rounded-lg font-bold text-white shadow-md">+ Nouvel Utilisateur</button>
+                        </div>
+                        <table class="w-full text-left text-sm">
+                            <thead class="text-[10px] text-text-dim uppercase bg-white/5">
+                                <tr><th class="px-6 py-4">Nom</th><th class="px-6 py-4">Profil</th><th class="px-6 py-4 text-right">Actions</th></tr>
+                            </thead>
+                            <tbody id="user-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- PROFILE -->
+                <div id="page-profile" class="hidden max-w-xl mx-auto animate-fade-up">
+                    <div class="bg-bg-card p-8 rounded-2xl border border-border-dim shadow-xl text-center">
+                        <div class="w-20 h-20 rounded-full bg-primary flex items-center justify-center mx-auto mb-4 text-3xl font-bold text-white shadow-lg" id="prof-initials">--</div>
+                        <h3 class="text-2xl font-bold" id="prof-name">Nom</h3>
+                        <p class="text-text-dim text-sm" id="prof-role">Rôle</p>
+                        <div class="mt-8 pt-8 border-t border-border-dim space-y-4 text-left">
+                            <input type="password" id="prof-pass" placeholder="Nouveau mot de passe" class="input-base">
+                            <button onclick="updateProfPass()" class="btn-primary w-full">Enregistrer le mot de passe</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast-container" class="fixed bottom-8 right-8 z-[400] flex flex-col gap-3"></div>
+
+    <script>
+        let state = {
+            societe: { name: '', mf: '' },
+            exercices: [],
+            ecritures: [],
+            users: [{ id: 1, login: 'admin', name: 'Administrateur', role: 'Administrateur', pass: '', permissions: ['saisie','consultation','lettrage','audit','états','clôture','paramétrage'] }],
+            user: null, currentEx: null, theme: localStorage.getItem('theme') || 'dark', isModified: false
+        };
+
+        const PERMS_DEFAULT = {
+            'Administrateur': ['saisie','consultation','lettrage','audit','états','clôture','paramétrage'],
+            'Senior': ['saisie','consultation','lettrage','audit','états'],
+            'Junior': ['saisie','consultation','lettrage']
+        };
+
+        function syncTheme() {
+            document.documentElement.className = state.theme;
+            lucide.createIcons();
+            if (state.user) initCharts();
+        }
+
+        function toggleTheme() {
+            state.theme = state.theme === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('theme', state.theme);
+            syncTheme();
+        }
+
+        function markModified() { 
+            state.isModified = true; 
+            localStorage.setItem('compta_backup', JSON.stringify(state)); 
+            if (state.societe.name) {
+                state.societe.name = document.getElementById('set-societe-name').value;
+                state.societe.mf = document.getElementById('set-societe-mf').value;
+            }
+        }
+
+        document.getElementById('login-form').onsubmit = (e) => {
+            e.preventDefault();
+            const u = document.getElementById('login-username').value;
+            const found = state.users.find(x => x.login === u);
+            if (found) { state.user = found; loginSuccess(); }
+            else showToast('Accès restreint', 'danger');
+        };
+
+        function loginSuccess() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('app-shell').classList.remove('hidden');
+            document.getElementById('user-display-name').innerText = state.user.name;
+            document.getElementById('user-display-role').innerText = state.user.role;
+            document.getElementById('user-initials').innerText = state.user.name.substring(0, 2);
+            
+            if (state.user.role === 'Administrateur') document.getElementById('link-settings').classList.remove('hidden');
+            
+            if (!state.societe.name) openModal('setup-modal');
+            else updateDossierUI();
+            
+            initCharts(); lucide.createIcons();
+        }
+
+        function initDossier() {
+            const name = document.getElementById('setup-name').value;
+            if (!name) return showToast('Nom requis', 'danger');
+            state.societe.name = name;
+            state.societe.mf = document.getElementById('setup-mf').value;
+            state.exercices = [{ id: 1, year: 2025, start: '2025-01-01', end: '2025-12-31', status: 'Actif' }];
+            state.currentEx = state.exercices[0];
+            closeModal('setup-modal');
+            updateDossierUI();
+            updateExerciseSelect();
+            renderSettings();
+            markModified();
+            showToast('Dossier initialisé', 'success');
+        }
+
+        function updateDossierUI() {
+            const el = document.getElementById('current-societe-name');
+            const dot = document.getElementById('dossier-status-dot');
+            const zone = document.getElementById('dossier-drop-zone');
+            if (state.societe.name) {
+                el.innerText = state.societe.name; zone.className = zone.className.replace('text-danger', 'text-success').replace('border-danger/30', 'border-success/30');
+                dot.className = 'w-2 h-2 rounded-full bg-success animate-pulse';
+                document.getElementById('set-societe-name').value = state.societe.name;
+                document.getElementById('set-societe-mf').value = state.societe.mf;
+            }
+        }
+
+        function updateExerciseSelect() {
+            const select = document.getElementById('exercise-selector');
+            select.innerHTML = '<option value="">Exercice --</option>' + state.exercices.map(ex => `<option value="${ex.year}" ${state.currentEx?.year == ex.year ? 'selected' : ''}>${ex.year}</option>`).join('');
+        }
+
+        function changeExercise(year) {
+            state.currentEx = state.exercices.find(ex => ex.year == year);
+            if (state.currentEx?.status === 'Clôturé') showToast('Exercice clôturé (Lecture seule)', 'warning');
+            initCharts();
+        }
+
+        function isLocked() { return state.currentEx?.status === 'Clôturé'; }
+
+        function renderSettings() {
+            const exBody = document.getElementById('exercise-table-body');
+            exBody.innerHTML = state.exercices.map(ex => `
+                <tr class="border-b border-border-dim hover:bg-white/5 transition-colors">
+                    <td class="px-6 py-4 font-bold">${ex.year}</td>
+                    <td class="px-6 py-4">${ex.start}</td>
+                    <td class="px-6 py-4">${ex.end}</td>
+                    <td class="px-6 py-4 text-center">
+                        <button onclick="toggleExStatus(${ex.id})" class="px-2 py-1 rounded-full text-[10px] font-bold ${ex.status === 'Actif' ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'} uppercase">${ex.status}</button>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="deleteEx(${ex.id})" class="text-text-dim hover:text-danger"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+
+            const userBody = document.getElementById('user-table-body');
+            userBody.innerHTML = state.users.map(u => `
+                <tr class="border-b border-border-dim hover:bg-white/5 transition-colors">
+                    <td class="px-6 py-4 font-medium">${u.name}</td>
+                    <td class="px-6 py-4 text-xs text-text-dim">${u.role}</td>
+                    <td class="px-6 py-4 text-right flex justify-end gap-3">
+                        <button onclick="editPerms(${u.id})" class="text-text-dim hover:text-primary"><i data-lucide="shield" class="w-4 h-4"></i></button>
+                        <button onclick="deleteUser(${u.id})" class="text-text-dim hover:text-danger"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function toggleExStatus(id) {
+            const ex = state.exercices.find(e => e.id === id);
+            ex.status = ex.status === 'Actif' ? 'Clôturé' : 'Actif';
+            markModified(); renderSettings(); updateExerciseSelect();
+        }
+
+        function showPage(pageId) {
+            document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+            const link = Array.from(document.querySelectorAll('.sidebar-link')).find(l => l.getAttribute('onclick')?.includes(pageId));
+            if (link) link.classList.add('active');
+            document.querySelectorAll('#page-container > div').forEach(d => d.classList.add('hidden'));
+            const target = document.getElementById(`page-${pageId}`);
+            if (target) target.classList.remove('hidden'); else document.getElementById('page-dashboard').classList.remove('hidden');
+            document.getElementById('page-title').innerText = link?.querySelector('span').innerText || 'Application';
+        }
+
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+        function confirmExit() { state.isModified = false; window.location.reload(); }
+
+        function exportData(exit = false) {
+            if (!state.societe.name) return showToast('Aucun dossier', 'danger');
+            const dataStr = JSON.stringify(state, null, 2);
+            const now = new Date();
+            const ds = now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0');
+            const ts = String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0');
+            const fn = `${state.societe.name.replace(/\s+/g,'_')}_${ds}_${ts}.json`;
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fn; a.click();
+            state.isModified = false; showToast('Sauvegarde réussie', 'success');
+            if (exit) window.location.reload();
+        }
+
+        function initCharts() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const colorText = isDark ? '#8892B0' : '#4A5568';
+            const colorGrid = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+
+            // Area
+            document.getElementById('chart-area').innerHTML = '';
+            new ApexCharts(document.getElementById('chart-area'), {
+                series: [{ name: 'CA', data: [31, 40, 28, 51, 42, 109, 100, 120, 135, 140, 125, 150] }, { name: 'Charges', data: [11, 32, 45, 32, 34, 52, 41, 48, 55, 60, 58, 62] }],
+                chart: { type: 'area', height: 300, toolbar: { show: false }, background: 'transparent', fontFamily: 'Inter' },
+                stroke: { curve: 'smooth', width: 2 }, colors: ['#6C63FF', '#FF6B6B'],
+                xaxis: { categories: ['J','F','M','A','M','J','J','A','S','O','N','D'], labels: { style: { colors: colorText } } },
+                grid: { borderColor: colorGrid }, theme: { mode: isDark ? 'dark' : 'light' }, dataLabels: { enabled: false }
+            }).render();
+
+            // Donut (55% Thickness)
+            document.getElementById('chart-donut').innerHTML = '';
+            new ApexCharts(document.getElementById('chart-donut'), {
+                series: [44, 35, 15, 25, 10], chart: { type: 'donut', height: 300, background: 'transparent' },
+                labels: ['Achats', 'Personnel', 'Impôts', 'Services Ext.', 'Autres'],
+                colors: ['#6C63FF', '#00D4AA', '#FDCB6E', '#74B9FF', '#FF6B6B'],
+                plotOptions: { pie: { donut: { size: '55%', labels: { show: true, total: { show: true, label: 'Charges', color: colorText } } } } },
+                stroke: { show: false }, theme: { mode: isDark ? 'dark' : 'light' }, legend: { position: 'bottom', labels: { colors: colorText } }
+            }).render();
+
+            // Bar Monthly (5 types)
+            document.getElementById('chart-bar-monthly').innerHTML = '';
+            new ApexCharts(document.getElementById('chart-bar-monthly'), {
+                series: [
+                    { name: 'Achats', data: [30, 40, 35, 50, 49, 60, 70, 91, 125, 110, 100, 120] },
+                    { name: 'Personnel', data: [20, 20, 20, 22, 21, 25, 25, 25, 25, 26, 25, 28] },
+                    { name: 'Impôts', data: [5, 5, 8, 5, 5, 10, 5, 5, 12, 5, 5, 15] },
+                    { name: 'Services Ext.', data: [10, 15, 12, 18, 15, 20, 15, 18, 22, 15, 18, 25] },
+                    { name: 'Autres', data: [5, 3, 4, 2, 5, 3, 5, 2, 5, 4, 3, 5] }
+                ],
+                chart: { type: 'bar', height: 300, stacked: true, toolbar: { show: false }, background: 'transparent' },
+                plotOptions: { bar: { borderRadius: 10, columnWidth: '60%' } },
+                colors: ['#6C63FF', '#00D4AA', '#FDCB6E', '#74B9FF', '#FF6B6B'],
+                xaxis: { categories: ['J','F','M','A','M','J','J','A','S','O','N','D'], labels: { style: { colors: colorText } } },
+                grid: { borderColor: colorGrid }, theme: { mode: isDark ? 'dark' : 'light' }, dataLabels: { enabled: false }
+            }).render();
+
+            // Bar Compare
+            document.getElementById('chart-bar-compare').innerHTML = '';
+            new ApexCharts(document.getElementById('chart-bar-compare'), {
+                series: [{ name: '2025 (N)', data: [185, 142, 39, 54, 20] }, { name: '2024 (N-1)', data: [171, 145, 33, 50, 18] }],
+                chart: { type: 'bar', height: 300, toolbar: { show: false }, background: 'transparent' },
+                plotOptions: { bar: { borderRadius: 10, columnWidth: '55%' } },
+                colors: ['#6C63FF', '#FF6B6B'], xaxis: { categories: ['Achats', 'Personnel', 'Impôts', 'Serv. Ext.', 'Autres'], labels: { style: { colors: colorText } } },
+                grid: { borderColor: colorGrid }, theme: { mode: isDark ? 'dark' : 'light' }, dataLabels: { enabled: false }
+            }).render();
+        }
+
+        function showToast(msg, type = 'info') {
+            const c = document.getElementById('toast-container'); const t = document.createElement('div');
+            t.className = `glass border-l-4 ${type === 'success' ? 'border-success text-success' : 'border-danger text-danger'} px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 animate-fade-up min-w-[300px]`;
+            t.innerHTML = `<i data-lucide="info" class="w-5 h-5"></i><span class="text-sm font-medium text-text-main">${msg}</span>`;
+            c.appendChild(t); lucide.createIcons(); setTimeout(() => { t.classList.add('opacity-0'); setTimeout(() => t.remove(), 500); }, 3000);
+        }
+
+        window.onload = () => { syncTheme(); lucide.createIcons(); };
+    </script>
+</body>
+</html>

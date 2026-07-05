@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ComptaLettrage Pro V7.9</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script>
+    tailwind.config = {
+    darkMode: "class",
+    theme: {
+    extend: {
+    colors: {
+    "primary": "#137fec",
+    "background-light": "#f6f7f8",
+    "background-dark": "#101922",
+    "sidebar-dark": "#0f172a",
+    },
+    fontFamily: {
+    "display": ["Inter"]
+    },
+    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+    },
+    }
+    }
+    </script>
+    <style>
+    .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #dbe0e6;
+    border-radius: 4px;
+    }
+    .btn-keyboard {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-weight: bold;
+    font-size: 11px;
+    padding: 2px 6px;
+    }
+    .sticky-header th {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: #f8f9fa;
+        dark:bg-white/5;
+    }
+    /* 🔵 CADRE BLEU NAVIGATION CLAVIER */
+    .row-focused {
+        outline: 2px solid #137fec !important;
+        outline-offset: -2px;
+    }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-[#111418] dark:text-white transition-colors duration-200">
+<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#dbe0e6] dark:border-b-white/10 bg-white dark:bg-[#1a2530] px-4 py-2 sticky top-0 z-50">
+<div class="flex items-center gap-3 text-[#111418] dark:text-white">
+<div class="size-7 text-primary">
+<span class="material-symbols-outlined text-2xl">account_balance_wallet</span>
+</div>
+<h2 class="text-lg font-bold leading-tight tracking-[-0.015em]">ComptaLettrage Pro V7.9</h2>
+</div>
+<div class="flex flex-1 justify-end gap-2">
+<nav class="flex items-center gap-2">
+<button onclick="actionImporter()" class="text-xs font-medium hover:text-primary transition-colors flex items-center gap-1 px-2 py-1 rounded hover:bg-[#f0f2f4] dark:hover:bg-white/10">
+<span class="material-symbols-outlined text-base">upload_file</span>
+Importer
+</button>
+<button onclick="actionAutoLettrage()" id="btnAuto" disabled class="text-xs font-bold text-primary flex items-center gap-1 px-2 py-1 rounded hover:bg-primary/10">
+<span class="material-symbols-outlined text-base">auto_fix_high</span>
+Lettrage Auto
+</button>
+<button onclick="actionLettrageManuel()" id="btnManual" disabled class="text-xs font-medium hover:text-primary transition-colors flex items-center gap-1 px-2 py-1 rounded hover:bg-[#f0f2f4] dark:hover:bg-white/10">
+<span class="material-symbols-outlined text-base">handshake</span>
+Lettrage Manuel
+</button>
+<button onclick="actionReequilibrerNonLet()" id="btnBalanceNonLet" disabled class="text-xs font-medium hover:text-primary transition-colors flex items-center gap-1 px-2 py-1 rounded hover:bg-[#f0f2f4] dark:hover:bg-white/10">
+<span class="material-symbols-outlined text-base">balance</span>
+Rééquilibrer
+</button>
+<button onclick="actionDelettrer()" id="btnDelet" disabled class="text-xs font-medium hover:text-primary transition-colors flex items-center gap-1 px-2 py-1 rounded hover:bg-[#f0f2f4] dark:hover:bg-white/10">
+<span class="material-symbols-outlined text-base">cancel</span>
+Délettrer
+</button>
+</nav>
+<div class="flex gap-1">
+<button onclick="actionExporter()" id="btnExport" disabled class="flex items-center justify-center rounded h-8 px-3 bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all">
+<span class="material-symbols-outlined mr-1 text-base">file_download</span>
+<span class="truncate">Excel</span>
+</button>
+<button onclick="actionReset()" class="flex items-center justify-center rounded h-8 px-3 bg-red-500 hover:bg-red-600 text-white text-xs font-bold">
+<span class="material-symbols-outlined mr-1 text-base">refresh</span>
+Reset
+</button>
+</div>
+</div>
+</header>
+<main class="flex-1 max-w-[1600px] mx-auto w-full px-4 py-3">
+<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 xl:grid-cols-12 gap-2 mb-3">
+<div class="xl:col-span-2 bg-white dark:bg-[#1a2530] rounded-lg p-3 border border-[#dbe0e6] dark:border-white/10">
+<p class="text-[#617589] dark:text-gray-400 text-[10px] font-medium uppercase tracking-wider">Compte / Tiers</p>
+<p id="compteInfo" class="text-[#111418] dark:text-white text-sm font-bold mt-1">****</p>
+</div>
+<div class="bg-white dark:bg-[#1a2530] rounded-lg p-3 border border-[#dbe0e6] dark:border-white/10">
+<p class="text-[#617589] dark:text-gray-400 text-[10px] font-medium uppercase tracking-wider flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">format_list_numbered</span>
+Total Lignes
+</p>
+<p id="totalLines" class="text-[#111418] dark:text-white text-lg font-bold mt-1">0</p>
+</div>
+<div class="bg-white dark:bg-[#1a2530] rounded-lg p-3 border border-[#dbe0e6] dark:border-white/10">
+<p class="text-[#617589] dark:text-gray-400 text-[10px] font-medium uppercase tracking-wider flex items-center gap-1">
+<span class="material-symbols-outlined text-xs text-green-500">check_circle</span>
+Lettrées
+</p>
+<p id="lettreCount" class="text-[#111418] dark:text-white text-lg font-bold mt-1">0</p>
+<p id="lettreLinesSub" class="text-[#617589] dark:text-gray-400 text-[9px] mt-0.5">0 lignes</p>
+</div>
+<div class="bg-white dark:bg-[#1a2530] rounded-lg p-3 border border-[#dbe0e6] dark:border-white/10">
+<p class="text-[#617589] dark:text-gray-400 text-[10px] font-medium uppercase tracking-wider flex items-center gap-1">
+<span class="material-symbols-outlined text-xs text-red-500">pending_actions</span>
+Non Lettrées
+</p>
+<p id="nonLettreCount" class="text-[#111418] dark:text-white text-lg font-bold mt-1">0</p>
+<p id="nonLettreLinesSub" class="text-[#617589] dark:text-gray-400 text-[9px] mt-0.5">0 lignes</p>
+</div>
+<div class="bg-white dark:bg-[#1a2530] rounded-lg p-3 border border-[#dbe0e6] dark:border-white/10">
+<p class="text-[#617589] dark:text-gray-400 text-[10px] font-medium uppercase tracking-wider">Automatique</p>
+<div class="flex items-center gap-1 mt-1">
+<div class="w-2 h-2 rounded-full bg-blue-500"></div>
+<p id="autoCount" class="text-[#111418] dark:text-white text-lg font-bold">0</p>
+</div>
+</div>
+<div class="bg-white dark:bg-[#1a2530] rounded-lg p-3 border border-[#dbe0e6] dark:border-white/10">
+<p class="text-[#617589] dark:text-gray-400 text-[10px] font-medium uppercase tracking-wider">Manuel</p>
+<div class="flex items-center gap-1 mt-1">
+<div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+<p id="manuelCount" class="text-[#111418] dark:text-white text-lg font-bold">0</p>
+</div>
+</div>
+<div class="bg-white dark:bg-[#1a2530] rounded-lg p-3 border border-[#dbe0e6] dark:border-white/10">
+<p class="text-[#617589] dark:text-gray-400 text-[10px] font-medium uppercase tracking-wider">Rééquilibrage</p>
+<div class="flex items-center gap-1 mt-1">
+<div class="w-2 h-2 rounded-full bg-purple-500"></div>
+<p id="reeqCount" class="text-[#111418] dark:text-white text-lg font-bold">0</p>
+</div>
+</div>
+<div class="xl:col-span-3 bg-white dark:bg-[#1a2530] rounded-lg p-3 border border-[#dbe0e6] dark:border-white/10">
+<p class="text-[#617589] dark:text-gray-400 text-[10px] font-medium uppercase tracking-wider flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">merge</span>
+Niveaux
+</p>
+<div class="grid grid-cols-2 gap-1 mt-1">
+<div class="flex items-center gap-0.5">
+<span class="text-[8px] font-bold text-amber-500 min-w-[100px]">N1: N° FAC, REF, LIB</span>
+<p id="niv1Count" class="text-[#111418] dark:text-white text-sm font-bold w-6 text-right">0</p>
+</div>
+<div class="flex items-center gap-0.5">
+<span class="text-[8px] font-bold text-blue-500 min-w-[100px]">N2: 1-1</span>
+<p id="niv2Count" class="text-[#111418] dark:text-white text-sm font-bold w-6 text-right">0</p>
+</div>
+<div class="flex items-center gap-0.5">
+<span class="text-[8px] font-bold text-emerald-500 min-w-[100px]">N3: FIFO</span>
+<p id="niv3Count" class="text-[#111418] dark:text-white text-sm font-bold w-6 text-right">0</p>
+</div>
+<div class="flex items-center gap-0.5">
+<span class="text-[8px] font-bold text-purple-500 min-w-[100px]">N4: N-N</span>
+<p id="niv4Count" class="text-[#111418] dark:text-white text-sm font-bold w-6 text-right">0</p>
+</div>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2 mb-3">
+<div class="bg-white dark:bg-[#1a2530] rounded-lg p-2 border border-[#dbe0e6] dark:border-white/10">
+<label class="flex flex-col gap-1">
+<span class="text-[10px] font-semibold text-slate-700 dark:text-gray-300">Tolérance</span>
+<input type="number" id="cfgTol" value="0.010" step="0.001" min="0" class="h-8 text-xs border border-slate-200 dark:border-white/10 rounded px-2 focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none text-slate-900 dark:text-white bg-white dark:bg-[#1a2530]"/>
+</label>
+</div>
+<div class="bg-white dark:bg-[#1a2530] rounded-lg p-2 border border-[#dbe0e6] dark:border-white/10">
+<label class="flex flex-col gap-1">
+<span class="text-[10px] font-semibold text-slate-700 dark:text-gray-300">Fenêtre</span>
+<input type="number" id="cfgWindow" value="50" step="1" min="1" max="500" class="h-8 text-xs border border-slate-200 dark:border-white/10 rounded px-2 focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none text-slate-900 dark:text-white bg-white dark:bg-[#1a2530]"/>
+</label>
+</div>
+<div class="bg-white dark:bg-[#1a2530] rounded-lg p-2 border border-[#dbe0e6] dark:border-white/10">
+<label class="flex flex-col gap-1">
+<span class="text-[10px] font-semibold text-slate-700 dark:text-gray-300">Début</span>
+<input type="text" id="cfgStartCode" value="A" maxlength="2" oninput="onStartCodeChange()" class="h-8 text-xs border border-slate-200 dark:border-white/10 rounded px-2 focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none text-slate-900 dark:text-white bg-white dark:bg-[#1a2530] uppercase"/>
+</label>
+</div>
+<div class="bg-white dark:bg-[#1a2530] rounded-lg p-2 border border-[#dbe0e6] dark:border-white/10">
+<label class="flex flex-col gap-1">
+<span class="text-[10px] font-semibold text-slate-700 dark:text-gray-300">636</span>
+<input type="text" id="cfgCpteD" value="636000" class="h-8 text-xs border border-slate-200 dark:border-white/10 rounded px-2 focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none text-slate-900 dark:text-white bg-white dark:bg-[#1a2530]"/>
+</label>
+</div>
+<div class="bg-white dark:bg-[#1a2530] rounded-lg p-2 border border-[#dbe0e6] dark:border-white/10">
+<label class="flex flex-col gap-1">
+<span class="text-[10px] font-semibold text-slate-700 dark:text-gray-300">736</span>
+<input type="text" id="cfgCpteC" value="736000" class="h-8 text-xs border border-slate-200 dark:border-white/10 rounded px-2 focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none text-slate-900 dark:text-white bg-white dark:bg-[#1a2530]"/>
+</label>
+</div>
+<div class="bg-white dark:bg-[#1a2530] rounded-lg p-2 border border-[#dbe0e6] dark:border-white/10">
+<label class="flex flex-col gap-1">
+<span class="text-[10px] font-semibold text-slate-700 dark:text-gray-300">Filtre</span>
+<select id="cfgFilter" onchange="rafraichirTableau()" class="h-8 text-xs border border-slate-200 dark:border-white/10 rounded px-2 focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none text-slate-900 dark:text-white bg-white dark:bg-[#1a2530]">
+<option value="all">Tout</option>
+<option value="let">Lettrées</option>
+<option value="nonlet">Non lettrées</option>
+<option value="auto">Automatique</option>
+<option value="manuel">Manuel</option>
+<option value="niv1">N1 (N° FAC, REF, LIB)</option>
+<option value="niv2">N2 (1 - 1)</option>
+<option value="niv3">N3 (FIFO)</option>
+<option value="niv4">N4 (N - N)</option>
+<option value="ecart">⚠️ Réequilibrées</option>
+</select>
+</label>
+</div>
+<div class="lg:col-span-2 bg-white dark:bg-[#1a2530] rounded-lg p-2 border border-[#dbe0e6] dark:border-white/10">
+<label class="flex flex-col h-8 w-full">
+<div class="flex w-full items-stretch rounded h-full overflow-hidden">
+<div class="text-[#617589] flex bg-[#f0f2f4] dark:bg-white/5 items-center justify-center pl-2 border-none">
+<span class="material-symbols-outlined text-base">search</span>
+</div>
+<input id="inputSearch" oninput="rafraichirTableau()" class="flex w-full min-w-0 flex-1 border-none bg-[#f0f2f4] dark:bg-white/5 focus:ring-0 text-[#111418] dark:text-white placeholder:text-[#617589] pl-1 text-xs font-normal" placeholder="Rechercher dans tous les champs..."/>
+</div>
+</label>
+</div>
+</div>
+<div class="bg-white dark:bg-[#1a2530] rounded-lg border border-[#dbe0e6] dark:border-white/10 shadow-sm overflow-hidden mb-3">
+<div class="p-2 border-b border-[#dbe0e6] dark:border-white/10">
+<label class="flex flex-col h-10 w-full">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-full overflow-hidden">
+<div class="text-[#617589] flex bg-[#f0f2f4] dark:bg-white/5 items-center justify-center pl-3 border-none">
+<span class="material-symbols-outlined text-lg">description</span>
+</div>
+<textarea id="txtExcel" class="flex w-full min-w-0 flex-1 border-none bg-[#f0f2f4] dark:bg-white/5 focus:ring-0 text-[#111418] dark:text-white placeholder:text-[#617589] pl-2 text-xs font-normal resize-none" placeholder="Collez vos données ici (GL) - Colonnes: DATE ; Mois ; JL ; N°FAC ; REF ; N PIECE ; FOLIO ; COMPTE ; TIERS ; LIBELLE ; ECH ; LET ; DÉBIT ; CRÉDIT ; SOLDE" rows="1"></textarea>
+</div>
+</label>
+</div>
+<div class="p-2 border-b border-[#dbe0e6] dark:border-white/10 flex flex-wrap gap-2 items-center justify-between bg-[#f8f9fa] dark:bg-white/5">
+<div class="flex gap-2 items-center">
+<span class="text-[10px] text-[#617589] dark:text-gray-400">Délettrer code:</span>
+<input type="text" id="inputCodeDelet" placeholder="Code" class="h-7 px-2 rounded border border-[#dbe0e6] dark:border-white/10 text-xs bg-white dark:bg-[#1a2530] text-[#111418] dark:text-white"/>
+</div>
+<div class="flex gap-2 items-center">
+<span class="text-[10px] text-[#617589] dark:text-gray-400">Raccourcis:</span>
+<span class="btn-keyboard">Espace</span>=Cocher
+<span class="btn-keyboard">Entrée</span>=Manuel
+<span class="btn-keyboard">Suppr</span>=Délettrer
+</div>
+<div class="flex gap-1">
+<button onclick="toggleEditMode()" id="btnLock" disabled class="flex items-center justify-center rounded h-7 px-2 bg-[#f0f2f4] dark:bg-white/10 text-[#111418] dark:text-white text-xs font-bold">
+<span class="material-symbols-outlined mr-1 text-sm">lock</span>Verrouiller
+</button>
+<button onclick="actionToggleTri()" id="btnTri" disabled class="flex items-center justify-center rounded h-7 px-2 bg-primary/10 text-primary text-xs font-bold">
+<span class="material-symbols-outlined mr-1 text-sm">sort</span>ORDRE INITIAL
+</button>
+</div>
+<div id="selectionStats" class="text-[12px] font-bold text-gray-700 dark:text-gray-300 mt-2 text-center w-full bg-gray-100 dark:bg-gray-700 p-1 rounded"></div>
+</div>
+<div class="overflow-x-auto custom-scrollbar max-h-[calc(100vh-280px)]">
+<table class="w-full text-left border-collapse min-w-[1100px] text-xs">
+<thead class="sticky-header">
+<tr class="bg-[#f8f9fa] dark:bg-white/5 text-[#617589] dark:text-gray-400 font-bold uppercase tracking-wider">
+<th class="px-2 py-2 border-b border-[#dbe0e6] dark:border-white/10 w-6 text-center">
+<input type="checkbox" onclick="actionToutCocher(this)" class="form-checkbox h-3 w-3 text-primary"/>
+</th>
+<th class="px-2 py-2 border-b border-[#dbe0e6] dark:border-white/10 w-8">Date</th>
+<th class="px-2 py-2 border-b border-[#dbe0e6] dark:border-white/10 w-8">Mois</th>
+<th class="px-2 py-2 border-b border-[#dbe0e6] dark:border-white/10 w-8">JL</th>
+<th class="px-2 py-2 border-b border-[#dbe0e6] dark:border-white/10 w-12">N° FAC</th>
+<th class="px-2 py-2 border-b border-[#dbe0e6] dark:border-white/10 w-12">REF</th>
+<th class="px-2 py-2 border-b border-[#dbe0e6] dark:border-white/10 w-6">N PIECE</th>
+<th class="px-2 py-2 border-b border-[#dbe0e6] dark:border-white/10 w-10">FOLIO</th>
+<th class="px-2 py-2 border-b border-[#dbe0e6] dark:border-white/10 w-10">COMPTE</th>
+<th class="px-2 py-2 border-b border-[#dbe0e6] dark:border-white/10">TIERS</th>
+<th class="px-2 py-2 border-b border-[#dbe0e6] dark:border-white/10">LIBELLE</th>
+<th class="px-2 py-2 border-b border-[#dbe0e6] dark:border-white/10 w-8">ECH</th>
+<th class="px-2 py-2 border-b border-[#dbe0e6] dark:border-white/10 w-6">LET</th>
+<th class="px-2 py-2 border-b border-[#dbe0e6] dark:border-white/10 text-right w-14">Débit</th>
+<th class="px-2 py-2 border-b border-[#dbe0e6] dark:border-white/10 text-right w-14">Crédit</th>
+<th class="px-2 py-2 border-b border-[#dbe0e6] dark:border-white/10 text-right w-14">Solde</th>
+</tr>
+</thead>
+<tbody id="tableBody" class="text-xs">
+</tbody>
+</table>
+</div>
+</div>
+</main>
+</div>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script>
+let DB = []; let ECARTS = []; let AUDIT = []; let ordreInitialMode = true; let editUnlocked = false;
+let STATS = { auto: 0, manuel: 0, reeq: 0, delet: 0, ecart: 0, niv1: 0, niv2: 0, niv3: 0, niv4: 0 };
+let INFO_COMPTE = { compteUnique: "", tiersUnique: "", compteMultiple: false, tiersMultiple: false };
+// 🔑 VARIABLE GLOBALE NAVIGATION CLAVIER
+let currentRowIndex = -1;
+
+const parseN = (v) => { if(!v) return 0; let clean = v.toString().replace(/[^\d.,-]/g, '').replace(',', '.'); return parseFloat(clean) || 0; };
+const normalizeRef = (ref) => { if(!ref) return ""; let clean = ref.toString().trim().toUpperCase().replace(/[\s\-._/\\]/g, '').replace(/[^A-Z0-9]/g, ''); return clean; };
+const parseD = (s) => { if(!s) return new Date(0); const p = s.split(/[\/.-]/); if(p.length < 3) return new Date(0); let a, m, j; if(p[0].length === 4) { a = p[0]; m = p[1]; j = p[2]; } else if(p[2].length === 4) { a = p[2]; m = p[1]; j = p[0]; } else { a = "20" + p[2]; m = p[1]; j = p[0]; } return new Date(a, parseInt(m)-1, j); };
+const getTolerance = () => { return parseFloat(document.getElementById('cfgTol').value) || 0.010; };
+const logAudit = (action, details) => { AUDIT.push({ timestamp: new Date().toISOString(), action: action, user: "utilisateur_web", details: details }); };
+
+// 🔑 GESTION ÉVÉNEMENTS CLAVIER (INTÉGRÉE)
+function handleGlobalKeys(e) {
+    // 🔵 NAVIGATION HAUT/BAS
+    if(e.key === "ArrowUp" || e.key === "ArrowDown") {
+        e.preventDefault();
+        navigateTableRow(e.key === "ArrowUp" ? -1 : 1);
+        return;
+    }
+    // ESPACE POUR COCHER/DÉCOCHER
+    if(e.code === "Space" && !e.target.isContentEditable && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        toggleCurrentRowSelection();
+        return;
+    }
+    // ENTRÉE POUR LETTRAGE MANUEL
+    if(e.key === "Enter" && !e.target.isContentEditable && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        actionLettrageManuel();
+        return;
+    }
+    // SUPPR POUR DÉLETTRER
+    if(e.key === "Delete" && !e.target.isContentEditable && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        actionDelettrer();
+        return;
+    }
+}
+document.addEventListener('keydown', handleGlobalKeys);
+
+// 🔑 FONCTION NAVIGATION CLAVIER (COMPLÈTE)
+function navigateTableRow(direction) {
+    const rows = document.querySelectorAll('#tableBody tr');
+    if(rows.length === 0) return;
+    
+    // Retirer le focus de la ligne actuelle
+    if(currentRowIndex >= 0 && currentRowIndex < rows.length) {
+        rows[currentRowIndex].classList.remove('row-focused');
+    }
+    
+    // Calculer le nouvel index avec gestion des bornes
+    if(currentRowIndex === -1) {
+        currentRowIndex = 0;
+    } else {
+        currentRowIndex += direction;
+        if(currentRowIndex < 0) currentRowIndex = 0;
+        if(currentRowIndex >= rows.length) currentRowIndex = rows.length - 1;
+    }
+    
+    // Appliquer le focus à la nouvelle ligne
+    rows[currentRowIndex].classList.add('row-focused');
+    
+    // Faire défiler vers la ligne si nécessaire
+    rows[currentRowIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// 🔑 FONCTION COCHER LIGNE COURANTE (ESPACE)
+function toggleCurrentRowSelection() {
+    const rows = document.querySelectorAll('#tableBody tr');
+    if(currentRowIndex >= 0 && currentRowIndex < rows.length) {
+        const checkbox = rows[currentRowIndex].querySelector('input[type="checkbox"]');
+        if(checkbox) {
+            checkbox.checked = !checkbox.checked;
+            const cellIndex = parseInt(checkbox.getAttribute('data-index'));
+            const isEcart = checkbox.getAttribute('data-is-ecart') === 'true';
+            updateRowSel(cellIndex, checkbox.checked, isEcart);
+        }
+    }
+}
+
+function toggleEditMode() {
+    editUnlocked = !editUnlocked;
+    const btn = document.getElementById('btnLock');
+    if(editUnlocked) {
+        btn.style.backgroundColor = '#28a745';
+        btn.innerHTML = '<span class="material-symbols-outlined mr-1 text-sm">lock_open</span>Déverrouiller';
+    } else {
+        btn.style.backgroundColor = '#dc3545';
+        btn.innerHTML = '<span class="material-symbols-outlined mr-1 text-sm">lock</span>Verrouiller';
+    }
+    rafraichirTableau();
+}
+
+function syncEdit(cell, idx, field, isEcart) {
+    let val = cell.innerText.trim();
+    let target = isEcart ? ECARTS[idx] : DB.find(d => d.idx === idx);
+    if(!target) return;
+    if(field === 'deb' || field === 'cre') { 
+        target[field] = parseN(val); 
+        rafraichirTableau(); 
+    } 
+    else { 
+        target[field] = val; 
+        rafraichirTableau(); 
+    }
+}
+
+function actionReset() { 
+    if(!confirm("⚠️ Réinitialiser toutes les données ?")) return; 
+    DB = []; ECARTS = []; AUDIT = []; STATS = { auto: 0, manuel: 0, reeq: 0, delet: 0, ecart: 0, niv1: 0, niv2: 0, niv3: 0, niv4: 0 };
+    INFO_COMPTE = { compteUnique: "", tiersUnique: "", compteMultiple: false, tiersMultiple: false };
+    currentRowIndex = -1;
+    document.getElementById('txtExcel').value = ""; document.getElementById('compteInfo').innerText = "???";
+    activerBoutons(false); rafraichirTableau();
+}
+
+function detectDelimiter(text) {
+    const firstLine = text.split('\n')[0];
+    return (firstLine.includes('\t') && firstLine.split('\t').length > firstLine.split(';').length) ? '\t' : ';';
+}
+
+function actionImporter() {
+    const raw = document.getElementById('txtExcel').value.trim(); if (!raw) { alert("⚠️ Veuillez coller des données"); return; }
+    const delimiter = detectDelimiter(raw); const lines = raw.split('\n'); DB = []; ECARTS = []; STATS = { auto: 0, manuel: 0, reeq: 0, delet: 0, ecart: 0, niv1: 0, niv2: 0, niv3: 0, niv4: 0 };
+    INFO_COMPTE = { compteUnique: "", tiersUnique: "", compteMultiple: false, tiersMultiple: false };
+    currentRowIndex = -1;
+    let start = (lines[0].toUpperCase().includes("DATE")) ? 1 : 0; let comptes = new Set(); let tiersSet = new Set();
+    for (let i = start; i < lines.length; i++) {
+        const c = lines[i].split(delimiter); if (c.length < 13) continue;
+        let dObj = parseD(c[0]); const compte = cleanK(c[7]); const tiers = cleanK(c[8]);
+        comptes.add(compte); if(tiers && tiers !== "" && tiers !== "0") tiersSet.add(tiers);
+        DB.push({ idx: i, dateStr: c[0], dateObj: dObj, mois: c[1] || "", jl: c[2] || "", nfac: cleanK(c[3]), nfacNorm: normalizeRef(c[3]), ref: cleanK(c[4]), refNorm: normalizeRef(c[4]), libNorm: normalizeRef(c[9]), npiece: cleanK(c[5]), folio: c[6] || "", cpte: compte, tiers: tiers, lib: c[9] || "", ech: c[10] || "", letOrig: c[11] || "", deb: parseN(c[12]), cre: parseN(c[13]), letA: "", selected: false, niveau: 0, type: "" });
+    }
+    INFO_COMPTE.compteMultiple = comptes.size > 1; INFO_COMPTE.tiersMultiple = tiersSet.size > 1;
+    INFO_COMPTE.compteUnique = comptes.size === 1 ? Array.from(comptes)[0] : "";
+    INFO_COMPTE.tiersUnique = tiersSet.size === 1 ? Array.from(tiersSet)[0] : "";
+    let infoDisplay = INFO_COMPTE.compteUnique || "?";
+    if(INFO_COMPTE.tiersUnique) infoDisplay += " / " + INFO_COMPTE.tiersUnique;
+    document.getElementById('compteInfo').innerText = infoDisplay;
+    activerBoutons(true); rafraichirTableau();
+}
+
+function creerLignesEcart(code, diff, grp) {
+    if(Math.abs(diff) < 0.001) return;
+    const ref = [...grp].sort((a,b) => b.dateObj - a.dateObj)[0];
+    const cpteC = document.getElementById('cfgCpteD').value || "636000";
+    const cpteD = document.getElementById('cfgCpteC').value || "736000";
+    ECARTS.push({ dateStr: ref.dateStr, dateObj: ref.dateObj, mois: ref.mois, jl: "OD", nfac: "", ref: "", npiece: "", folio: "", cpte: ref.cpte, tiers: ref.tiers, lib: "DIFFÉRENCE DE LETTRAGE", ech: "", letA: code, deb: diff > 0 ? 0 : Math.abs(diff), cre: diff > 0 ? diff : 0, isEcart: true, selected: false, niveau: 0, type: "ecart" });
+    ECARTS.push({ dateStr: ref.dateStr, dateObj: ref.dateObj, mois: ref.mois, jl: "OD", nfac: "", ref: "", npiece: "", folio: "", cpte: diff > 0 ? cpteC : cpteD, tiers: "", lib: "DIFFÉRENCE DE LETTRAGE", ech: "", deb: diff > 0 ? diff : 0, cre: diff < 0 ? Math.abs(diff) : 0, isEcart: true, selected: false, niveau: 0, type: "ecart" });
+    STATS.ecart++;
+}
+
+function incrementerCode(c) { let a = c.split(''); for(let i = a.length - 1; i >= 0; i--) { if(a[i] === 'Z') { a[i] = 'A'; if(i === 0) return 'A' + a.join(''); } else { a[i] = String.fromCharCode(a[i].charCodeAt(0) + 1); break; } } return a.join(''); }
+function genererCodeDebut() { let code = document.getElementById('cfgStartCode').value.toUpperCase().trim(); if(!code || code === "") code = "A"; return code; }
+function recalculerAlphabetique(codeDebut) { let existants = [...new Set(DB.map(d => d.letA).filter(x => x))]; existants.sort((a,b) => a.length - b.length || a.localeCompare(b)); let cur = codeDebut; let mapN = new Map(); existants.forEach(o => { mapN.set(o, cur); cur = incrementerCode(cur); }); DB.forEach(d => { if(d.letA) d.letA = mapN.get(d.letA); }); ECARTS.forEach(e => { if(e.letA) e.letA = mapN.get(e.letA); }); }
+function onStartCodeChange() { if(DB.length > 0) { recalculerAlphabetique(genererCodeDebut()); rafraichirTableau(); } }
+
+function actionAutoLettrage() {
+    const tol = getTolerance(); const windowSize = parseInt(document.getElementById('cfgWindow').value) || 50; let code = genererCodeDebut();
+    DB.forEach(d => { d.letA = ""; d.niveau = 0; d.type = ""; }); ECARTS = []; STATS.auto = 0; STATS.ecart = 0; STATS.niv1 = 0; STATS.niv2 = 0; STATS.niv3 = 0; STATS.niv4 = 0;
+    let groupsNiv1 = new Map();
+    DB.forEach(d => { if(d.nfacNorm && d.nfacNorm !== "ESP" && d.nfacNorm !== "") { let k = "F_"+d.nfacNorm; if(!groupsNiv1.has(k)) groupsNiv1.set(k, []); groupsNiv1.get(k).push(d); } });
+    DB.forEach(d => { if(!d.letA && d.refNorm && d.refNorm !== "ESP" && d.refNorm !== "") { let k = "R_"+d.refNorm; if(!groupsNiv1.has(k)) groupsNiv1.set(k, []); groupsNiv1.get(k).push(d); } });
+    DB.forEach(d => { if(!d.letA && d.libNorm && d.libNorm !== "") { let k = "L_"+d.libNorm; if(!groupsNiv1.has(k)) groupsNiv1.set(k, []); groupsNiv1.get(k).push(d); } });
+    groupsNiv1.forEach(rows => {
+        if(rows.length < 2 || rows.some(r => r.letA)) return;
+        let s = rows.reduce((acc, r) => acc + (r.deb - r.cre), 0);
+        if(Math.abs(s) <= tol + 0.0001) { rows.forEach(r => { r.letA = code; r.niveau = 1; r.type = "auto"; }); STATS.auto++; STATS.niv1++; if(Math.abs(s) > 1e-7) creerLignesEcart(code, s, rows); code = incrementerCode(code); }
+    });
+    let nonLet = DB.filter(d => !d.letA); let mapGroupes = new Map();
+    nonLet.forEach(d => { let key = d.cpte; if(d.tiers && d.tiers !== "" && d.tiers !== "0") key += "_" + d.tiers; if(!mapGroupes.has(key)) mapGroupes.set(key, []); mapGroupes.get(key).push(d); });
+    mapGroupes.forEach((grpData, grpKey) => {
+        grpData.sort((a,b) => a.dateObj - b.dateObj);
+        for(let i = 0; i < grpData.length; i++) {
+            let row = grpData[i]; if(row.letA) continue; if(Math.abs(row.deb - row.cre) < 0.001) continue;
+            let matched = false; const rowSolde = row.deb - row.cre;
+            for(let j = i + 1; j < grpData.length && j < i + windowSize; j++) {
+                let target = grpData[j]; if(target.letA) continue;
+                const targetSolde = target.deb - target.cre;
+                if(Math.abs(rowSolde + targetSolde) <= tol) {
+                    row.letA = code; target.letA = code; row.niveau = 2; target.niveau = 2; row.type = "auto"; target.type = "auto"; STATS.auto++; STATS.niv2++;
+                    if(Math.abs(rowSolde + targetSolde) > 1e-7) creerLignesEcart(code, rowSolde + targetSolde, [row, target]);
+                    code = incrementerCode(code); matched = true; break;
+                }
+            }
+            if(matched) continue;
+            let stack = [row]; let stackSum = rowSolde;
+            for(let j = i + 1; j < grpData.length && j < i + windowSize; j++) {
+                let candidate = grpData[j]; if(candidate.letA) continue; const candidateSolde = candidate.deb - candidate.cre;
+                let futureMatchFound = false; let futureMatchIndex = -1;
+                for(let k = j; k < grpData.length && k < i + windowSize; k++) {
+                    let futur = grpData[k]; if(futur.letA) continue; const futurSolde = futur.deb - futur.cre;
+                    if(Math.abs(stackSum + futurSolde) <= tol) { futureMatchFound = true; futureMatchIndex = k; break; }
+                }
+                if(futureMatchFound) {
+                    let matchRow = grpData[futureMatchIndex]; stack.push(matchRow);
+                    stack.forEach(r => { r.letA = code; r.niveau = 3; r.type = "auto"; }); STATS.auto++; STATS.niv3++;
+                    const matchSolde = matchRow.deb - matchRow.cre; if(Math.abs(stackSum + matchSolde) > 1e-7) creerLignesEcart(code, stackSum + matchSolde, stack);
+                    code = incrementerCode(code); matched = true; break;
+                }
+                if(Math.sign(candidateSolde) !== Math.sign(stackSum)) {
+                    if(Math.abs(stackSum + candidateSolde) <= tol) {
+                        stack.push(candidate); stack.forEach(r => { r.letA = code; r.niveau = 4; r.type = "auto"; }); STATS.auto++; STATS.niv4++;
+                        if(Math.abs(stackSum + candidateSolde) > 1e-7) creerLignesEcart(code, stackSum + candidateSolde, stack);
+                        code = incrementerCode(code); matched = true; break;
+                    }
+                    stack.push(candidate); stackSum += candidateSolde;
+                } else { stack.push(candidate); stackSum += candidateSolde; }
+            }
+        }
+    });
+    recalculerAlphabetique(genererCodeDebut()); rafraichirTableau();
+    const lettres = DB.filter(d => d.letA).length; const taux = DB.length > 0 ? ((lettres / DB.length) * 100).toFixed(1) : 0;
+    alert(`📊 RAPPORT DE LETTRAGE AUTO\n✅ Compte/Tiers: ${INFO_COMPTE.compteUnique}${INFO_COMPTE.tiersUnique ? ' / ' + INFO_COMPTE.tiersUnique : ''}\n📈 Total lignes: ${DB.length}\n✅ Lettrées: ${lettres} (${taux}%)\n❌ Non lettrées: ${Math.max(0, DB.length - lettres)}\n🔵 Auto: ${STATS.auto}\n📊 Niveau 1: ${STATS.niv1}\n📊 Niveau 2: ${STATS.niv2}\n📊 Niveau 3: ${STATS.niv3}\n📊 Niveau 4: ${STATS.niv4}\n⚖️ OD Écarts créés: ${STATS.ecart}`);
+}
+
+// POINT 1: Lettre suivante après tri + Lettrage lignes dans rééquilibrage
+function actionLettrageManuel() {
+    const sel = DB.filter(d => d.selected && !d.letA); if(sel.length < 2) { alert("⚠️ Sélectionnez au moins 2 lignes non lettrées"); return; }
+    const dejaLet = sel.filter(d => d.letA); if(dejaLet.length > 0) { alert("⚠️ Certaines lignes sont déjà lettrées.\nDélettrez-les avant de continuer."); return; }
+    const s = sel.reduce((acc, r) => acc + (r.deb - r.cre), 0); const tol = getTolerance();
+    if(Math.abs(s) > tol) { alert(`❌ Solde non nul: ${s.toFixed(3)}\nTolérance: ±${tol.toFixed(3)}`); return; }
+    
+    const existingCodes = [...new Set(DB.map(d => d.letA).filter(x => x))];
+    let c;
+    if (existingCodes.length > 0) {
+        existingCodes.sort((a, b) => a.length - b.length || a.localeCompare(b));
+        c = incrementerCode(existingCodes[existingCodes.length - 1]);
+    } else {
+        c = genererCodeDebut();
+    }
+    
+    if(Math.abs(s) > 0.001) { if(confirm(`⚠️ Écart de ${Math.abs(s).toFixed(3)}\nCréer l'OD d'écart ?`)) creerLignesEcart(c, s, sel); }
+    sel.forEach(d => { d.letA = c; d.selected = false; d.niveau = 0; d.type = "manuel"; }); STATS.manuel++; recalculerAlphabetique(genererCodeDebut()); rafraichirTableau();
+}
+
+function actionReequilibrerNonLet() {
+    const sel = DB.filter(d => d.selected && !d.letA); if(sel.length < 2) { alert("⚠️ Sélectionnez au moins 2 lignes non lettrées"); return; }
+    const s = sel.reduce((acc, r) => acc + (r.deb - r.cre), 0); const tol = getTolerance();
+    if(Math.abs(s) > tol) { alert(`❌ Solde non nul: ${s.toFixed(3)}\nTolérance: ±${tol.toFixed(3)}`); return; }
+    if(Math.abs(s) <= 0.001) { alert("✅ Aucun écart à créer (solde équilibré)"); return; }
+    
+    const existingCodes = [...new Set(DB.map(d => d.letA).filter(x => x))];
+    let code;
+    if (existingCodes.length > 0) {
+        existingCodes.sort((a, b) => a.length - b.length || a.localeCompare(b));
+        code = incrementerCode(existingCodes[existingCodes.length - 1]);
+    } else {
+        code = genererCodeDebut();
+    }
+    
+    // Lettrer les lignes sélectionnées avec le code généré
+    sel.forEach(d => { d.letA = code; d.niveau = 0; d.type = "reeq"; });
+    STATS.reeq++;
+    
+    ECARTS.push({ dateStr: sel[0].dateStr, dateObj: sel[0].dateObj, mois: sel[0].mois, jl: "OD", nfac: "", ref: "", npiece: "", folio: "", cpte: sel[0].cpte, tiers: sel[0].tiers, lib: "DIFFÉRENCE SÉLECTION", ech: "", letA: code, deb: s > 0 ? 0 : Math.abs(s), cre: s > 0 ? s : 0, isEcart: true, selected: false, niveau: 0, type: "ecart" });
+    const cpteC = document.getElementById('cfgCpteC').value || "736000";
+    ECARTS.push({ dateStr: sel[0].dateStr, dateObj: sel[0].dateObj, mois: sel[0].mois, jl: "OD", nfac: "", ref: "", npiece: "", folio: "", cpte: cpteC, tiers: "", lib: "DIFFÉRENCE SÉLECTION", ech: "", deb: s > 0 ? s : 0, cre: s < 0 ? Math.abs(s) : 0, isEcart: true, selected: false, niveau: 0, type: "ecart" });
+    
+    STATS.ecart += 2;
+    
+    alert(`✅ Groupe rééquilibré avec code ${code} (${Math.abs(s).toFixed(3)})`); 
+    rafraichirTableau();
+}
+
+// POINT 2: Suppression complète des ECARTS liés au code
+function actionDelettrer() {
+    const input = document.getElementById('inputCodeDelet').value.toUpperCase(); let codes = [];
+    if(input) codes = [input]; else { codes = [...new Set(DB.filter(d => d.selected && d.letA).map(d => d.letA))]; if(codes.length === 0) { alert("⚠️ Sélectionnez des lignes lettrées ou entrez un code"); return; } }
+    if(!confirm(`❌ Supprimer le lettrage ${codes.join(', ')} ?`)) return;
+    DB.forEach(d => { if(codes.includes(d.letA)) { d.letA = ""; d.niveau = 0; d.type = ""; } }); 
+    ECARTS = ECARTS.filter(e => !codes.includes(e.letA));
+    STATS.delet += codes.length;
+    recalculerAlphabetique(genererCodeDebut()); rafraichirTableau();
+}
+
+function updateRowSel(id, val, isEc) { if(isEc) ECARTS[id].selected = val; else { let r = DB.find(x => x.idx === id); if(r) r.selected = val; } rafraichirTableau(); }
+
+// POINT 3: Affichage solde sélectionné (format EXACT)
+function calculStats() { 
+    const s = [...DB, ...ECARTS].filter(d => d.selected); 
+    const solde = s.reduce((acc, r) => acc + (r.deb - r.cre), 0); 
+    const soldeAbs = Math.abs(solde);
+    const soldeStr = solde.toFixed(3);
+    
+    let soldeDisplay = soldeStr;
+    if(soldeAbs > 0.001) {
+        if(solde < 0) {
+            soldeDisplay = `<span class="text-red-500">-${soldeAbs.toFixed(3)}</span>`;
+        } else {
+            soldeDisplay = `<span class="text-red-500">${soldeAbs.toFixed(3)}</span>`;
+        }
+    }
+    
+    document.getElementById('selectionStats').innerHTML = `Sélection : ${s.length} | Solde : ${soldeDisplay}`;
+}
+
+function rafraichirTableau() {
+    const body = document.getElementById('tableBody'); const view = document.getElementById('cfgFilter').value; const search = document.getElementById('inputSearch').value.toUpperCase();
+    const cpteD = document.getElementById('cfgCpteD').value || "636000"; const cpteC = document.getElementById('cfgCpteC').value || "736000";
+    body.innerHTML = ''; let list = [...DB, ...ECARTS.map((e,i) => ({...e, eIdx: i}))];
+    if(!ordreInitialMode) list.sort((a, b) => (a.letA||"ZZZ").localeCompare(b.letA||"ZZZ") || a.dateObj - b.dateObj); else list.sort((a,b) => (a.idx ?? 999999) - (b.idx ?? 999999));
+    let letCount = 0; let totalTarget = DB.length;
+    list.forEach(d => {
+        if(d.cpte === cpteD || d.cpte === cpteC) return;
+        if(view === 'let' && !d.letA) return; if(view === 'nonlet' && d.letA) return; if(view === 'auto' && d.type !== "auto") return;
+        if(view === 'manuel' && d.type !== "manuel") return; if(view === 'niv1' && d.niveau !== 1) return; if(view === 'niv2' && d.niveau !== 2) return;
+        if(view === 'niv3' && d.niveau !== 3) return; if(view === 'niv4' && d.niveau !== 4) return; if(view === 'ecart' && !ECARTS.some(e => e.letA === d.letA)) return;
+        
+        const searchData = `${d.dateStr||''} ${d.mois||''} ${d.jl||''} ${d.nfac||''} ${d.ref||''} ${d.npiece||''} ${d.folio||''} ${d.cpte||''} ${d.tiers||''} ${d.lib||''} ${d.ech||''} ${d.letA||''} ${d.deb||''} ${d.cre||''} ${(d.deb-d.cre)||''}`.toUpperCase();
+        if(search && !searchData.includes(search.toUpperCase())) return;
+        
+        if(d.letA) letCount++;
+        const tr = document.createElement('tr');
+        if(d.isEcart) tr.className = 'bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400';
+        else if(d.letA) tr.className = 'bg-green-50 dark:bg-green-900/10 hover:bg-green-100 dark:hover:bg-green-900/20';
+        if(d.selected) tr.classList.add('bg-blue-100', 'dark:bg-blue-900/20');
+        
+        // 🔑 APPLICATION DU STYLE DE NAVIGATION DANS LE RENDU
+        if(currentRowIndex >= 0 && list.indexOf(d) === currentRowIndex) {
+            tr.classList.add('row-focused');
+        }
+        
+        const rId = d.isEcart ? d.eIdx : d.idx; const isEc = d.isEcart || false;
+        const letCellContent = d.letA || "";
+        let letCellDisplay = `<span class="font-bold text-primary text-xs">${letCellContent}</span>`;
+        
+        const editAttrDate = editUnlocked ? `contenteditable="true" onblur="syncEdit(this, ${rId}, 'dateStr', ${isEc})"` : '';
+        const editAttrMois = editUnlocked ? `contenteditable="true" onblur="syncEdit(this, ${rId}, 'mois', ${isEc})"` : '';
+        const editAttrJl = editUnlocked ? `contenteditable="true" onblur="syncEdit(this, ${rId}, 'jl', ${isEc})"` : '';
+        const editAttrNfac = editUnlocked ? `contenteditable="true" onblur="syncEdit(this, ${rId}, 'nfac', ${isEc})"` : '';
+        const editAttrRef = editUnlocked ? `contenteditable="true" onblur="syncEdit(this, ${rId}, 'ref', ${isEc})"` : '';
+        const editAttrNpiece = editUnlocked ? `contenteditable="true" onblur="syncEdit(this, ${rId}, 'npiece', ${isEc})"` : '';
+        const editAttrFolio = editUnlocked ? `contenteditable="true" onblur="syncEdit(this, ${rId}, 'folio', ${isEc})"` : '';
+        const editAttrCpte = editUnlocked ? `contenteditable="true" onblur="syncEdit(this, ${rId}, 'cpte', ${isEc})"` : '';
+        const editAttrTiers = editUnlocked ? `contenteditable="true" onblur="syncEdit(this, ${rId}, 'tiers', ${isEc})"` : '';
+        const editAttrLib = editUnlocked ? `contenteditable="true" onblur="syncEdit(this, ${rId}, 'lib', ${isEc})"` : '';
+        const editAttrEch = editUnlocked ? `contenteditable="true" onblur="syncEdit(this, ${rId}, 'ech', ${isEc})"` : '';
+        const editAttrLet = editUnlocked ? `contenteditable="true" onblur="syncEdit(this, ${rId}, 'letA', ${isEc})"` : '';
+        const editAttrDeb = editUnlocked ? `contenteditable="true" onblur="syncEdit(this, ${rId}, 'deb', ${isEc})"` : '';
+        const editAttrCre = editUnlocked ? `contenteditable="true" onblur="syncEdit(this, ${rId}, 'cre', ${isEc})"` : '';
+        
+        tr.innerHTML = `<td class="px-2 py-1.5 border-b border-[#dbe0e6] dark:border-white/10 text-center"><input type="checkbox" ${d.selected?'checked':''} data-index="${rId}" data-is-ecart="${isEc}" onchange="updateRowSel(${rId}, this.checked, ${isEc})" class="form-checkbox h-3 w-3 text-primary"/></td>
+            <td class="px-2 py-1.5 border-b border-[#dbe0e6] dark:border-white/10" ${editAttrDate}>${d.dateStr}</td>
+            <td class="px-2 py-1.5 border-b border-[#dbe0e6] dark:border-white/10" ${editAttrMois}>${d.mois||""}</td>
+            <td class="px-2 py-1.5 border-b border-[#dbe0e6] dark:border-white/10" ${editAttrJl}>${d.jl}</td>
+            <td class="px-2 py-1.5 border-b border-[#dbe0e6] dark:border-white/10" ${editAttrNfac}>${d.nfac}</td>
+            <td class="px-2 py-1.5 border-b border-[#dbe0e6] dark:border-white/10" ${editAttrRef}>${d.ref}</td>
+            <td class="px-2 py-1.5 border-b border-[#dbe0e6] dark:border-white/10" ${editAttrNpiece}>${d.npiece}</td>
+            <td class="px-2 py-1.5 border-b border-[#dbe0e6] dark:border-white/10" ${editAttrFolio}>${d.folio||""}</td>
+            <td class="px-2 py-1.5 border-b border-[#dbe0e6] dark:border-white/10" ${editAttrCpte}>${d.cpte}</td>
+            <td class="px-2 py-1.5 border-b border-[#dbe0e6] dark:border-white/10" ${editAttrTiers}>${d.tiers||""}</td>
+            <td class="px-2 py-1.5 border-b border-[#dbe0e6] dark:border-white/10" ${editAttrLib}>${d.lib}</td>
+            <td class="px-2 py-1.5 border-b border-[#dbe0e6] dark:border-white/10" ${editAttrEch}>${d.ech||""}</td>
+            <td class="px-2 py-1.5 border-b border-[#dbe0e6] dark:border-white/10" ${editAttrLet}>${letCellDisplay}</td>
+            <td class="px-2 py-1.5 border-b border-[#dbe0e6] dark:border-white/10 text-right" ${editAttrDeb}>${d.deb !== 0 ? d.deb.toFixed(3) : ''}</td>
+            <td class="px-2 py-1.5 border-b border-[#dbe0e6] dark:border-white/10 text-right" ${editAttrCre}>${d.cre !== 0 ? d.cre.toFixed(3) : ''}</td>
+            <td class="px-2 py-1.5 border-b border-[#dbe0e6] dark:border-white/10 text-right">${(d.deb - d.cre) !== 0 ? (d.deb - d.cre).toFixed(3) : ''}</td>`;
+        body.appendChild(tr);
+    });
+    const lettresUniques = [...new Set(DB.filter(d => d.letA).map(d => d.letA))]; const lettresCount = lettresUniques.length;
+    const lettresLines = DB.filter(d => d.letA).length; const nonLettresCount = DB.length - lettresLines;
+    document.getElementById('totalLines').innerText = totalTarget;
+    document.getElementById('lettreCount').innerText = lettresCount;
+    document.getElementById('lettreLinesSub').innerText = `${lettresLines} lignes`;
+    document.getElementById('nonLettreCount').innerText = nonLettresCount;
+    document.getElementById('nonLettreLinesSub').innerText = `${nonLettresCount} lignes`;
+    document.getElementById('autoCount').innerText = STATS.auto;
+    document.getElementById('manuelCount').innerText = STATS.manuel;
+    document.getElementById('reeqCount').innerText = STATS.reeq;
+    document.getElementById('niv1Count').innerText = STATS.niv1;
+    document.getElementById('niv2Count').innerText = STATS.niv2;
+    document.getElementById('niv3Count').innerText = STATS.niv3;
+    document.getElementById('niv4Count').innerText = STATS.niv4;
+    
+    calculStats();
+}
+
+// POINT 4: Lignes ECARTS en rouge dans Excel (police uniquement)
+function actionExporter() {
+    if(!DB.length) { alert("⚠️ Aucune donnée à exporter"); return; }
+    const ref = DB[0]; const annee = ref.dateObj.getFullYear() > 1970 ? ref.dateObj.getFullYear() : "Exercice";
+    const nomFichier = `Lettrage_${ref.cpte.replace(/\s+/g,'')}${ref.tiers?'_'+ref.tiers.replace(/\s+/g,''):''}_${annee}.xlsx`;
+    
+    const wsData = [...DB, ...ECARTS].map(l => ({ 
+        "DATE": l.dateStr, 
+        "Mois": l.mois, 
+        "JL": l.jl, 
+        "N° FAC": l.nfac, 
+        "REF": l.ref, 
+        "N PIECE": l.npiece, 
+        "FOLIO": l.folio, 
+        "COMPTE": l.cpte, 
+        "TIERS": l.tiers, 
+        "LIBELLE": l.lib, 
+        "ECH": l.ech, 
+        "LET": l.letA || "", 
+        "DÉBIT": l.deb, 
+        "CRÉDIT": l.cre, 
+        "SOLDE": (l.deb - l.cre) 
+    }));
+    const ws = XLSX.utils.json_to_sheet(wsData);
+    
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for(let R = range.s.r + 1; R <= range.e.r; ++R) {
+        const dataIndex = R - (range.s.r + 1);
+        if(dataIndex >= DB.length) {
+            for(let C = range.s.c; C <= range.e.c; ++C) {
+                const cellRef = XLSX.utils.encode_cell({r:R, c:C});
+                if(!ws[cellRef]) ws[cellRef] = {t:'s', v:''};
+                ws[cellRef].s = {
+                    font: { color: { rgb: "FF0000" } }
+                };
+            }
+        }
+    }
+    
+    const wb = XLSX.utils.book_new(); 
+    XLSX.utils.book_append_sheet(wb, ws, "Lettrage"); 
+    XLSX.writeFile(wb, nomFichier);
+    alert(`✅ Export réussi: ${nomFichier}\n📊 ${DB.length} lignes principales`);
+}
+
+function activerBoutons(etat) { ['btnAuto', 'btnManual', 'btnBalanceNonLet', 'btnDelet', 'btnTri', 'btnExport', 'btnLock'].forEach(id => document.getElementById(id).disabled = !etat); }
+function actionToutCocher(src) { DB.forEach(d => d.selected = src.checked); ECARTS.forEach(e => e.selected = src.checked); rafraichirTableau(); }
+function actionToggleTri() { ordreInitialMode = !ordreInitialMode; const btn = document.getElementById('btnTri'); btn.innerHTML = ordreInitialMode ? '<span class="material-symbols-outlined mr-1 text-sm">sort</span>ORDRE INITIAL' : '<span class="material-symbols-outlined mr-1 text-sm">sort</span>TRI Alphabétique'; rafraichirTableau(); }
+const cleanK = (v) => v ? v.toString().trim().toUpperCase() : "";
+</script>
+</body>
+</html>

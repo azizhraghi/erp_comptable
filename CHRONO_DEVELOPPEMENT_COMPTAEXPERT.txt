@@ -1,0 +1,609 @@
+﻿====================================================================
+            CHRONOLOGIE DE DÉVELOPPEMENT — COMPTAEXPERT ERP
+               Du 14/05/2026 au 01/06/2026 — 57 versions (V01→V57)
+               Durée totale estimée : ~30 h 15 min de développement effectif
+====================================================================
+
+====================================================================
+PROJET : ERP Comptable Tunisien — Solution monolithique HTML5/Tailwind/ApexCharts
+AUTEUR : ACO NAJD
+TECHNOLOGIES : HTML5, Tailwind CSS, Lucide Icons, ApexCharts, SheetJS (xlsx), html2pdf
+STOCKAGE : LocalStorage (clé compta_vXX_backup) + Export/Import JSON
+====================================================================
+
+********************************************************************
+V58 — Module Saisie/Import + Design fixes
+Date : 01/06/2026 — 18:00
+Fichier : COMPTAEXPERT_V58.html — ~6300 lignes
+Durée : 60 min
+Description : Module Saisie/Import complet avec onglets (Saisie Manuelle + Import Excel).
+Grille dynamique avec lignes débit/crédit, sélection compte PCE et tiers, vérification équilibre temps réel.
+Import Excel avec données de démonstration, validation et rapport de logs.
+AJOUTÉ :
+  [+] Saisie : Module complet avec onglets Saisie Manuelle / Import Excel
+  [+] Saisie : Grille dynamique de lignes (ajout/suppression, compte, tiers, débit, crédit, devise)
+  [+] Saisie : Vérification équilibre temps réel avec badge Équilibré/Déséquilibré
+  [+] Saisie : Validation et enregistrement des écritures dans state.ecritures
+  [+] Import : Simulation import Excel avec données de démonstration
+  [+] Import : Rapport de validation (lignes acceptées/rejetées) avec logs détaillés
+MODIFIÉ :
+  [~] Design : Cadre Analyse Charges padding uniforme (p-4) sur les 4 côtés
+  [~] Design : Cadre entête onglet Saisie wrapper gemini-card (même format que graphiques)
+  [~] Design : Animation titre page ralentie 6s→10s (title-shimmer)
+  [~] Clé LocalStorage : compta_v57_backup → compta_v58_backup
+  [~] Migration : ajout V57 → V58
+  [~] Identifiant version : titre et login → COMPTAEXPERT V58 — Precision Ledger
+SUPPRIMÉ :
+  [-] Rien
+
+********************************************************************
+V57 — PCE, Éditions, Lettrage amélioré
+Date : 01/06/2026 — 12:00
+Fichier : COMPTAEXPERT_V57.html — ~6400 lignes
+Durée : 180 min
+Description : Module Plan Comptable complet (recherche, filtre classe, CRUD avec mapping NEF/liasse).
+Module Éditions (Balance Générale, Balance Auxiliaire, Grand-Livre). Lettrage amélioré avec 4 niveaux auto.
+Tiers enrichi avec balance âgée.
+AJOUTÉ :
+  [+] PCE : Plan Comptable complet avec recherche, filtre classe 1-7, tableau des comptes
+  [+] PCE : Ajout/modification de compte avec mapping NEF Bilan/CR et liasse fiscale
+  [+] PCE : Blocage/déblocage de compte, cycle d'audit
+  [+] Éditions : Balance Générale avec cumuls BILAN (Classes 1-5) et GESTION (Classes 6-7)
+  [+] Éditions : Balance Auxiliaire ventilée par collectif Clients (411) et Fournisseurs (401)
+  [+] Éditions : Grand-Livre Général avec priorité RAN-first et solde cumulé D/C
+  [+] Lettrage : Moteur 4 niveaux (N1: N° Pièce, N2: One-to-One, N3: FIFO, N4: Combinatoire)
+  [+] Lettrage : OD d'écart de centimes automatique pour lettrage manuel
+  [+] Tiers : Analyse de balance âgée et alerte plafond crédit
+MODIFIÉ :
+  [~] Clé LocalStorage : compta_v56_backup → compta_v57_backup
+  [~] Migration : ajout V56 → V57
+  [~] Identifiant version : titre et login → COMPTAEXPERT V57 — Precision Ledger
+SUPPRIMÉ :
+  [-] Rien
+
+********************************************************************
+V57 — Header gemini-card + Titre animé
+Date : 29/05/2026 — 00:01
+Fichier : COMPTAEXPERT_V56.html — ~5480 lignes
+Durée : 20 min
+Description : Wrapper gemini-card sur le header, titre page animé (linear-gradient shimmer + background-clip text).
+AJOUTÉ :
+  [+] Header : wrap gemini-card (bordure animée conic-gradient)
+  [+] Titre page : animation linear-gradient shimmer (font-weight 900, background-clip text)
+MODIFIÉ :
+  [~] Clé LocalStorage : compta_v55_backup → compta_v56_backup
+  [~] Migration : ajout V55 → V56
+  [~] Identifiant version : titre et login → COMPTAEXPERT V56 — Precision Ledger
+SUPPRIMÉ :
+  [-] Duplicate state keys nettoyés
+Fichier : COMPTAEXPERT_V55.html — ~5470 lignes
+Durée : 10 min
+Description : Remplacement du ::before CSS automatique par wrapper HTML explicite sur les 4 conteneurs .card.
+MODIFIÉ :
+  [~] .card ::before supprimé, border statique restaurée
+  [~] 4 conteneurs graphiques Dashboard : wrapper gemini-card appliqué (login inchangé)
+  [~] Clé LocalStorage : compta_v54_backup → compta_v55_backup
+  [~] Migration : ajout V54 → V55
+  [~] Identifiant version : titre et login → COMPTAEXPERT V55 — Precision Ledger
+SUPPRIMÉ :
+  [-] CSS : règle .card::before (bordure animée automatique)
+
+********************************************************************
+V54 — Gemini Animated Borders (Design refinement)
+Date : 28/05/2026 — [HEURE]
+Fichier : COMPTAEXPERT_V54.html — ~5465 lignes
+Durée : 10 min
+Description : Application d'effets de bordure animée "Gemini" (conic-gradient) à tous les conteneurs .card de l'application.
+AJOUTÉ :
+  [+] CSS : Effet de bordure animée Gemini via ::before sur classe .card (conic-gradient cyan/purple/orange/emerald)
+  [+] CSS : Classes .gemini-card, .gemini-border, .gemini-body pour emballage optionnel
+MODIFIÉ :
+  [~] .card : border 1px statique supprimée, remplacée par ::before gradient animé
+  [~] Login card : wrapper gemini-card complet (bordure tournante + fond intérieur)
+  [~] Clé LocalStorage : compta_v53_backup → compta_v54_backup
+  [~] Migration : ajout migration auto V53 → V54
+  [~] Identifiant version : titre et login → COMPTAEXPERT V54 — Precision Ledger
+
+********************************************************************
+V53 — Module Tiers (Plan Tiers) + KPI Text Values Harmonisation
+Date : 28/05/2026 — [HEURE]
+Fichier : COMPTAEXPERT_V53.html — ~5450 lignes
+Durée : 40 min (5 min KPI fonts + 35 min Tiers)
+Description : Construction complète du module Tiers (gestion des tiers) sur base V49 reprise avec police KPI JetBrains Mono.
+AJOUTÉ :
+  [+] Module Tiers : CRUD complet (création, modification, suppression avec protection mouvement)
+  [+] Module Tiers : Layout scindé 1/3 liste + 2/3 fiche détail avec filtres nature/statut/recherche
+  [+] Module Tiers : Export/Import Excel .xlsx via SheetJS
+  [+] Module Tiers : Comptes associés automatiques dérivés du PCE (même préfixe 3 chiffres)
+  [+] Module Tiers : Recherche PCE modale pour sélection du compte collectif
+  [+] Module Tiers : Indicateurs de mouvement (N/N-1/Inactif) sur les cartes tiers
+  [+] Module Tiers : 8 tiers mock (3 clients, 4 fournisseurs, 1 salarié)
+  [+] PCE : Compte 425000 (Personnel) avec gestion_tiers:true
+  [+] localStorage : state.tiers initialisé + migration auto
+MODIFIÉ :
+  [~] PCE : 401000/411000/425000 étendus avec gestion_tiers bool + type_tiers (fournisseur/client/salarié)
+  [~] PCE : Migration rétroactive pour comptes existants
+  [~] Navigation : Onglet Tiers activé avec showPage handler renderTiers()
+  [~] Nature tiers : "Personnel" → "Salarié", ajout "Autre"
+  [~] CSS : Styles dédiés module Tiers (cartes, formulaires, badges, dot, switch, filtres)
+  [~] Police data KPI : Inter → JetBrains Mono (monospace tabulaire) sur .kpi-value
+  [~] Google Fonts : ajout JetBrains Mono (400-800)
+  [~] Tailwind config : ajout fontFamily mono
+  [~] Clé LocalStorage : compta_v49_backup → compta_v53_backup
+  [~] Identifiant version : titre et login → COMPTAEXPERT V53 — Precision Ledger
+
+********************************************************************
+V52 — Module Rapprochement & Export Excel
+Date : [À DÉFINIR]
+Fichier : COMPTAEXPERT_V52.html (PRÉVU)
+Durée : [ESTIMÉE]
+Description : Rapprochement bancaire automatique, export Excel multi-feuilles, notifications en temps réel.
+PLANIFIÉ :
+  [+] Module de rapprochement bancaire automatique : import relevés, matching automatique, écarts
+  [+] Export Excel multi-feuilles : structure par exercice, par mois, par module
+  [+] Notifications en temps réel : alertes anomalies, soldes négatifs, échéances
+  [~] Module Journaux : intégration directe avec rapprochement bancaire
+  [~] Performance : indexation optimisée des écritures recherche/filtrage
+  [~] Interface : réactivité accrue avec animations fluides
+
+********************************************************************
+V52 — Design System Modernisation & Typography
+Date : 28/05/2026 — 16:30
+Fichier : COMPTAEXPERT_V52.html — ~5200 lignes
+Durée : 45 min
+Description : Modernisation complète du design system avec JetBrains Mono pour valeurs KPI et palette Fintech haute fidélité.
+MODIFIÉ :
+  [~] Base V49 reprise avec design V50 intégré
+  [~] Police valeurs KPI : Inter → JetBrains Mono (monospace tabulaire)
+  [~] Palette couleurs : secondary #FF00E5 → #8A2BE2 ; danger #FF8C42 → #E53935
+  [~] Fond bg-surface différencié de bg-card (#131b2e → #18203a)
+  [~] Boutons : border-radius 999px → 8px (ROUND_EIGHT)
+  [~] Background : dégradés radiaux subtils pour profondeur visuelle
+  [~] Toggle switches : composant .toggle-switch unifié
+  [~] Glows dynamiques : effets lumineux par couleur sémantique
+  [~] Volume bars : 4px → 6px avec dégradés Cyan > Amber > Gris
+  [~] Charts ApexCharts : couleurs sémantiques primaires/secondaires/succès/danger
+  [~] Glassmorphism amélioré : backdrop-blur(20px) surfaces principales
+  [~] Clé LocalStorage : compta_v49_backup → compta_v52_backup
+  [~] Identifiant version : titre → COMPTAEXPERT V52 - Precision Ledger
+
+********************************************************************
+V51 — Audit Design & Corrections
+Date : 28/05/2026 — 10:45
+Fichier : COMPTAEXPERT_V51.html
+Durée : 30 min
+Description : Audit complet design (28 points) et corrections sur tous les onglets.
+MODIFIÉ :
+  [~] Palette : secondary #FF00E5 → #8A2BE2, danger #FF8C42 → #E53935
+  [~] bg-surface différencié de bg-card (#131b2e → #18203a)
+  [~] Glassmorphism étendu à toutes les surfaces majeures
+  [~] Tableaux : padding réduit de 60% (px-10 py-5 → px-4 py-3)
+  [~] Toggle Multidevise unifié avec .toggle-switch CSS
+  [~] Tabs : padding réduit
+  [~] Page container : padding unifié p-4 → px-8 py-6
+  [~] KPI Cards : height 96px → min-height auto + padding accru
+  [~] Badges : 9px → 10px, Volume bars : 4px → 6px
+  [~] Sidebar nav headers : 10px → 11px
+  [~] Toasts : texte foncé sur fonds clairs (contraste WCAG)
+  [+] Champ mot de passe login avec validation
+  [+] Variable --accent-orange (#FF8C42) pour usage non-danger
+CORRIGÉ :
+  [x] @apply directives : 5 classes cassées remplacées par CSS pur
+  [x] openPceSearch() : ID generic-modal-content → modal-content
+  [x] Duplicate ecritures/pce dans l'état initial
+  [x] Selects Profil Métier : white-on-white en mode sombre
+  [x] Layout lettrage : calc(100vh-180px) → flex-1
+  [x] Login card : background solide → glass
+
+********************************************************************
+V50 — Redesign High-Fidelity Fintech
+Date : 28/05/2026 — 17:00
+Fichier : COMPTAEXPERT_V50.html — ~5000 lignes
+Durée : 30 min
+Description : Refonte complète du design system : palette sémantique anti-rouge, glassmorphism, typographie chirurgicale.
+MODIFIÉ :
+  [~] Palette : Primaire Cyan #00F2FF, Alerte Sunset Orange #FF8C42, Succès Emerald #50C878, Avertissement Amber #FFB700, Insight Deep Purple #8A2BE2
+  [~] Fond Deep Navy #0B1326 avec motifs subtils de gradient
+  [~] Bordures néon (1px) Cyan sur les zones de focus
+  [~] Glassmorphism : backdrop-blur(20px) sur menus latéraux et modales
+  [~] Boutons : border-radius 8px (ROUND_EIGHT) + outer glow matching accent
+  [~] Toggles : style "Switch" lumineux avec transition fluide
+  [~] Graphiques : dégradés de la couleur sémantique vers transparence
+  [~] Barres de volume : dégradés dynamiques Cyan > Amber > Gris
+  [~] Police données : JetBrains Mono pour tous les chiffres, codes et hash
+  [~] Clé LocalStorage : compta_v49_backup → compta_v50_backup
+  [~] Identifiant version : titre et login → COMPTAEXPERT V50 — Precision Ledger
+
+********************************************************************
+V49 — Module Journaux Amélioré
+Date : 28/05/2026 — 16:00
+Fichier : COMPTAEXPERT_V49.html — ~4900 lignes
+Durée : 40 min
+Description : Améliorations majeures du module Journaux (recherche, PCE, rapprochement, histogramme, protection suppression).
+MODIFIÉ :
+  [~] Code journal : longueur libre (non limité à 4 caractères)
+  [~] Placeholders : "Ex: ACH" / "Ex: ACHAT"
+  [+] Barre de recherche/filtre dans la liste des journaux
+  [~] Compte de Trésorerie : format "532000 — BIAT" (Compte – Intitulé)
+  [+] Loupe de recherche depuis le Plan Comptable (PCE) pour compte trésorerie
+  [+] Validation bloquante si compte trésorerie inexistant dans le PCE
+  [+] Case à cocher "Rapprochement bancaire" pour journaux Trésorerie (cochée par défaut)
+  [+] Affichage du compte trésorerie (532000 — BIAT) dans la liste des journaux
+  [+] Protection suppression : impossible si le journal contient des écritures
+  [/] Volumes calculés par exercice sélectionné (sélecteur header)
+  [+] Histogramme mensuel du nombre de lignes par journal (selon exercice en cours)
+  [+] Filtre : Tous / Actifs / Verrouillés dans la liste des journaux
+  [+] Icône verrou dans la liste pour les journaux verrouillés
+  [~] Clé LocalStorage : compta_v48_backup → compta_v49_backup
+  [~] Identifiant version : titre et login → COMPTAEXPERT V49 — Precision Ledger
+
+********************************************************************
+V48 — Journaux Layout Scindé
+Date : 28/05/2026 — 15:00
+Fichier : COMPTAEXPERT_V48.html — ~4800 lignes
+Durée : 20 min
+Description : Construction complète du module Journaux (liste + édition, natures, volumes, verrouillage temporel).
+MODIFIÉ :
+  [~] Layout scindé 1/3 liste journaux + 2/3 édition
+  [~] 6 natures de journal (AN, Achat, Vente, Trésorerie, OD, Situ/Inv) avec boutons radio
+  [~] Analyse volumétrique : calcul nb lignes par journal, % volume, barre Cyan/Jaune/Gris
+  [~] Verrouillage temporel : dates par exercice + par journal
+  [~] Bouton verrouillage/déverrouillage journal (toggle actif)
+  [~] Clé LocalStorage : compta_v47_backup → compta_v48_backup
+  [~] Identifiant version : titre et login → COMPTAEXPERT V48 — Precision Ledger
+
+********************************************************************
+V47 — Ajustements Graphiques
+Date : 28/05/2026 — 15:00
+Fichier : COMPTAEXPERT_V47.html — 4434 lignes
+Durée : 5 min
+Description : Agrandissement des labels pourcentage et texte central du donut Analyse Charges.
+MODIFIÉ :
+  [~] Donut Chart : dataLabels pourcentage 12px→14px gras 800
+  [~] Donut Chart : Total centre 13px→15px gras 800, valeur 18px→20px gras 800
+  [~] Clé LocalStorage : compta_v46_backup → compta_v47_backup
+  [~] Identifiant version : titre et login → COMPTAEXPERT V47 — Precision Ledger
+
+********************************************************************
+V46 — Graphiques & KPI
+Date : 27/05/2026 — 21:26
+Fichier : COMPTAEXPERT_V46.html — 4425 lignes
+Durée : 16 min
+Description : Alignement graphiques ApexCharts sur V45, audit design cartes KPI, icône exercice + bordure.
+MODIFIÉ :
+  [~] Graphiques ApexCharts : 4 graphiques alignés sur V45 (Area dropShadow, Donut 55% no stroke, Barres borderRadius 10/6)
+  [~] Cartes KPI : variation % 10px→13px, meilleure répartition verticale
+  [~] Sélecteur exercice header : icône calendrier + bordure visible
+  [~] Clé LocalStorage : compta_v45_backup → compta_v46_backup
+  [~] Identifiant version : titre et login → COMPTAEXPERT V46 — Precision Ledger
+
+********************************************************************
+V45 — Reprise V44
+Date : 27/05/2026 — 21:10
+Fichier : COMPTAEXPERT_V45.html — 4334 lignes
+Durée : 5 min
+Description : Reprise de la base V44 en version V45, mise à jour clé LocalStorage et titre.
+MODIFIÉ :
+  [~] Base V44 reprise complète
+  [~] Identifiant version : titre et login → COMPTAEXPERT V45
+
+********************************************************************
+V44 — KPI Améliorés
+Date : 18/05/2026 — 19:09
+Fichier : COMPTAEXPERT_V44.html — 1907 lignes, 68 fonctions
+Durée : 3 h 24
+Description : Layout vertical compact avec icône visible, TOTAL permanent au centre du Donut.
+
+********************************************************************
+V43 — Layout KPI Horizontal
+Date : 18/05/2026 — 15:45
+Fichier : COMPTAEXPERT_V43.html
+Durée : batch (15:45)
+Description : Badge Erreurs 12 & Layout Horizontal.
+
+********************************************************************
+V42 — 12 KPIs + Données Mock
+Date : 18/05/2026 — 15:45
+Fichier : COMPTAEXPERT_V42.html
+Durée : batch (15:45)
+Description : 12 Cartes KPI Dynamiques & Badge Alertes.
+
+********************************************************************
+V41 — Graphiques Redesign
+Date : 18/05/2026 — 15:45
+Fichier : COMPTAEXPERT_V41.html
+Durée : batch (15:45)
+Description : Légendes Latérales & Layout Centré.
+
+********************************************************************
+V40 — Dashboard Réduit
+Date : 18/05/2026 — 15:45
+Fichier : COMPTAEXPERT_V40.html
+Durée : batch (15:45)
+Description : Dashboard Compact.
+Note : V40→V43 sont 4 versions créées en même temps (15:45) — modifications CSS/layout groupées.
+
+********************************************************************
+V39 — Dashboard Homogène
+Date : 18/05/2026 — 15:00
+Fichier : COMPTAEXPERT_V39.html
+Durée : 45 min
+Description : Bénéfice/Déficit Dynamique & Icône Thème.
+
+********************************************************************
+V38 — Intégration Revue/Lettrage
+Date : 18/05/2026 — 14:00
+Fichier : COMPTAEXPERT_V38.html
+Durée : 1 h 00
+Description : Intégration complète du module Revue/Lettrage.
+
+********************************************************************
+V37 — Module Revue/Lettrage
+Date : 18/05/2026 — 02:04
+Fichier : COMPTAEXPERT_V37.html
+Durée : 11 h 56 (jusqu'à V38 — pause nuit)
+Description : Module Revue/Lettrage Autonome complet.
+
+********************************************************************
+V36 — Base Stable V30+
+Date : 18/05/2026 — 01:37
+Fichier : COMPTAEXPERT_V36.html
+Durée : 27 min
+Description : Base Stable V30+ Intégrale.
+
+********************************************************************
+V35 — Traçabilité Audit
+Date : 18/05/2026 — 00:58
+Fichier : COMPTAEXPERT_V35.html
+Durée : 39 min
+Description : Traçabilité Audit Complète.
+
+********************************************************************
+V34 — Données Mock par Exercice
+Date : 18/05/2026 — 00:50
+Fichier : COMPTAEXPERT_V34.html
+Durée : 8 min
+Description : Mock Data par Exercice & Filtre Audit.
+
+********************************************************************
+V33 — Exercice par Défaut
+Date : 18/05/2026 — 00:35
+Fichier : COMPTAEXPERT_V33.html
+Durée : 15 min
+Description : Exercice par Défaut & Tri Décroissant.
+
+********************************************************************
+V32 — Filtre Audit
+Date : 18/05/2026 — 00:22
+Fichier : COMPTAEXPERT_V32.html
+Durée : 13 min
+Description : Sauvegarde Explicite & Indicateur Visuel. Filtre audit par utilisateur, touche Échap universelle, indicateur visuel sauvegarde, alerte fermeture navigateur.
+
+********************************************************************
+V31 — Utilisateurs & Habilitation
+Date : 17/05/2026 — 23:59
+Fichier : COMPTAEXPERT_V31.html
+Durée : 23 min
+Description : Matrice Droits Complète & Journal d'Audit. Gestion complète des utilisateurs avec 13 droits granulaires.
+
+********************************************************************
+V30 — Comparatif N/N-1
+Date : 17/05/2026 — 23:17
+Fichier : COMPTAEXPERT_V30.html
+Durée : 42 min
+Description : Comparatif N/N-1 Dynamique & Devises BCT. Calcul N-1 réel depuis exercice précédent, 30 devises BCT.
+
+********************************************************************
+V29 — Export & Donut
+Date : 17/05/2026 — 23:00
+Fichier : COMPTAEXPERT_V29.html
+Durée : 17 min
+Description : Recherche Devises & Filtrage. Modale de recherche devises avec filtrage temps réel.
+
+********************************************************************
+V28 — Données Mock 2 Exercices
+Date : 17/05/2026 — 22:49
+Fichier : COMPTAEXPERT_V28.html
+Durée : 11 min
+Description : 144 écritures mock par exercice, création auto 2025+2026.
+
+********************************************************************
+V27 — 4 Graphiques
+Date : 17/05/2026 — 22:33
+Fichier : COMPTAEXPERT_V27.html
+Durée : 16 min
+Description : Devises Personnalisées. Ajout de devises personnalisées avec modale de création.
+
+********************************************************************
+V26 — Graphiques Restaurés
+Date : 17/05/2026 — 00:00
+Fichier : COMPTAEXPERT_V26.html — ~1200 lignes
+Durée : ~22 h 30 jusqu'à V27 (pause entre minuit et 22h33)
+Description : Réintégration 4 graphiques ApexCharts complets + variations dynamiques.
+AJOUTÉ :
+  - 4 graphiques ApexCharts restaurés : Area (CA vs Charges), Donut (Analyse Charges),
+    Barres Empilées (Mensuelles), Comparatif N/N-1
+  - Variations dynamiques N vs N-1 : pastilles colorées sur chaque KPI
+  - Données mensuelles détaillées dans calculateDashboard()
+  - Fonction changeExercise() : changement exercice avec rafraîchissement auto
+  - Fonction updateVariation() : calcul intelligent avec inversion couleur charges
+  - Formatage français : toLocaleString('fr-FR')
+
+********************************************************************
+V25 — Tableau de Bord Dynamique
+Date : 16/05/2026
+Fichier : COMPTAEXPERT_V25.html
+Durée : inconnue
+Description : Triple Onglet Dossier & Mock Data.
+
+********************************************************************
+V24 — Analyse Volume + RAN
+Date : 16/05/2026
+Fichier : COMPTAEXPERT_V24.html
+Durée : ~45 min
+Description : Analyse de Volume & Restauration V22.
+
+********************************************************************
+V23 — Triple Onglet Dossier
+Date : 16/05/2026
+Fichier : COMPTAEXPERT_V23.html
+Durée : ~45 min
+Description : Triple Onglet Dossier & Mock Data.
+
+********************************************************************
+V22 — Blocage Drag & Couleurs Graphiques
+Date : 16/05/2026
+Fichier : COMPTAEXPERT_V22.html
+Durée : ~20 min
+Description : Blocage Drag Navigateur & Couleurs Graphiques.
+
+********************************************************************
+V21 — Drag & Drop Global
+Date : 16/05/2026
+Fichier : COMPTAEXPERT_V21.html
+Durée : ~30 min
+Description : Drag & Drop Global & Légendes.
+
+********************************************************************
+V20 — Formatage Milliers & Variations
+Date : 15/05/2026
+Fichier : COMPTAEXPERT_V20.html
+Durée : ~30 min
+Description : Formatage Milliers & Variations Intelligentes.
+
+********************************************************************
+V19 — Moteur calculateDashboard()
+Date : 15/05/2026
+Fichier : COMPTAEXPERT_V19.html
+Durée : ~45 min
+Description : Moteur calculateDashboard() & Permissions.
+
+********************************************************************
+V18 — Style Saisie "Champs Blancs"
+Date : 15/05/2026
+Fichier : COMPTAEXPERT_V18.html
+Durée : ~20 min
+Description : Style Saisie "Champs Blancs".
+
+********************************************************************
+V17 — Architecture Sidebar & Touche Échap
+Date : 15/05/2026
+Fichier : COMPTAEXPERT_V17.html
+Durée : ~30 min
+Description : Architecture Sidebar & Touche Échap.
+
+********************************************************************
+V16 — Rétablissement Graphiques
+Date : 14/05/2026
+Fichier : COMPTAEXPERT_V16.html
+Durée : ~20 min
+Description : Rétablissement Graphiques.
+
+********************************************************************
+V15 à V01 — Versions Initiales
+Date : 14/05/2026
+
+V15 — Sécurité Anti-Suppression & Contraste
+Fichier : COMPTAEXPERT_V15.html
+Durée : ~25 min
+
+V14 — Statut Utilisateur & Synchro Analytique
+Fichier : COMPTAEXPERT_V14.html
+Durée : ~20 min
+
+V13 — Tableau Exercices Étendu & Typographie
+Fichier : COMPTAEXPERT_V13.html
+Durée : ~15 min
+
+V12 — Export Normalisé & Labels Mensuels
+Fichier : COMPTAEXPERT_V12.html
+Durée : ~25 min
+
+V11 — Intelligence des Dates & Contraste
+Fichier : COMPTAEXPERT_V11.html
+Durée : ~20 min
+
+V10 — Gestion Active Exercices & Utilisateurs
+Fichier : COMPTAEXPERT_V10.html
+Durée : ~45 min
+Description : CRUD fonctionnel pour exercices et collaborateurs.
+
+V09 — Verrouillage Exercices & Sidebar
+Fichier : COMPTAEXPERT_V09.html
+Durée : ~20 min
+Description : Blocage saisie exercice clôturé, réorganisation sidebar.
+
+V08 — Palette Slate/Indigo
+Fichier : COMPTAEXPERT_V08.html
+Durée : ~15 min
+Description : Transition palette Slate/Indigo, suppression graphiques redondants.
+
+V07 — Version de Référence Stable
+Fichier : COMPTAEXPERT_V07.html
+Durée : ~30 min
+Description : Sauvegarde auto LocalStorage + modale de sortie.
+
+V06 — 4 Graphiques ApexCharts
+Fichier : COMPTAEXPERT_V06.html
+Durée : ~1 h
+Description : Premier set de 4 graphiques pour le tableau de bord.
+
+V05 — KPI Cards Étendues
+Fichier : COMPTAEXPERT_V05.html
+Durée : ~30 min
+Description : Passage à 7 KPIs principaux + 6 cartes de détails.
+
+V04 — Dashboard Double Rangée & Dark Mode
+Fichier : COMPTAEXPERT_V04.html
+Durée : ~15 min
+Description : Organisation des indicateurs sur deux lignes.
+
+V03 — Persistance et Sécurité Admin
+Fichier : COMPTAEXPERT_V03.html
+Durée : ~15 min
+Description : Première implémentation de la persistance des données.
+
+V02 — Matrice de Droits Initiale
+Fichier : COMPTAEXPERT_V02.html
+Durée : ~20 min
+Description : Première version des habilitations utilisateurs. Matrice de droits : Junior, Senior, Admin.
+
+V01 — Initialisation du Projet
+Fichier : COMPTAEXPERT_V01.html + index.html — ~200 lignes
+Durée : ~2 h (création du squelette complet)
+Description : Création du shell HTML5 monolithique avec Tailwind CSS et Lucide Icons.
+AJOUTÉ :
+  - Dashboard 8 KPI : première structure avec 8 indicateurs statiques
+  - Drag & Drop JSON : moteur de lecture de fichiers JSON pour ingestion de données
+  - Thème Dual : sélecteur de thème (Clair / Sombre)
+  - Login screen : authentification avec écran de connexion
+  - Sidebar : navigation avec menu Principal, Saisie & Analyse, Système
+
+********************************************************************
+RÉCAPITULATIF DES JOURNÉES
+---
+Jour 1 — 14/05/2026 : V01→V16  (16 versions)  ~7 h 00
+Jour 2 — 15/05/2026 : V17→V20   (4 versions)   ~2 h 05
+Jour 3 — 16/05/2026 : V21→V25   (5 versions)   ~3 h 50
+Jour 4 — 17/05/2026 : V26→V31   (6 versions)   ~2 h 30* (*22h pause entre V26 et V27)
+Jour 5 — 18/05/2026 : V32→V44   (13 versions)  ~8 h 30* (*11h56 pause nuit entre V37 et V38)
+Jour 6 — 28/05/2026 : V45→V56   (12 versions)   ~3 h 25
+Jour 7 — 01/06/2026 : V57→V58   (1 version)    ~1 h 00
+---
+Total estimé : ~27 h 55 min de développement effectif (sur 18 jours calendaires)
+
+********************************************************************
+STATISTIQUES GLOBALES (V01→V58)
+---
+  - Période : 14 mai → 01 juin 2026
+  - Versions : 58 (V01 à V58)
+  - Technologies : HTML5, Tailwind CSS, Lucide Icons, ApexCharts
+  - Stockage : LocalStorage + Import/Export JSON
+  - Langue : Française (interface + documentation)
+  - Framework : Aucun (monolithique vanilla JS)
+  - Modules fonctionnels : 10+ (Dashboard, Sociétés, PCE, Tiers, Saisie, Lettrage,
+    Éditions, Contrôles, États Financiers, Liasse Fiscale, Paramétrage, Revue)
+
+====================================================================
+FIN DU CHRONO — COMPTAEXPERT ERP — © 2026 ACO NAJD
+====================================================================

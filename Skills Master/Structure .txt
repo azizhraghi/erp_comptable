@@ -1,0 +1,16 @@
+[dossier projet]/
+├── instructions.md
+├── brand-guidelines.md
+├── context.md
+└── .agent/
+    └── skills/
+        ├── brainstorming-ideas/
+        │   └── SKILL.md
+        ├── planning-implementation/
+        │   └── SKILL.md
+        ├── managing-versions/
+        │   └── SKILL.md
+        ├── audit-workflow/
+        │   └── SKILL.md
+        └── optimize-workflow/
+        │   └── SKILL.md

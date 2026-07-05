@@ -1,0 +1,649 @@
+﻿====================================================================================================================================
+                                               HISTORIQUE DÉTAILLÉ DES VERSIONS — COMPTAEXPERT ERP
+====================================================================================================================================
+
+************************************************************************************************************************************
+VERSION : V44
+DATE : 18/05/2026 à 19:09
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- (Aucun ajout)
+MODIFIÉ :
+- Cartes KPI : Nouveau layout vertical compact — icône gauche w-7 visible, variation % en haut à droite (couleur rouge/vert), valeur (montant) centrée en haut, label en dessous.
+- CSS KPI : Hauteur 82px → 96px, padding 0.3rem 0.5rem → 0.5rem 0.75rem, valeur 17px → 18px, variation 11px → 10px.
+- Card template : Passage de display:flex row à flex-col justify-between avec padding uniforme (p-3) pour marges 4 côtés.
+- Donut Chart (Analyse Charges) : TOTAL permanent au centre + montant en K du segment sélectionné au clic, légendes à droite (inchangé).
+- Clé LocalStorage : Migration de compta_v43_backup à compta_v44_backup.
+- Identifiant Version : Titre et écran de login mis à jour vers COMPTAEXPERT V44.
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V43
+DATE : 18/05/2026 à 15:45
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Badge "12" erreurs dans le menu Revue/Lettrage (sidebar).
+MODIFIÉ :
+- Cartes KPI : Nouveau layout horizontal — icône gauche (w-10, opacity-15), label + valeur centrés, variation % à droite (centrée verticalement, police 11px).
+- switchExerciseView() : Suppression de la restauration isCurrent → l'exercice sélectionné devient réellement l'exercice courant.
+- Badge sidebar Revue/Lettrage : "!" remplacé par "12" (nombre d'erreurs, badge rouge arrondi min-w-[20px]).
+- Gap grid KPI : grid2 passe de gap-4 à gap-3 (uniforme avec grid1).
+- Clé LocalStorage : Migration de compta_v42_backup à compta_v43_backup.
+- Identifiant Version : Titre et écran de login mis à jour vers COMPTAEXPERT V43.
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V42
+DATE : 18/05/2026 à 15:45
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- (Aucun ajout)
+MODIFIÉ :
+- Cartes KPI : Icône gauche plus grande (w-6 h-6, absolute, opacity-30), label plus grand (9px), variation % centrée sous la valeur.
+- 12 cartes sur 2 lignes (6+6) de même taille : grid1 passe de lg:grid-cols-7 à lg:grid-cols-6.
+- Carte Alertes supprimée du Dashboard → remplacée par badge "!" rouge dans le menu Revue/Lettrage (sidebar).
+- Règles de couleur variation : Créances inv=true (+ rouge, - vert), Fournisseur inv=false (- rouge, + vert), Trésorerie inv=false, Stock inv=false, Emprunt inv=true.
+- Toutes les variations sont maintenant dynamiques (varId) et changent par exercice (treso, clients, fourn, stock, emprunt ajoutés à getMockDataForYear et calculateDashboard).
+- Données Mock : CA et Charges complètement indépendants (sans relation), CA mensuel aléatoire (r4() = random 4 chiffres) pour chaque exercice.
+- Donut Chart : "TOTAL" réintégré au centre (taille 13px, toujours visible), tooltip désactivé (tooltip: false), sélection affiche montant en K.
+- Clé LocalStorage : Migration de compta_v41_backup à compta_v42_backup.
+- Identifiant Version : Titre et écran de login mis à jour vers COMPTAEXPERT V42.
+CORRIGÉ :
+- (Aucune correction)
+SUPPRIMÉ :
+- Carte Alertes du Dashboard (remplacée par badge sidebar).
+- varStatic remplacé par varId dynamique pour toutes les cartes.
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V41
+DATE : 18/05/2026 à 15:45
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- (Aucun ajout)
+MODIFIÉ :
+- Dashboard Layout : Légendes des 4 graphiques déplacées à droite (legend: 'right') → gain de place vertical.
+- Graphiques ApexCharts : Hauteur 200px → 260px pour profiter de l'espace libéré par les légendes latérales.
+- Cartes KPI : Variation % centrée sous la valeur (plus en position absolue top-right), icône centrée, label en bas.
+- KPI Cards : Hauteur 72px → 80px pour accommoder le nouveau layout centré (icône + valeur + variation + label).
+- Donut Chart : Texte "TOTAL..." retiré du centre ; montant en K affiché lors de la sélection d'un segment.
+- Données Mock : Exercices rendus non homogènes (2024 = tendance basse, 2025 = stable, 2026 = forte croissance) pour visualiser les changements au switch d'exercice.
+- Clé LocalStorage : Migration de compta_v40_backup à compta_v41_backup.
+- Identifiant Version : Titre et écran de login mis à jour vers COMPTAEXPERT V41.
+CORRIGÉ :
+- (Aucune correction)
+SUPPRIMÉ :
+- (Aucune suppression)
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V40
+DATE : 18/05/2026 à 15:45
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- (Aucun ajout)
+MODIFIÉ :
+- Dashboard : Layout réduit pour afficher les 13 cartes KPI + 4 graphiques sans barre de défilement vertical.
+- KPI Cards : Hauteur 100px → 72px, padding réduit, icônes w-5 → w-4, label 10px → 8px, valeur 28px → 20px.
+- Graphiques ApexCharts : Hauteur 280px → 200px, cartes padding p-10 → p-4, titre mb-10 → mb-3.
+- Espacements : page-container p-10 → p-4, dashboard space-y-8 → space-y-4, chart grid gap-8 → gap-4.
+- Clé LocalStorage : Migration de compta_v39_backup à compta_v40_backup.
+- Identifiant Version : Titre et écran de login mis à jour vers COMPTAEXPERT V40.
+CORRIGÉ :
+- Graphiques ApexCharts : TypeError sur getElementById('kpi-achats') inexistant → try/catch individuels + ajout ids aux items grid2.
+SUPPRIMÉ :
+- (Aucune suppression)
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V39
+DATE : 18/05/2026 à 15:00
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Dashboard : Label Résultat remplacé par Bénéfice/Déficit selon le signe (dynamique).
+- Icône thème : Soleil affiché en mode sombre, Lune en mode clair (toggle bidirectionnel).
+MODIFIÉ :
+- Dashboard : 13 cartes KPI homogènes (même template, icônes text-info, variations kpi-var).
+- Labels KPI : format unifié avec code compte en parenthèses (ex: "Achats (60x)").
+- Init graphiques : appel synchrone sans setTimeout (comme V31) pour fiabilité du rendu.
+- Clé LocalStorage : Migration de compta_v38_backup à compta_v39_backup.
+- Identifiant Version : Titre et écran de login mis à jour vers COMPTAEXPERT V39.
+CORRIGÉ :
+- Graphiques ApexCharts : suppression du setTimeout dans showPage() qui empêchait le rendu des 4 graphiques (Area, Donut, Barres Empilées, Comparatif N/N-1).
+- KPI Résultat : couleur dynamique (vert si bénéfice, rouge si déficit).
+SUPPRIMÉ :
+- (Aucune suppression)
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V38
+DATE : 18/05/2026 à 14:00 (finalisée)
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Module Revue/Lettrage (V37) intégré : page complète avec grille comptes, cycles de révision, visas, notes et filtres avancés.
+- Données mock temporelles pour 3 exercices (2024, 2025, 2026) avec 144 écritures chacun, cohérence inter-exercices vérifiée.
+- Sélecteur header activé : l'exercice sélectionné change l'affichage (KPIs + graphiques) sans modifier l'exercice courant.
+MODIFIÉ :
+- Version V38 : basée sur V36 (copie complète du moteur Dashboard + Exercices + 4 graphiques ApexCharts).
+- Clé LocalStorage : compta_v38_backup (indépendante, migration depuis V36).
+- Identifiant Version : Titre et écran de login mis à jour vers COMPTAEXPERT V38.
+CORRIGÉ :
+- Graphiques ApexCharts : suppression du setTimeout imbriqué (100ms), timeout showPage porté à 500ms pour fiabilité du rendu.
+- Sélecteur header : disabled supprimé, curseur et opacité rétablis, changement d'exercice visuel sans altération du isCurrent.
+- Exercice courant : exclusivement modifiable depuis l'onglet Exercices (bouton étoile ⭐).
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V37
+DATE : 18/05/2026 à 02:04
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Module Revue/Lettrage : page autonome avec grille comptes (solde N/N-1/N-2, visas collaborateur/superviseur).
+- Cycles de révision : arbre de progression avec filtres par type (Financier, Fiscal, Social).
+- Notes et points en suspens : historique complet avec filtrage points réglés.
+- Filtres avancés : évitement comptes soldés, révisés, supervisés ou non mouvementés.
+- Documentation complète : module Revue/Lettrage isolé pour intégration ultérieure.
+MODIFIÉ :
+- Clé LocalStorage : Aucune (module autonome sans persistance).
+- Identifiant Version : Titre mis à jour vers COMPTAEXPERT V37.
+CORRIGÉ :
+- Grille comptes synchronisée : recalcule dynamique des soldes par compte et par exercice.
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V36
+DATE : 18/05/2026 à 01:37
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Base stable V30+ intégrale : Dashboard complet avec 4 graphiques ApexCharts (Area, Donut, Barres Empilées, Comparatif N/N-1).
+- Gestion complète des exercices : CRUD, RAN, volume, étoile exercice courant.
+- Données mock temporelles : écritures réalistes pour 2024, 2025, 2026 avec cohérence inter-exercices.
+- Sélecteur d'exercice dans le header avec vue par année.
+MODIFIÉ :
+- Clé LocalStorage : compta_v36_backup (migration depuis V35).
+- Identifiant Version : Titre et écran de login mis à jour vers COMPTAEXPERT V36.
+CORRIGÉ :
+- Graphiques ApexCharts : synchronisation du rendu au changement d'exercice.
+- Encodage UTF-8 : préservation des caractères français (é, è, ê, ô, etc.).
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V35
+DATE : 18/05/2026 à 00:58
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Traçabilité Audit Complète : Toutes les modifications de la base JSON sont maintenant enregistrées dans le journal d'audit :
+  * Changement d'exercice courant
+  * Suppression d'exercice
+  * Génération de RAN
+  * Modification des paramètres dossier
+  * Création/suppression de devises
+  * Changement de thème
+  * Export de sauvegarde
+  * Effacement du journal d'audit
+  * Création d'exercice
+MODIFIÉ :
+- Clé LocalStorage : Migration de compta_v34_backup vers compta_v35_backup.
+- Identifiant Version : Titre et écran de login mis à jour vers COMPTAEXPERT V35.
+CORRIGÉ :
+- Graphiques ApexCharts : Correction du timing d'initialisation (setTimeout 150ms) pour assurer le rendu des 4 graphiques.
+- Encodage UTF-8 : Correction des caractères corrompus dans les labels de graphiques (Août, Fév, Déc, etc.).
+- Vérification DOM : initCharts() vérifie maintenant l'existence des éléments avant de renderer.
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V34
+DATE : 18/05/2026 à 00:50
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Filtre Audit par Utilisateur (Liste Déroulante) : Sélectionner un utilisateur spécifique pour filtrer le journal d'audit, combiné avec la barre de recherche textuelle.
+- Données Mock par Exercice : Fonction getMockDataForYear() générant des données réalistes pour 2024, 2025, 2026 afin d'assurer l'affichage des 4 graphiques ApexCharts quel que soit l'exercice sélectionné.
+- Comparatif N/N-1 Dynamique : Le graphique comparatif utilise l'exercice précédent comme N-1 (2026→2025, 2025→2024, etc.).
+MODIFIÉ :
+- Tri Décroissant Exercices : Le sélecteur d'exercice dans l'en-tête affiche les exercices du plus récent au plus ancien.
+- Calcul Dashboard : Utilise les données réelles si disponibles, sinon fallback sur les données mock de l'exercice sélectionné.
+- N-1 avec Mock : Si l'exercice précédent n'a pas de données réelles, utilise les données mock correspondantes.
+CORRIGÉ :
+- Graphiques ApexCharts Vides : Les 4 graphiques (Area, Donut, Barres Empilées, Comparatif) s'affichent maintenant pour tous les exercices.
+- Cohérence Changement d'Exercice : Les KPIs, variations et graphiques sont recalculés correctement à chaque changement d'exercice.
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V33
+DATE : 18/05/2026 à 00:35
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Exercice par Défaut au Chargement : L'exercice actif (ou le plus récent) est automatiquement chargé à l'ouverture du dossier.
+- Tri Décroissant des Exercices : Les exercices sont affichés du plus récent au plus ancien dans la gestion.
+- Icône RAN Généré/Non Généré : Colonne dédiée avec icône (✓ vert si généré, ✗ gris si non généré) et date/heure de génération du Report à Nouveau.
+- Données Mock 2024 : 144 écritures supplémentaires pour l'exercice 2024 afin de tester les tableaux de bord sur 3 exercices (2024, 2025, 2026).
+- Fonction Nouvel Exercice : Modale complète pour créer un exercice (année, label, dates début/fin).
+- Fonction Déconnexion : Bouton de déconnexion dans le panneau utilisateur avec confirmation.
+MODIFIÉ :
+- Clé LocalStorage : Migration de compta_v32_backup vers compta_v33_backup.
+- Identifiant Version : Titre et écran de login mis à jour vers COMPTAEXPERT V33.
+- Structure Exercices : Ajout des champs ranGenerated (booléen) et ranDate (string) à chaque exercice.
+CORRIGÉ :
+- Encodage UTF-8 : Correction de tous les caractères corrompus (Ã© → é, Ã¨ → è, Ã® → î, â€" → —, etc.) dans l'ensemble du fichier.
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V32
+DATE : 18/05/2026 à 00:22
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Filtre Audit par Utilisateur : Champ de recherche textuelle pour filtrer le journal d'audit par nom d'utilisateur, action ou détails.
+- Touche Échap Universelle : Fermeture de la modale generic-modal et suppression de tous les toasts actifs via la touche Échap.
+- Indicateur Visuel Sauvegarde : Le bouton change de couleur (vert → orange) et affiche "Enregistrer" quand il y a des modifications non enregistrées.
+- Alerte Fermeture Navigateur : Message d'avertissement "Vous avez des modifications non enregistrées" si l'utilisateur tente de fermer l'onglet avec des changements en cours.
+- Sauvegarde Explicite : Les modifications sont marquées mais non persistées jusqu'à clic sur le bouton "Enregistrer" (export JSON + localStorage).
+MODIFIÉ :
+- Clé LocalStorage : Migration de compta_v31_backup vers compta_v32_backup.
+- Identifiant Version : Titre et écran de login mis à jour vers COMPTAEXPERT V32.
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V31
+DATE : 17/05/2026 à 23:59
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Matrice de Droits Initiale : Junior (Saisie, Lettrage), Senior (Junior + Révision, Supervision, Importation, PCE, Tiers, Journaux, Devises, Sauvegarde, Exportation), Admin (tous droits).
+- Gestion Active des Utilisateurs : Création avec modale complète (nom, identifiant, profil, habilitations granulaires).
+- Attribution Automatique : Les permissions sont pré-remplies selon le profil sélectionné, ajustables individuellement.
+- Permissions Granulaires : 13 droits distincts (Saisie, Lettrage, Révision, Supervision, Importation, Plan Comptable, Tiers, Journaux, Devises, Paramétrage, Clôture, Sauvegarde, Exportation).
+- Statut Utilisateur : Colonne Actif/Inactif cliquable pour basculer le statut directement depuis le tableau.
+- Journal d'Audit : Tableau des 100 dernières opérations avec date/heure, utilisateur, action et détails. Bouton d'effacement.
+- Sécurité Anti-Suppression : Blocage si l'utilisateur a des écritures liées. Protection du compte admin.
+- Traçabilité Complète : Chaque création, modification, suppression d'utilisateur et changement de statut est enregistré dans l'audit.
+MODIFIÉ :
+- Clé LocalStorage : Migration de compta_v30_backup vers compta_v31_backup.
+- Identifiant Version : Titre et écran de login mis à jour vers COMPTAEXPERT V31.
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V30
+DATE : 17/05/2026 à 23:17
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Comparatif N vs N-1 Dynamique : Les années et données du graphique comparatif s'adaptent automatiquement à l'exercice sélectionné.
+- Calcul N-1 Réel : Les données N-1 sont calculées depuis l'exercice précédent au lieu de valeurs figées.
+- Devises BCT Complètes : 30 devises de la Banque Centrale de Tunisie (TND, EUR, USD, GBP, SAR, AED, KWD, QAR, JPY, CNY...).
+MODIFIÉ :
+- Graphique Donut (Analyse Charges) : Étiquettes en % avec montant en K affiché au centre lors de la sélection d'un segment.
+- Onglets Paramétrage Dossier : Boutons plus grands, plus gras, espacés (gap-6, py-6, px-10, text-[13px], icônes w-6 h-6).
+- KPIs & Graphiques : Recalcul total du dashboard (cartes + 4 graphiques + variations N vs N-1) au changement d'exercice.
+- Clé LocalStorage : Migration de compta_v29_backup vers compta_v30_backup.
+- Identifiant Version : Titre et écran de login mis à jour vers COMPTAEXPERT V30.
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V29
+DATE : 17/05/2026 à 23:00
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Bouton Chercher (Loupe) : Modale de recherche de devises avec filtrage en temps réel par code ou nom.
+- Résultats de Recherche Dynamiques : Affichage avec badge "ACTIVE" pour les devises cochées, mise en surbrillance visuelle.
+- Cliquable depuis Recherche : Activation/désactivation directe des devises depuis la modale de recherche avec sauvegarde auto.
+- Grille Devises Filtrée : Affichage par défaut des seules devises cochées, message si aucune sélectionnée.
+MODIFIÉ :
+- Graphique Donut (Analyse Charges) : Étiquettes en milliers (K) au lieu de pourcentages (%).
+- Format d'Export : NOM_[AAAA.MM.JJ]_[HH-MM].json (ex: Ma_Societe_SARL_[2026.05.17]_[23-00].json).
+- KPIs & Graphiques par Exercice : Toutes les cartes KPI et les 4 graphiques se recalculent automatiquement selon l'exercice sélectionné.
+- Dossier par défaut sans Multidevise : Toggle désactivé par défaut (multidevise: false).
+- Devises par défaut : USD et EUR cochés uniquement, TND et autres décochés.
+- Clé LocalStorage : Migration de compta_v28_backup vers compta_v29_backup.
+- Identifiant Version : Titre et écran de login mis à jour vers COMPTAEXPERT V29.
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V28
+DATE : 17/05/2026 à 22:49
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Données Mock 2025 & 2026 : Injection automatique de 144 écritures couvrant les 12 mois de chaque exercice pour tester les graphiques.
+- Double Exercice : Création automatique de l'exercice 2025 (Clôturé) et 2026 (Actif) au premier démarrage.
+- Couverture Comptable Complète : Écritures sur 70x (CA), 60x (Achats), 64x (Personnel), 66x (Impôts), 61x/62x (Serv. Ext.), 628x (Autres).
+- Variation N vs N-1 Réelle : Les graphiques comparatifs utilisent maintenant les données réelles 2025 vs 2026.
+MODIFIÉ :
+- Onglets Paramétrage Dossier : Boutons plus visibles (bg-primary/20, border-b-4, text-[12px], hover:bg-white/10, shadow-lg).
+- Ajout Devise Simplifié : Suppression du champ "Taux de change" — seul le Code ISO (3 lettres) et le Nom sont demandés.
+- Bouton Supprimer : Réservé exclusivement aux devises personnalisées (icône poubelle uniquement sur devises ajoutées).
+- Clé LocalStorage : Migration de compta_v27_backup vers compta_v28_backup.
+- Identifiant Version : Titre et écran de login mis à jour vers COMPTAEXPERT V28.
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V27
+DATE : 17/05/2026 à 22:33
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Ajout de Devises Personnalisées : Bouton "Ajouter Devise" dans l'onglet Multidevise du Paramétrage Dossier.
+- Modale Nouvelle Devise : Formulaire complet avec Code ISO (3 lettres), Nom de la devise, et Taux de change vs TND (4 décimales).
+- Affichage Devises Custom : Section dédiée "Devises Personnalisées" avec code, nom et bouton de suppression par devise.
+- Validation stricte : Code ISO 3 lettres obligatoire, nom requis, taux > 0, détection de doublons (base + custom).
+- Suppression Sécurisée : Blocage si la devise est utilisée dans des écritures existantes, confirmation avant suppression.
+- Auto-Migration : Injection automatique de devisesPersonnalisees: [] pour les anciens LocalStorage (V26 et avant).
+- Conversion Majuscule Auto : Le champ code ISO se convertit automatiquement en majuscules lors de la saisie.
+MODIFIÉ :
+- Onglets Paramétrage Dossier : Espacement accru (gap-4, px-10 py-6) + icônes Lucide (Général ⚙️, Paramètres ✅, Multidevise 🌐).
+- Grille Devises Unifiée : Les devises personnalisées apparaissent directement dans la grille principale avec leur nom complet.
+- Clé LocalStorage : Migration de compta_v26_backup vers compta_v27_backup.
+- Identifiant Version : Titre et écran de login mis à jour vers COMPTAEXPERT V27.
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V26
+DATE : 17/05/2026 à 00:00
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Graphiques V22 Restaurés : Réintégration des 4 graphiques ApexCharts complets de la V22 (Area, Donut, Barres Empilées, Comparatif N/N-1).
+- Graphique Area CA vs Charges : Courbes lisses avec couleurs distinctes (CA violet, Charges rouge), grille adaptative, thème sombre/clair.
+- Graphique Donut Analyse Charges : Taille 55%, total central formaté, pourcentages sur segments, légende synchronisée.
+- Graphique Barres Empilées Mensuelles : 5 catégories (Achats, Personnel, Impôts, Serv. Ext., Autres) avec colonnes arrondies.
+- Graphique Comparatif N vs N-1 : Comparaison visuelle CA/Charges par catégorie avec fill colors individuels par barre.
+- Variations Dynamiques N vs N-1 : Pastilles colorées (+/- %) sur chaque KPI principal (Résultat, CA, Charges, Achats, Personnel, Impôts, Serv. Ext.).
+- Données Mensuelles Détaillées : calculateDashboard() retourne maintenant chargesMensuelles et caMensuel pour alimenter les graphiques.
+- Fonction changeExercise() : Changement d'exercice via le sélecteur avec rafraîchissement automatique des graphiques et KPIs.
+- Fonction updateVariation() : Calcul intelligent des variations avec inversion de couleur pour les charges (négatif = bon).
+- Formatage Français des Montants : formatK() utilise toLocaleString('fr-FR') pour un affichage conforme aux normes locales.
+MODIFIÉ :
+- KPIs avec Badges de Variation : Les 13 cartes du dashboard incluent maintenant les pastilles de variation en haut à droite.
+- Clé LocalStorage : Migration de compta_v25_backup vers compta_v26_backup.
+- Identifiant Version : Titre et écran de login mis à jour vers COMPTAEXPERT V26.
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V25
+DATE : 16/05/2026
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Injection de Données (Mock Engine) : Moteur d'injection automatique de 50 écritures au premier démarrage pour peupler les KPIs.
+- Tableau de Bord Dynamique : Activation des 13 cartes KPI et 4 graphiques (ApexCharts) avec variations N vs N-1.
+- Onglet "Exercices" (Principal) : Migration du module depuis Paramétrage vers le menu Principal pour un accès métier direct.
+- Analyse de Volume Détaillée : Modale d'analyse par mois (Lignes/Écritures) et par journal pour chaque exercice.
+- Fiche Dossier (3 Onglets) : Restructuration complète (Général, Paramètres Comptables, Multidevise).
+- Gestion Multidevise : Activation globale et sélection des devises actives (TND, EUR, USD, etc.) filtrant le menu "Devises".
+- Module Utilisateurs Centralisé : Gestion unifiée des collaborateurs remplaçant l'ancien menu "Mon Profil".
+- Matrice des Habilitations : Grille de droits granulaires par profil (Saisie, Revue, Supervision, Config).
+- Logique de Profils Métier : Junior (Saisie), Senior (Revue), Expert (Supervision/RAN), Admin (Full).
+- Structure Multidevise : Ajout des champs mntDevise, devise, cours (4 décimales) dans le modèle de données.
+- Statut de Revue : Intégration d'un flag de validation revue sur chaque ligne d'écriture.
+MODIFIÉ :
+- Paramétrage Longueur Comptes : Contrôle strict (5 à 9 chiffres) avec alerte bloquante si PCE non vide.
+- Formatage des Dates : Standardisation du format JJ/MM/AAAA pour la saisie et l'affichage des exercices.
+- Navigation Système : Refonte de la barre latérale pour une ergonomie accrue.
+CORRIGÉ :
+- Persistance LocalStorage : Sécurisation de la clé compta_v25_backup pour éviter les conflits avec les versions antérieures.
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V24
+DATE : 16/05/2026
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Système d'Analyse de Volume : Vue détaillée par mois et par journal (Lignes/Écritures) accessible depuis la gestion des exercices.
+- Sécurité Exercices : Protection stricte contre la modification ou suppression des exercices mouvementés (contenant des écritures).
+- Sélecteur d'Exercice Courant : Bouton explicite "Définir comme courant" avec indicateur visuel (Étoile).
+- Bouton Manuel RAN : Déclenchement explicite du moteur de Report à Nouveau vers l'exercice N+1.
+MODIFIÉ :
+- Restauration Interface V22 : Retour au Tableau de bord complet (13 KPIs) et à la structure de Paramétrage de la version stable V22.
+- Formatage des Dates : Standardisation au format JJ/MM/AAAA pour toutes les périodes fiscales.
+- Structure Tableau Exercices : Séparation des colonnes Date Début (DD) et Date Fin (DF) pour une clarté optimale.
+SUPPRIMÉ :
+- Bouton "Rebasculer" automatique (remplacé par l'action de sélection d'exercice courant).
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V23
+DATE : 16/05/2026
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Architecture Dossier Triple Onglet : Introduction des onglets Général, Paramètres, et Multidevise dans la fiche dossier.
+- Moteur de Mock Data Initial : Première implémentation de l'injection automatique d'écritures pour démonstration.
+MODIFIÉ :
+- Système de Navigation : Tentative de réorganisation des menus "Principal" et "Système".
+CORRIGÉ :
+- Bug Synchronisation Charts : Résolution des problèmes de rafraîchissement des graphiques ApexCharts après injection de données.
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V22
+DATE : 16/05/2026
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Blocage Browser Drag & Drop : Interception globale (window) pour éviter l'ouverture accidentelle du fichier JSON par le navigateur.
+- Format d'Export Dynamique : Formatage strict SOCIETE_[AAAA.MM.JJ]_[HH-MM-SS].json pour les sauvegardes.
+MODIFIÉ :
+- Couleurs Graphiques : Alignement forcé du CA en Vert et des Charges en dégradés de Rouge pour le comparatif N vs N-1.
+- Interface Devises : Harmonisation de la mise en page de l'onglet Devises avec le reste de l'application.
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V21
+DATE : 16/05/2026
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Support Drag & Drop Global : Possibilité de glisser le fichier JSON n'importe où sur l'application pour charger les données sans fermeture.
+MODIFIÉ :
+- Légende ApexCharts : Synchronisation parfaite entre les séries de données (CA, Achats, Personnel) et les pastilles de légende.
+- Icônes Navigation : Remplacement du bouton Devises par un sigle monétaire plus explicite pour la visibilité.
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V20
+DATE : 15/05/2026
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Formatage Milliers (k) : Conversion automatique des montants élevés dans les cartes KPIs (ex: 458 230 -> 458.2 k).
+- Variations N vs N-1 Intelligentes : Pastilles de variation colorées (Vert/Rouge) selon la nature financière de l'indicateur.
+- Ajout du CA aux Graphiques : Intégration du Chiffre d'Affaires dans le graphique comparatif avec couleur distincte.
+MODIFIÉ :
+- Layout KPI Centré : Alignement vertical et horizontal parfait des montants dans les 13 cartes du dashboard.
+- Habilitations Étendues : Ajout des droits pour Importation, Révision, Plan Comptable, Tiers, Journaux et Devises.
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V19
+DATE : 15/05/2026
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Moteur calculateDashboard() : Calcul dynamique des agrégats comptables (CA, Achats, Personnel, Impôts...) en temps réel selon les racines.
+- Gestion Permissions Granulaire : Matrice de droits par utilisateur stockée en base et ajustable individuellement.
+MODIFIÉ :
+- Audit Cohérence : Synchronisation de toutes les cartes et graphiques sur la même source de données (state.ecritures).
+CORRIGÉ :
+- Bug Template Literals : Correction des erreurs de syntaxe JS causées par l'échappement des backticks dans le fichier monolithique.
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V18
+DATE : 15/05/2026
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Style de Saisie "Champs Blancs" : Les inputs sont sur fond blanc avec texte Noir Pur (#000000) pour une visibilité maximale.
+- Libellés "Indication" : Passage des étiquettes (labels) en gris foncé pour une distinction nette avec les valeurs saisies.
+MODIFIÉ :
+- Audit Visuel : Équilibre entre l'esthétique du Mode Sombre (fonds foncés) et la rigueur de saisie (champs blancs).
+SUPPRIMÉ :
+- Fonds blancs sur les cartes et modales (Retour aux fonds sombres professionnels pour préserver l'esthétique Dark Mode).
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V17
+DATE : 15/05/2026
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Architecture Sidebar : Ajout des modules Plan Comptable, Tiers, Journaux et Devise sous le menu Principal.
+- Support Touche Échap : Fermeture automatique des modales et fenêtres actives via la touche Échap.
+MODIFIÉ :
+- Organisation États : Déplacement du module Éditions (BG/GL) sous le groupe États pour une cohérence de reporting.
+- Audit Haute Visibilité : Passage des modales critiques (Dossier, Exercices) en style "Blanc/Noir" (Haute Contraste).
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V16
+DATE : 14/05/2026
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Rétablissement des Graphiques : Réintégration des graphiques "Répartition Charges par mois" et "Comparatif Charges" omis en V15.
+MODIFIÉ :
+- Audit Formules : Vérification de la synchronisation totale entre les 13 cartes KPI et les 4 graphiques métiers.
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V15
+DATE : 14/05/2026
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Sécurité Anti-Suppression : Blocage de la suppression des exercices ou utilisateurs ayant des mouvements comptables liés.
+- Activation Modifications : Boutons Modifier actifs pour la Fiche Dossier, les Exercices et les Utilisateurs.
+MODIFIÉ :
+- Contraste Noir sur Blanc : Forçage du texte en Noir Pur (#000000) pour tous les champs de saisie en Mode Clair.
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V14
+DATE : 14/05/2026
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Statut Utilisateur : Ajout de la colonne Actif / Inactif dans la gestion des collaborateurs.
+MODIFIÉ :
+- Synchronisation Analytique : Unification des calculs pour garantir l'égalité parfaite entre Cartes et Graphiques (Total Charges).
+- Audit Bordures : Suppression des bordures blanches éblouissantes en mode sombre au profit de bordures subtiles (rgba).
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V13
+DATE : 14/05/2026
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Tableau Exercices Étendu : Séparation des dates (Début / Fin) dans deux colonnes distinctes au format JJ-MM-AAAA.
+MODIFIÉ :
+- Typographie Uniforme : Standardisation de la taille de police (24px) pour les 13 cartes du Dashboard.
+- Audit Couleurs : Correction de la visibilité des labels et inputs pour les formulaires en Mode Sombre.
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V12
+DATE : 14/05/2026
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Format d'Export Normalisé : Mise en place du format NOM_[AAAA.MM.JJ]_[HH-MM].json pour les exports.
+- Labels Mensuels Complets : Affichage des mois (Janv, Fév, Mars...) sur les axes des graphiques de répartition.
+MODIFIÉ :
+- Analyse Charges (Donut) : Affichage direct des pourcentages (%) sur les segments pour une lecture métier.
+- Uniformisation Layout : Fixation de la hauteur des 13 cartes à 120px avec police Inter.
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V11
+DATE : 14/05/2026
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Intelligence des Dates : Calcul automatique des dates de début (01/01) et fin (31/12) lors de la saisie de l'année d'exercice.
+- Audit Contrastes "Zéro Défaut" : Renforcement des bordures et poids des polices pour une lisibilité parfaite en Mode Clair.
+MODIFIÉ :
+- Hiérarchie Sidebar : Organisation stricte de la navigation (Principal, Saisie & Analyse, États, Système).
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V10
+DATE : 14/05/2026
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Gestion Active des Exercices : Boutons Ajout/Modif/Suppr fonctionnels avec modales dédiées.
+- Gestion Active des Utilisateurs : Création de collaborateurs avec attribution automatique de droits selon le profil.
+MODIFIÉ :
+- Initialisation Dossier : Migration de la création de dossier vers l'onglet Paramétrage (Fiche Dossier).
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V09
+DATE : 14/05/2026
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Verrouillage Exercices : Blocage de la saisie si l'exercice est marqué comme "Cloturé".
+- Épaisseur Donut : Ajustement du Donut Chart à 55% pour une meilleure lisibilité des labels centraux.
+MODIFIÉ :
+- Groupement Sidebar : Réorganisation des onglets sous Saisie & Analyse et États.
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V08
+DATE : 14/05/2026
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Palette Slate : Transition vers une palette de couleurs Slate/Indigo pour un rendu plus institutionnel.
+MODIFIÉ :
+- Audit Doublons : Suppression des graphiques redondants et optimisation de l'espace sur le Dashboard.
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V07
+DATE : 14/05/2026
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Version de Référence : Première version stable avec sauvegarde automatique vers le LocalStorage.
+- Modale de Sortie : Ajout d'une alerte à la fermeture pour proposer la sauvegarde manuelle en JSON.
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V06
+DATE : 14/05/2026
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Set de 4 Graphiques : Évolution, Répartition, Détail Mensuel et Comparatif N/N-1.
+MODIFIÉ :
+- Nettoyage Visuel : Suppression des dataLabels encombrants sur les graphiques de barres.
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V05
+DATE : 14/05/2026
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- KPI Cards Étendues : Passage à une structure de 7 KPIs principaux et 6 cartes de détails analytiques.
+- Borders Rounded : Application systématique de coins arrondis sur tous les éléments graphiques.
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V04
+DATE : 14/05/2026
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Dashboard Double Rangée : Organisation des indicateurs sur deux lignes pour optimiser la hauteur de page.
+MODIFIÉ :
+- Audit Dark Mode : Premier ajustement des contrastes profonds pour le thème sombre.
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V03
+DATE : 14/05/2026
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Sécurité Admin : Mot de passe vide par défaut pour le profil admin en phase de développement.
+MODIFIÉ :
+- Persistance : Première implémentation de la structure de state monolithique sauvegardée.
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V02
+DATE : 14/05/2026
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Matrice de Droits Initiale : Première version des habilitations (Junior, Senior, Admin).
+MODIFIÉ :
+- Permissions par défaut : Le profil Junior accède désormais au lettrage par défaut.
+------------------------------------------------------------------------------------------------------------------------------------
+
+************************************************************************************************************************************
+VERSION : V01
+DATE : 14/05/2026
+------------------------------------------------------------------------------------------------------------------------------------
+AJOUTÉ :
+- Initialisation Projet : Création du shell HTML5 monolithique avec Tailwind CSS et Lucide Icons.
+- Dashboard 8 KPI : Première structure de tableau de bord avec 8 indicateurs statiques.
+- Drag & Drop JSON : Moteur de lecture de fichiers JSON pour l'ingestion de données.
+MODIFIÉ :
+- Thème Dual : Implémentation du sélecteur de thème (Clair / Sombre).
+------------------------------------------------------------------------------------------------------------------------------------

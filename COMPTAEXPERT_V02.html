@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COMPTAEXPERT V02 — ERP Comptable Tunisien</title>
+    
+    <!-- Meta SEO -->
+    <meta name="description" content="Solution comptable tunisienne 100% hors-ligne respectant le Plan Comptable Tunisien (SYSCOHADA).">
+    
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'bg-base': 'var(--bg-base)',
+                        'bg-surface': 'var(--bg-surface)',
+                        'bg-card': 'var(--bg-card)',
+                        'primary': '#6C63FF',
+                        'primary-light': '#9C8FFF',
+                        'success': '#00D4AA',
+                        'warning': '#FDCB6E',
+                        'danger': '#FF6B6B',
+                        'text-main': 'var(--text-main)',
+                        'text-dim': 'var(--text-dim)',
+                        'border-dim': 'var(--border-dim)',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --bg-base: #0D0F1A;
+            --bg-surface: #13162A;
+            --bg-card: #181B2E;
+            --text-main: #E8EAFF;
+            --text-dim: #8892B0;
+            --border-dim: rgba(255, 255, 255, 0.07);
+        }
+
+        .light {
+            --bg-base: #F1F5F9;
+            --bg-surface: #FFFFFF;
+            --bg-card: #FFFFFF;
+            --text-main: #1E293B;
+            --text-dim: #64748B;
+            --border-dim: rgba(0, 0, 0, 0.08);
+        }
+
+        body { background-color: var(--bg-base); color: var(--text-main); transition: all 0.3s ease; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #6C63FF44; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6C63FF; }
+
+        .kpi-card {
+            height: 110px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 1.25rem;
+            border-radius: 1rem;
+            border: 1px solid var(--border-dim);
+            background: var(--bg-card);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+        .kpi-card:hover { transform: translateY(-2px); border-color: #6C63FF; }
+
+        .glass { background: rgba(var(--bg-card-rgb), 0.8); backdrop-filter: blur(12px); border: 1px solid var(--border-dim); }
+        .sidebar-link.active { background: rgba(108, 99, 255, 0.1); color: #6C63FF; border-right: 3px solid #6C63FF; font-weight: 600; }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-up { animation: fadeInUp 0.4s ease-out forwards; }
+
+        .drop-zone-active { border: 2px dashed #6C63FF !important; background: rgba(108, 99, 255, 0.05) !important; }
+    </style>
+</head>
+<body class="font-sans antialiased overflow-hidden">
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" class="fixed inset-0 z-[100] flex items-center justify-center bg-bg-base">
+        <div class="w-full max-w-md p-8 bg-bg-card rounded-2xl border border-border-dim shadow-2xl animate-fade-up">
+            <div class="flex flex-col items-center mb-8">
+                <div class="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-primary/20">
+                    <i data-lucide="shield-check" class="w-8 h-8 text-white"></i>
+                </div>
+                <h1 class="text-2xl font-bold tracking-tight">COMPTAEXPERT V02</h1>
+                <p class="text-text-dim text-sm">Authentification sécurisée</p>
+            </div>
+            
+            <form id="login-form" class="space-y-5">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-text-dim mb-2">Utilisateur</label>
+                    <input type="text" id="login-username" placeholder="Identifiant" required
+                        class="w-full bg-bg-surface border border-border-dim rounded-xl px-4 py-3 focus:outline-none focus:border-primary transition-all text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-text-dim mb-2">Mot de Passe</label>
+                    <input type="password" id="login-password" placeholder="••••••••" required
+                        class="w-full bg-bg-surface border border-border-dim rounded-xl px-4 py-3 focus:outline-none focus:border-primary transition-all text-sm">
+                </div>
+                <button type="submit" 
+                    class="w-full bg-primary hover:bg-primary-light text-white font-semibold py-3 rounded-xl transition-all shadow-lg shadow-primary/20">
+                    Se Connecter
+                </button>
+            </form>
+            <p class="mt-8 text-center text-xs text-text-dim">Version 02 — © 2026 ACO NAJD</p>
+        </div>
+    </div>
+
+    <!-- MAIN APP SHELL -->
+    <div id="app-shell" class="hidden h-screen flex overflow-hidden">
+        
+        <!-- SIDEBAR -->
+        <aside class="w-64 glass flex-shrink-0 flex flex-col border-r border-border-dim z-20">
+            <div class="p-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
+                        <i data-lucide="box" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <span class="font-bold text-lg tracking-tight">ComptaExpert</span>
+                </div>
+            </div>
+
+            <nav class="flex-1 px-3 space-y-1 overflow-y-auto no-scrollbar">
+                <div class="text-[10px] font-bold text-text-dim uppercase tracking-widest px-3 py-4">Principal</div>
+                
+                <a href="#" onclick="showPage('dashboard')" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-dim hover:text-text-main transition-all text-sm">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                    <span>Tableau de bord</span>
+                </a>
+                <a href="#" onclick="showPage('plan-comptable')" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-dim hover:text-text-main transition-all text-sm">
+                    <i data-lucide="book-open" class="w-5 h-5"></i>
+                    <span>Plan Comptable</span>
+                </a>
+                <a href="#" onclick="showPage('tiers')" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-dim hover:text-text-main transition-all text-sm">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                    <span>Tiers</span>
+                </a>
+
+                <div class="text-[10px] font-bold text-text-dim uppercase tracking-widest px-3 py-4 mt-2">Saisie & Analyse</div>
+                
+                <a href="#" onclick="showPage('saisie')" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-dim hover:text-text-main transition-all text-sm">
+                    <i data-lucide="pen-tool" class="w-5 h-5"></i>
+                    <span>Saisie Écritures</span>
+                </a>
+                <a href="#" onclick="showPage('lettrage')" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-dim hover:text-text-main transition-all text-sm">
+                    <i data-lucide="link-2" class="w-5 h-5"></i>
+                    <span>Lettrage</span>
+                </a>
+                <a href="#" onclick="showPage('editions')" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-dim hover:text-text-main transition-all text-sm">
+                    <i data-lucide="file-text" class="w-5 h-5"></i>
+                    <span>Éditions (BG/GL)</span>
+                </a>
+
+                <div class="text-[10px] font-bold text-text-dim uppercase tracking-widest px-3 py-4 mt-2">Système</div>
+                
+                <a href="#" id="link-settings" onclick="showPage('settings')" class="sidebar-link hidden flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-dim hover:text-text-main transition-all text-sm">
+                    <i data-lucide="settings" class="w-5 h-5"></i>
+                    <span>Paramétrage</span>
+                </a>
+                <a href="#" onclick="showPage('profile')" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-dim hover:text-text-main transition-all text-sm">
+                    <i data-lucide="user-cog" class="w-5 h-5"></i>
+                    <span>Mon Profil</span>
+                </a>
+            </nav>
+
+            <div class="p-4 border-t border-border-dim bg-white/5">
+                <div class="flex items-center gap-3">
+                    <div id="user-avatar" class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30">
+                        <span class="text-xs font-bold text-primary uppercase" id="user-initials">--</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium truncate" id="user-display-name">Chargement...</p>
+                        <p class="text-[10px] text-text-dim truncate" id="user-display-role">Profil</p>
+                    </div>
+                    <button onclick="logout()" class="text-text-dim hover:text-danger transition-colors">
+                        <i data-lucide="log-out" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- CONTENT AREA -->
+        <main class="flex-1 flex flex-col min-w-0 relative">
+            
+            <!-- HEADER / DROP ZONE -->
+            <header id="main-header" class="h-16 glass flex items-center justify-between px-8 z-10 transition-all duration-300">
+                <div class="flex items-center gap-4">
+                    <h2 id="page-title" class="text-xl font-semibold">Tableau de bord</h2>
+                    
+                    <div id="dossier-drop-zone" class="flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all cursor-pointer group relative">
+                        <span id="dossier-status-dot" class="w-2 h-2 rounded-full animate-pulse"></span>
+                        <span class="text-[10px] font-bold uppercase tracking-wider">
+                            Dossier: <span id="current-societe-name">Aucun</span>
+                        </span>
+                        <div class="absolute -bottom-10 left-0 bg-primary text-white text-[9px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                            Glissez votre base JSON ici
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-full border border-primary/20">
+                        <i data-lucide="calendar" class="w-3.5 h-3.5 text-primary"></i>
+                        <select id="exercise-selector" onchange="changeExercise(this.value)" class="bg-transparent text-[10px] font-bold text-primary uppercase focus:outline-none cursor-pointer">
+                            <option value="">Exercice --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <button onclick="exportData()" class="flex items-center gap-2 bg-success/10 text-success border border-success/30 px-4 py-2 rounded-lg text-xs font-bold hover:bg-success hover:text-white transition-all">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                        Sauvegarder
+                    </button>
+                    <button onclick="toggleTheme()" class="w-10 h-10 rounded-lg glass flex items-center justify-center hover:bg-white/5 transition-all text-text-dim">
+                        <i data-lucide="moon" id="theme-icon" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- MAIN SCROLLABLE CONTENT -->
+            <div id="page-container" class="flex-1 overflow-y-auto p-6 no-scrollbar">
+                
+                <!-- DASHBOARD PAGE -->
+                <div id="page-dashboard" class="animate-fade-up space-y-6">
+                    <!-- ROW 1: KPIs -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-7 gap-4">
+                        <div class="kpi-card">
+                            <div class="flex justify-between items-center"><i data-lucide="wallet" class="w-5 h-5 text-success"></i> <span class="text-[10px] font-bold text-success">+5.2%</span></div>
+                            <p class="text-[11px] text-text-dim font-bold uppercase">Résultat</p>
+                            <p class="text-2xl font-bold mt-1">82,450</p>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="flex justify-between items-center"><i data-lucide="trending-up" class="w-5 h-5 text-primary"></i> <span class="text-[10px] font-bold text-success">+12.4%</span></div>
+                            <p class="text-[11px] text-text-dim font-bold uppercase">CA (70x)</p>
+                            <p class="text-2xl font-bold mt-1">458,230</p>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="flex justify-between items-center"><i data-lucide="receipt" class="w-5 h-5 text-danger"></i> <span class="text-[10px] font-bold text-danger">+8.1%</span></div>
+                            <p class="text-[11px] text-text-dim font-bold uppercase">Charges (6x)</p>
+                            <p class="text-2xl font-bold mt-1">362,150</p>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="flex justify-between items-center"><i data-lucide="banknote" class="w-5 h-5 text-secondary"></i> <span class="text-[10px] font-bold text-success">+22.6%</span></div>
+                            <p class="text-[11px] text-text-dim font-bold uppercase">Trésorerie (5x/50x)</p>
+                            <p class="text-2xl font-bold mt-1">126,340</p>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="flex justify-between items-center"><i data-lucide="users" class="w-5 h-5 text-info"></i> <span class="text-[10px] font-bold text-warning">41x</span></div>
+                            <p class="text-[11px] text-text-dim font-bold uppercase">Clients</p>
+                            <p class="text-2xl font-bold mt-1">87,350</p>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="flex justify-between items-center"><i data-lucide="truck" class="w-5 h-5 text-primary-light"></i> <span class="text-[10px] font-bold text-info">40x</span></div>
+                            <p class="text-[11px] text-text-dim font-bold uppercase">Fournisseurs</p>
+                            <p class="text-2xl font-bold mt-1">64,120</p>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="flex justify-between items-center"><i data-lucide="shield-alert" class="w-5 h-5 text-warning"></i> <span class="text-[10px] font-bold text-danger">24</span></div>
+                            <p class="text-[11px] text-text-dim font-bold uppercase">Alertes</p>
+                            <p class="text-2xl font-bold mt-1">8 <span class="text-xs font-normal">cycles</span></p>
+                        </div>
+                    </div>
+
+                    <!-- ROW 2: Stock, Emprunt, Charges -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                        <div class="kpi-card">
+                            <i data-lucide="package" class="w-5 h-5 text-warning"></i>
+                            <p class="text-[10px] text-text-dim font-bold uppercase">Stock (3x)</p>
+                            <p class="text-xl font-bold">74,520</p>
+                        </div>
+                        <div class="kpi-card">
+                            <i data-lucide="building-2" class="w-5 h-5 text-danger"></i>
+                            <p class="text-[10px] text-text-dim font-bold uppercase">Emprunt (16x+50x)</p>
+                            <p class="text-xl font-bold">215,800</p>
+                        </div>
+                        <div class="kpi-card flex-row items-center gap-3">
+                            <div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center"><i data-lucide="shopping-cart" class="w-5 h-5 text-primary"></i></div>
+                            <div><p class="text-[9px] text-text-dim font-bold uppercase">Achats 60x</p><p class="text-sm font-bold">185,420</p></div>
+                        </div>
+                        <div class="kpi-card flex-row items-center gap-3">
+                            <div class="w-10 h-10 bg-success/10 rounded-lg flex items-center justify-center"><i data-lucide="users" class="w-5 h-5 text-success"></i></div>
+                            <div><p class="text-[9px] text-text-dim font-bold uppercase">Pers. 64x</p><p class="text-sm font-bold">142,800</p></div>
+                        </div>
+                        <div class="kpi-card flex-row items-center gap-3">
+                            <div class="w-10 h-10 bg-warning/10 rounded-lg flex items-center justify-center"><i data-lucide="landmark" class="w-5 h-5 text-warning"></i></div>
+                            <div><p class="text-[9px] text-text-dim font-bold uppercase">Impôts 66/69</p><p class="text-sm font-bold">38,950</p></div>
+                        </div>
+                        <div class="kpi-card flex-row items-center gap-3">
+                            <div class="w-10 h-10 bg-info/10 rounded-lg flex items-center justify-center"><i data-lucide="external-link" class="w-5 h-5 text-info"></i></div>
+                            <div><p class="text-[9px] text-text-dim font-bold uppercase">Ext. 61/62</p><p class="text-sm font-bold">54,200</p></div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Area -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-bg-card p-6 rounded-2xl border border-border-dim">
+                            <h3 class="text-sm font-bold mb-6 flex items-center gap-2"><i data-lucide="line-chart" class="w-4 h-4 text-primary"></i> Évolution CA vs Charges</h3>
+                            <div id="chart-main" style="height: 300px;"></div>
+                        </div>
+                        <div class="bg-bg-card p-6 rounded-2xl border border-border-dim">
+                            <h3 class="text-sm font-bold mb-6 flex items-center gap-2"><i data-lucide="pie-chart" class="w-4 h-4 text-success"></i> Répartition des Charges</h3>
+                            <div id="chart-donut" style="height: 300px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SETTINGS PAGE (ADMIN ONLY) -->
+                <div id="page-settings" class="hidden space-y-8 animate-fade-up pb-20">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-2xl font-bold">Paramétrage Système</h3>
+                        <div class="flex gap-2">
+                            <button onclick="showToast('Enregistrement global réussi', 'success')" class="bg-success/20 text-success border border-success/30 px-6 py-2 rounded-lg text-xs font-bold hover:bg-success hover:text-white transition-all">Enregistrer Matrice</button>
+                            <button onclick="addUser()" class="bg-primary text-white px-6 py-2 rounded-lg text-xs font-bold shadow-lg shadow-primary/20">Nouveau Collaborateur</button>
+                        </div>
+                    </div>
+
+                    <!-- Permissions Matrix -->
+                    <div class="bg-bg-card rounded-2xl border border-border-dim overflow-hidden shadow-sm">
+                        <div class="px-6 py-4 border-b border-border-dim bg-white/5 font-bold text-sm flex items-center gap-2">
+                            <i data-lucide="shield-check" class="w-4 h-4 text-primary"></i>
+                            Matrice des Habilitations par Profil
+                        </div>
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="text-[10px] font-bold text-text-dim uppercase tracking-widest border-b border-border-dim bg-white/5">
+                                    <th class="px-6 py-4">Module / Fonctionnalité</th>
+                                    <th class="px-6 py-4 text-center">Junior</th>
+                                    <th class="px-6 py-4 text-center">Senior</th>
+                                    <th class="px-6 py-4 text-center">Administrateur</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm">
+                                <tr class="border-b border-border-dim hover:bg-white/5"><td class="px-6 py-3 font-medium">Saisie des écritures</td><td class="text-center"><input type="checkbox" checked class="accent-primary"></td><td class="text-center"><input type="checkbox" checked class="accent-primary"></td><td class="text-center"><input type="checkbox" checked disabled class="opacity-50"></td></tr>
+                                <tr class="border-b border-border-dim hover:bg-white/5"><td class="px-6 py-3 font-medium">Consultation (BG, GL, Journaux)</td><td class="text-center"><input type="checkbox" checked class="accent-primary"></td><td class="text-center"><input type="checkbox" checked class="accent-primary"></td><td class="text-center"><input type="checkbox" checked disabled class="opacity-50"></td></tr>
+                                <tr class="border-b border-border-dim hover:bg-white/5"><td class="px-6 py-3 font-medium">Lettrage & Rapprochement</td><td class="text-center"><input type="checkbox" checked class="accent-primary"></td><td class="text-center"><input type="checkbox" checked class="accent-primary"></td><td class="text-center"><input type="checkbox" checked disabled class="opacity-50"></td></tr>
+                                <tr class="border-b border-border-dim hover:bg-white/5"><td class="px-6 py-3 font-medium">Audit & Contrôles de cycle</td><td class="text-center"><input type="checkbox" class="accent-primary"></td><td class="text-center"><input type="checkbox" checked class="accent-primary"></td><td class="text-center"><input type="checkbox" checked disabled class="opacity-50"></td></tr>
+                                <tr class="border-b border-border-dim hover:bg-white/5"><td class="px-6 py-3 font-medium">États Financiers & Liasse</td><td class="text-center"><input type="checkbox" class="accent-primary"></td><td class="text-center"><input type="checkbox" checked class="accent-primary"></td><td class="text-center"><input type="checkbox" checked disabled class="opacity-50"></td></tr>
+                                <tr class="border-b border-border-dim hover:bg-white/5"><td class="px-6 py-3 font-medium">Clôture d'exercice</td><td class="text-center"><input type="checkbox" class="accent-primary"></td><td class="text-center"><input type="checkbox" class="accent-primary"></td><td class="text-center"><input type="checkbox" checked disabled class="opacity-50"></td></tr>
+                                <tr class="border-b border-border-dim hover:bg-white/5"><td class="px-6 py-3 font-medium">Paramétrage (Users, Dossiers)</td><td class="text-center"><input type="checkbox" class="accent-primary"></td><td class="text-center"><input type="checkbox" class="accent-primary"></td><td class="text-center"><input type="checkbox" checked disabled class="opacity-50"></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Exercises & Users -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="bg-bg-card rounded-2xl border border-border-dim overflow-hidden shadow-sm">
+                            <div class="px-6 py-4 border-b border-border-dim bg-white/5 font-bold text-sm">Gestion des Exercices</div>
+                            <table class="w-full text-left">
+                                <thead class="text-[10px] text-text-dim uppercase bg-white/5"><tr><th class="px-6 py-4">Période</th><th class="px-6 py-4 text-center">Statut</th><th class="px-6 py-4 text-right">Actions</th></tr></thead>
+                                <tbody id="exercises-list-table"></tbody>
+                            </table>
+                        </div>
+                        <div class="bg-bg-card rounded-2xl border border-border-dim overflow-hidden shadow-sm">
+                            <div class="px-6 py-4 border-b border-border-dim bg-white/5 font-bold text-sm">Collaborateurs</div>
+                            <table class="w-full text-left">
+                                <thead class="text-[10px] text-text-dim uppercase bg-white/5"><tr><th class="px-6 py-4">Utilisateur</th><th class="px-6 py-4 text-center">Rôle</th><th class="px-6 py-4 text-right">Actions</th></tr></thead>
+                                <tbody id="users-list-table"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PROFILE PAGE -->
+                <div id="page-profile" class="hidden max-w-2xl mx-auto animate-fade-up">
+                    <div class="bg-bg-card p-8 rounded-2xl border border-border-dim shadow-xl">
+                        <h3 class="text-2xl font-bold mb-6">Mon Profil</h3>
+                        <div class="space-y-6">
+                            <div class="flex items-center gap-4 p-4 bg-primary/5 rounded-xl border border-primary/20">
+                                <div class="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-2xl font-bold text-white" id="profile-avatar">--</div>
+                                <div><p class="text-lg font-bold" id="profile-name">Nom Utilisateur</p><p class="text-sm text-text-dim" id="profile-role">Rôle</p></div>
+                            </div>
+                            <div class="pt-4 space-y-4">
+                                <h4 class="font-bold text-sm">Changer mon mot de passe</h4>
+                                <input type="password" id="old-pass" placeholder="Ancien mot de passe" class="w-full bg-bg-surface border border-border-dim rounded-xl px-4 py-3 text-sm focus:border-primary focus:outline-none">
+                                <input type="password" id="new-pass" placeholder="Nouveau mot de passe" class="w-full bg-bg-surface border border-border-dim rounded-xl px-4 py-3 text-sm focus:border-primary focus:outline-none">
+                                <button onclick="updatePassword()" class="w-full bg-primary text-white font-bold py-3 rounded-xl hover:bg-primary-light transition-all">Mettre à jour</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- TOASTS -->
+    <div id="toast-container" class="fixed bottom-8 right-8 z-[200] flex flex-col gap-3"></div>
+
+    <script>
+        let state = {
+            user: null, societe: null, exercices: [], currentExercice: null, ecritures: [],
+            users: [{ id: 1, login: 'admin', pass: 'admin', name: 'Administrateur', role: 'Administrateur', status: 'Actif' }],
+            theme: localStorage.getItem('theme') || 'dark', isModified: false
+        };
+
+        function syncTheme() {
+            document.documentElement.className = state.theme;
+            lucide.createIcons();
+            if (state.user) initCharts();
+        }
+
+        function toggleTheme() {
+            state.theme = state.theme === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('theme', state.theme);
+            syncTheme();
+        }
+
+        document.getElementById('login-form').onsubmit = (e) => {
+            e.preventDefault();
+            const u = document.getElementById('login-username').value;
+            const p = document.getElementById('login-password').value;
+            const found = state.users.find(x => x.login === u && x.pass === p);
+            if (found && found.status === 'Actif') { state.user = found; loginSuccess(); }
+            else showToast('Identifiants incorrects ou compte désactivé', 'danger');
+        };
+
+        function loginSuccess() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('app-shell').classList.remove('hidden');
+            document.getElementById('user-display-name').innerText = state.user.name;
+            document.getElementById('user-display-role').innerText = state.user.role;
+            document.getElementById('user-initials').innerText = state.user.name.substring(0, 2);
+            if (state.user.role === 'Administrateur') document.getElementById('link-settings').classList.remove('hidden');
+            updateDossierUI(); initCharts(); lucide.createIcons();
+        }
+
+        function logout() { if (state.isModified && !confirm('Modifications non sauvegardées. Quitter ?')) return; window.location.reload(); }
+
+        // --- DRAG & DROP ---
+        const dropZone = document.getElementById('dossier-drop-zone');
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => document.addEventListener(evt, (e) => { e.preventDefault(); e.stopPropagation(); }));
+        document.addEventListener('dragover', () => dropZone.classList.add('drop-zone-active'));
+        document.addEventListener('dragleave', () => dropZone.classList.remove('drop-zone-active'));
+        document.addEventListener('drop', (e) => {
+            dropZone.classList.remove('drop-zone-active');
+            const file = e.dataTransfer.files[0];
+            if (file && file.name.endsWith('.json')) {
+                const reader = new FileReader();
+                reader.onload = (re) => { try { loadBase(JSON.parse(re.target.result)); } catch (err) { showToast('JSON invalide', 'danger'); } };
+                reader.readAsText(file);
+            }
+        });
+
+        function loadBase(data) {
+            state.societe = data.societe; state.exercices = data.exercices || []; state.users = data.users || state.users;
+            state.ecritures = data.ecritures || []; state.isModified = false;
+            updateDossierUI(); updateExerciseSelect(); if (state.user.role === 'Administrateur') renderSettings();
+            showToast(`Dossier ${state.societe} chargé`, 'success');
+        }
+
+        function updateDossierUI() {
+            const el = document.getElementById('current-societe-name');
+            const dot = document.getElementById('dossier-status-dot');
+            const zone = document.getElementById('dossier-drop-zone');
+            if (state.societe) {
+                el.innerText = state.societe; el.parentElement.classList.replace('text-danger', 'text-success');
+                dot.className = 'w-2 h-2 rounded-full bg-success animate-pulse';
+                zone.classList.add('border-success/30', 'bg-success/5'); zone.classList.remove('border-danger/30', 'bg-danger/5');
+            } else {
+                el.innerText = 'Aucun'; el.parentElement.classList.add('text-danger');
+                dot.className = 'w-2 h-2 rounded-full bg-danger animate-pulse';
+                zone.classList.add('border-danger/30', 'bg-danger/5');
+            }
+        }
+
+        function updateExerciseSelect() {
+            const select = document.getElementById('exercise-selector');
+            select.innerHTML = '<option value="">Exercice --</option>' + state.exercices.map(ex => `<option value="${ex.year}">${ex.year} (${ex.status})</option>`).join('');
+        }
+
+        function changeExercise(year) {
+            state.currentExercice = state.exercices.find(ex => ex.year == year);
+            if (state.currentExercice?.status === 'Clôturé') showToast('Exercice clôturé : Lecture seule', 'warning');
+            initCharts();
+        }
+
+        function renderSettings() {
+            const exList = document.getElementById('exercises-list-table');
+            exList.innerHTML = state.exercices.map(ex => `<tr class="border-b border-border-dim hover:bg-white/5"><td class="px-6 py-4 font-bold">${ex.year}</td><td class="px-6 py-4 text-center"><span class="px-2 py-1 rounded-full text-[10px] font-bold ${ex.status === 'Actif' ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'}">${ex.status}</span></td><td class="px-6 py-4 text-right"><button class="text-text-dim hover:text-primary"><i data-lucide="lock" class="w-4 h-4"></i></button></td></tr>`).join('');
+            const userList = document.getElementById('users-list-table');
+            userList.innerHTML = state.users.map(u => `<tr class="border-b border-border-dim hover:bg-white/5"><td class="px-6 py-4">${u.name}</td><td class="px-6 py-4 text-center text-xs">${u.role}</td><td class="px-6 py-4 text-right"><button class="text-text-dim hover:text-primary"><i data-lucide="edit-2" class="w-4 h-4"></i></button></td></tr>`).join('');
+            lucide.createIcons();
+        }
+
+        function showPage(pageId) {
+            document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+            const link = Array.from(document.querySelectorAll('.sidebar-link')).find(l => l.getAttribute('onclick')?.includes(pageId));
+            if (link) link.classList.add('active');
+            document.getElementById('page-title').innerText = pageId === 'dashboard' ? 'Tableau de bord' : (pageId === 'settings' ? 'Paramétrage' : 'Mon Profil');
+            document.querySelectorAll('#page-container > div').forEach(d => d.classList.add('hidden'));
+            const target = document.getElementById(`page-${pageId}`);
+            if (target) target.classList.remove('hidden'); else document.getElementById('page-dashboard').classList.remove('hidden');
+            if (pageId === 'profile') loadProfile();
+        }
+
+        function loadProfile() {
+            document.getElementById('profile-avatar').innerText = state.user.name.substring(0, 2).toUpperCase();
+            document.getElementById('profile-name').innerText = state.user.name;
+            document.getElementById('profile-role').innerText = state.user.role;
+        }
+
+        function updatePassword() {
+            const oldP = document.getElementById('old-pass').value;
+            const newP = document.getElementById('new-pass').value;
+            if (oldP === state.user.pass) {
+                state.user.pass = newP; state.users.find(u => u.id === state.user.id).pass = newP;
+                state.isModified = true; showToast('Mot de passe mis à jour !', 'success');
+                document.getElementById('old-pass').value = ''; document.getElementById('new-pass').value = '';
+            } else showToast('Ancien mot de passe incorrect', 'danger');
+        }
+
+        function exportData() {
+            if (!state.societe) return showToast('Aucun dossier chargé', 'danger');
+            const dataStr = JSON.stringify({ societe: state.societe, exercices: state.exercices, users: state.users, ecritures: state.ecritures }, null, 2);
+            const now = new Date(); const ds = now.toISOString().slice(0, 10).replace(/-/g, ''); const ts = now.getHours().toString().padStart(2, '0') + now.getMinutes().toString().padStart(2, '0');
+            const fn = `${state.societe.replace(/\s+/g, '_')}_${ds}_${ts}.json`;
+            const blob = new Blob([dataStr], { type: 'application/json' }); const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = fn; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            state.isModified = false; showToast('Sauvegarde réussie', 'success');
+        }
+
+        function initCharts() {
+            const isDark = state.theme === 'dark';
+            const colors = { text: isDark ? '#8892B0' : '#4A5568', grid: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' };
+            document.getElementById('chart-main').innerHTML = '';
+            new ApexCharts(document.getElementById('chart-main'), {
+                series: [{ name: 'CA', data: [31, 40, 28, 51, 42, 109, 100, 120, 135, 140, 125, 150] }, { name: 'Charges', data: [11, 32, 45, 32, 34, 52, 41, 48, 55, 60, 58, 62] }],
+                chart: { type: 'area', height: 300, toolbar: { show: false }, background: 'transparent' },
+                colors: ['#6C63FF', '#FF6B6B'], stroke: { curve: 'smooth', width: 2 },
+                xaxis: { categories: ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'], labels: { style: { colors: colors.text } } },
+                yaxis: { labels: { style: { colors: colors.text } } },
+                grid: { borderColor: colors.grid }, theme: { mode: isDark ? 'dark' : 'light' }
+            }).render();
+            document.getElementById('chart-donut').innerHTML = '';
+            new ApexCharts(document.getElementById('chart-donut'), {
+                series: [44, 55, 13, 33], chart: { type: 'donut', height: 300 },
+                labels: ['Achats', 'Personnel', 'Impôts', 'Services Ext.'],
+                colors: ['#6C63FF', '#00D4AA', '#FDCB6E', '#74B9FF'], theme: { mode: isDark ? 'dark' : 'light' }
+            }).render();
+        }
+
+        function showToast(msg, type = 'info') {
+            const c = document.getElementById('toast-container'); const t = document.createElement('div');
+            const colors = { success: 'border-success text-success', danger: 'border-danger text-danger', warning: 'border-warning text-warning', info: 'border-info text-info' };
+            t.className = `glass border-l-4 ${colors[type]} px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 min-w-[300px] animate-fade-up`;
+            t.innerHTML = `<i data-lucide="info" class="w-5 h-5"></i><span class="text-sm font-medium">${msg}</span>`;
+            c.appendChild(t); lucide.createIcons(); setTimeout(() => { t.classList.add('opacity-0', 'translate-x-full'); setTimeout(() => t.remove(), 500); }, 3000);
+        }
+
+        window.onbeforeunload = (e) => { if (state.isModified) { e.preventDefault(); return "Modifications non sauvegardées."; } };
+        window.onload = () => { syncTheme(); lucide.createIcons(); };
+    </script>
+</body>
+</html>

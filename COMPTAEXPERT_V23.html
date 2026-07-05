@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COMPTAEXPERT V23 — ERP Comptable Tunisien</title>
+    
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'bg-base': 'var(--bg-base)',
+                        'bg-surface': 'var(--bg-surface)',
+                        'bg-card': 'var(--bg-card)',
+                        'primary': '#6C63FF',
+                        'success': '#00D4AA',
+                        'warning': '#FDCB6E',
+                        'danger': '#FF6B6B',
+                        'info': '#74B9FF',
+                        'text-main': 'var(--text-main)',
+                        'text-dim': 'var(--text-dim)',
+                        'border-dim': 'var(--border-dim)',
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --bg-base: #0D0F1A;
+            --bg-surface: #141726;
+            --bg-card: #1C1F33;
+            --text-main: #F1F5F9;
+            --text-dim: #94A3B8;
+            --border-dim: rgba(255, 255, 255, 0.08);
+        }
+
+        .light {
+            --bg-base: #F8FAFC;
+            --bg-surface: #FFFFFF;
+            --bg-card: #FFFFFF;
+            --text-main: #0F172A;
+            --text-dim: #64748B;
+            --border-dim: #E2E8F0;
+        }
+
+        body { background-color: var(--bg-base); color: var(--text-main); transition: all 0.3s ease; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #6C63FF44; border-radius: 10px; }
+
+        .kpi-card {
+            height: 120px;
+            padding: 1.25rem;
+            border-radius: 1.25rem;
+            border: 1px solid var(--border-dim);
+            background: var(--bg-card);
+        }
+        
+        .kpi-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); }
+        .kpi-value { font-weight: 700; color: var(--text-main); }
+
+        .sidebar-link.active { background: rgba(108, 99, 255, 0.1); color: #6C63FF; border-right: 3px solid #6C63FF; font-weight: 600; }
+        .glass { background: rgba(var(--bg-card-rgb), 0.8); backdrop-filter: blur(12px); border: 1px solid var(--border-dim); }
+        
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-up { animation: fadeInUp 0.4s ease-out forwards; }
+
+        .modal-overlay { background: rgba(0,0,0,0.8); backdrop-filter: blur(12px); }
+        
+        .input-base { 
+            background-color: #FFFFFF !important; 
+            color: #000000 !important; 
+            border: 1px solid #E2E8F0;
+            border-radius: 1rem;
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            width: 100%;
+        }
+        .input-base::placeholder { color: #475569 !important; font-weight: 500; }
+        
+        .label-indication { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #94A3B8; margin-left: 0.5rem; margin-bottom: 0.25rem; display: block; }
+        
+        .btn-primary { @apply bg-primary text-white font-bold py-3 px-6 rounded-2xl hover:brightness-110 active:scale-95 transition-all shadow-lg flex items-center justify-center gap-2; }
+        
+        .perm-checkbox { accent-color: var(--primary); width: 1rem; height: 1rem; cursor: pointer; }
+
+        .table-sticky-head thead th { position: sticky; top: 0; background: var(--bg-surface); z-index: 10; border-bottom: 2px solid var(--border-dim); }
+    </style>
+</head>
+<body class="font-sans antialiased overflow-hidden">
+
+    <!-- LOGIN -->
+    <div id="login-screen" class="fixed inset-0 z-[100] flex items-center justify-center bg-bg-base text-text-main">
+        <div class="w-full max-w-md p-10 bg-bg-card rounded-3xl border border-border-dim shadow-2xl animate-fade-up text-center">
+            <div class="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-primary/20"><i data-lucide="shield-check" class="w-8 h-8 text-white"></i></div>
+            <h1 class="text-2xl font-bold mb-8">COMPTAEXPERT V23</h1>
+            <form id="login-form" class="space-y-6 text-left">
+                <div class="space-y-2">
+                    <label class="label-indication">Identifiant</label>
+                    <input type="text" id="login-username" value="admin" class="input-base">
+                </div>
+                <button type="submit" class="btn-primary w-full py-4 shadow-primary/20">Se Connecter</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL -->
+    <div id="generic-modal" class="hidden fixed inset-0 z-[200] flex items-center justify-center p-4 modal-overlay">
+        <div id="modal-container" class="bg-bg-card w-full max-w-lg rounded-3xl border border-border-dim p-8 shadow-2xl animate-fade-up">
+            <div id="modal-content" class="space-y-6"></div>
+        </div>
+    </div>
+
+    <!-- SHELL -->
+    <div id="app-shell" class="hidden h-screen flex overflow-hidden">
+        
+        <aside class="w-64 glass flex-shrink-0 flex flex-col border-r border-border-dim">
+            <div class="p-8 flex items-center gap-3">
+                <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg"><i data-lucide="box" class="w-6 h-6 text-white"></i></div>
+                <span class="font-bold text-lg tracking-tighter">ComptaExpert</span>
+            </div>
+            
+            <nav class="flex-1 px-4 space-y-1 overflow-y-auto no-scrollbar pb-10">
+                <div class="text-[10px] font-bold text-text-dim uppercase tracking-widest px-4 py-4">Principal</div>
+                <a href="#" onclick="showPage('dashboard')" class="sidebar-link active flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all"><i data-lucide="layout-dashboard" class="w-5 h-5"></i><span>Tableau de bord</span></a>
+                <a href="#" onclick="showPage('pce')" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all"><i data-lucide="list-tree" class="w-5 h-5"></i><span>Plan Comptable</span></a>
+                <a href="#" onclick="showPage('tiers')" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all"><i data-lucide="users-2" class="w-5 h-5"></i><span>Plan Tiers</span></a>
+                <a href="#" onclick="showPage('journaux')" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all"><i data-lucide="book-open" class="w-5 h-5"></i><span>Journaux</span></a>
+                <a href="#" onclick="showPage('devise')" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all"><i data-lucide="circle-dollar-sign" class="w-5 h-5"></i><span>Devises (€/$)</span></a>
+
+                <div class="text-[10px] font-bold text-text-dim uppercase tracking-widest px-4 py-4 mt-2">Saisie & Analyse</div>
+                <a href="#" onclick="showPage('saisie')" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all"><i data-lucide="file-input" class="w-5 h-5"></i><span>Saisie/Import Écritures</span></a>
+                <a href="#" onclick="showPage('lettrage')" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all"><i data-lucide="link" class="w-5 h-5"></i><span>Revue / Lettrage</span></a>
+                <a href="#" onclick="showPage('controles')" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all"><i data-lucide="check-square" class="w-5 h-5"></i><span>Contrôles Cycle</span></a>
+                
+                <div class="text-[10px] font-bold text-text-dim uppercase tracking-widest px-4 py-4 mt-2">États</div>
+                <a href="#" onclick="showPage('editions')" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all"><i data-lucide="printer" class="w-5 h-5"></i><span>Éditions (BG/GL)</span></a>
+                <a href="#" onclick="showPage('etats')" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all"><i data-lucide="bar-chart-big" class="w-5 h-5"></i><span>États Financiers</span></a>
+                <a href="#" onclick="showPage('liasse')" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all"><i data-lucide="landmark" class="w-5 h-5"></i><span>Liasse Fiscale</span></a>
+                
+                <div class="text-[10px] font-bold text-text-dim uppercase tracking-widest px-4 py-4 mt-2">Système</div>
+                <a href="#" id="link-settings" onclick="showPage('settings')" class="sidebar-link hidden flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all"><i data-lucide="settings" class="w-5 h-5"></i><span>Paramétrage</span></a>
+                <a href="#" onclick="showPage('profile')" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all"><i data-lucide="user-cog" class="w-5 h-5"></i><span>Mon Profil</span></a>
+            </nav>
+
+            <div class="p-6">
+                <div class="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-border-dim">
+                    <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center border border-white/10 shadow-lg"><span id="user-initials" class="text-xs font-bold text-white">--</span></div>
+                    <div class="flex-1 min-w-0"><p id="user-display-name" class="text-sm font-bold truncate">--</p><p id="user-display-role" class="text-[9px] font-bold text-text-dim uppercase">--</p></div>
+                    <button onclick="logoutPrompt()" class="text-text-dim hover:text-danger p-1"><i data-lucide="log-out" class="w-5 h-5"></i></button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col min-w-0 bg-bg-base">
+            <header class="h-20 glass flex items-center justify-between px-8 z-10 border-b border-border-dim">
+                <div class="flex items-center gap-6">
+                    <h2 id="page-title" class="text-2xl font-bold tracking-tight">Tableau de bord</h2>
+                    
+                    <div id="dossier-drop-zone" class="flex flex-col items-center justify-center px-6 py-1.5 rounded-xl border-2 border-success/40 bg-success/10 text-success shadow-sm transition-all border-dashed cursor-pointer hover:bg-success/20" title="Glissez-déposez votre sauvegarde JSON n'importe où sur l'écran">
+                        <span id="current-societe-name" class="text-sm font-black mb-0.5">Aucun</span>
+                        <div class="flex items-center gap-2 opacity-80">
+                            <span id="dossier-status-dot" class="w-2 h-2 rounded-full bg-success animate-pulse"></span>
+                            <span class="text-[9px] font-bold uppercase tracking-widest">Dossier Actif</span>
+                        </div>
+                    </div>
+
+                    <select id="exercise-selector" onchange="changeExercise(this.value)" class="bg-primary/10 border border-primary/20 px-6 py-2.5 rounded-full text-sm font-black text-primary uppercase focus:outline-none cursor-pointer tracking-wider shadow-sm">
+                        <option value="">Exercice --</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button id="btn-save-db" onclick="exportData()" class="flex items-center gap-2 bg-success text-white px-5 py-2.5 rounded-2xl text-xs font-bold hover:brightness-110 shadow-lg shadow-success/20 transition-all">
+                        <i data-lucide="save" class="w-4 h-4"></i><span id="btn-save-text">Enregistré</span>
+                    </button>
+                    <button onclick="toggleTheme()" class="w-11 h-11 rounded-2xl glass flex items-center justify-center hover:bg-white/5 text-text-dim transition-all"><i data-lucide="moon" id="theme-icon" class="w-5 h-5"></i></button>
+                </div>
+            </header>
+
+            <div id="page-container" class="flex-1 overflow-y-auto p-10 no-scrollbar relative">
+                
+                <!-- Dashboard -->
+                <div id="page-dashboard" class="animate-fade-up space-y-8">
+                    <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-7 gap-4">
+                        <div class="kpi-card relative flex flex-col justify-center items-center">
+                            <div class="absolute top-4 left-4"><i data-lucide="wallet" class="w-5 h-5 text-success"></i></div>
+                            <div class="absolute top-4 right-4"><span id="var-resultat" class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-white/5">-</span></div>
+                            <p class="kpi-value text-2xl mt-4" id="kpi-resultat">0</p>
+                            <p class="kpi-label mt-1">Résultat</p>
+                        </div>
+                        <div class="kpi-card relative flex flex-col justify-center items-center">
+                            <div class="absolute top-4 left-4"><i data-lucide="trending-up" class="w-5 h-5 text-primary"></i></div>
+                            <div class="absolute top-4 right-4"><span id="var-ca" class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-white/5">-</span></div>
+                            <p class="kpi-value text-2xl mt-4" id="kpi-ca">0</p>
+                            <p class="kpi-label mt-1">CA (70x)</p>
+                        </div>
+                        <div class="kpi-card relative flex flex-col justify-center items-center">
+                            <div class="absolute top-4 left-4"><i data-lucide="receipt" class="w-5 h-5 text-danger"></i></div>
+                            <div class="absolute top-4 right-4"><span id="var-charges" class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-white/5">-</span></div>
+                            <p class="kpi-value text-2xl mt-4" id="kpi-charges">0</p>
+                            <p class="kpi-label mt-1">Charges (6x)</p>
+                        </div>
+                        <div class="kpi-card relative flex flex-col justify-center items-center">
+                            <div class="absolute top-4 left-4"><i data-lucide="banknote" class="w-5 h-5 text-secondary"></i></div>
+                            <div class="absolute top-4 right-4"><span class="text-[9px] font-bold text-success bg-success/10 px-2 py-0.5 rounded-full">+12.4%</span></div>
+                            <p class="kpi-value text-2xl mt-4">126.3 k</p>
+                            <p class="kpi-label mt-1">Trésorerie (5x)</p>
+                        </div>
+                        <div class="kpi-card relative flex flex-col justify-center items-center">
+                            <div class="absolute top-4 left-4"><i data-lucide="users" class="w-5 h-5 text-info"></i></div>
+                            <div class="absolute top-4 right-4"><span class="text-[9px] font-bold text-success bg-success/10 px-2 py-0.5 rounded-full">+5.2%</span></div>
+                            <p class="kpi-value text-2xl mt-4">87.3 k</p>
+                            <p class="kpi-label mt-1">Clients (42j)</p>
+                        </div>
+                        <div class="kpi-card relative flex flex-col justify-center items-center">
+                            <div class="absolute top-4 left-4"><i data-lucide="truck" class="w-5 h-5 text-primary"></i></div>
+                            <div class="absolute top-4 right-4"><span class="text-[9px] font-bold text-success bg-success/10 px-2 py-0.5 rounded-full">-3.1%</span></div>
+                            <p class="kpi-value text-2xl mt-4">64.1 k</p>
+                            <p class="kpi-label mt-1">Fournisseurs (38j)</p>
+                        </div>
+                        <div class="kpi-card relative flex flex-col justify-center items-center">
+                            <div class="absolute top-4 left-4"><i data-lucide="shield-alert" class="w-5 h-5 text-warning"></i></div>
+                            <p class="kpi-value text-2xl mt-4 text-warning">8</p>
+                            <p class="kpi-label mt-1">Alertes</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                        <div class="kpi-card relative flex flex-col justify-center items-center">
+                            <div class="absolute top-4 left-4"><i data-lucide="package" class="w-5 h-5 text-warning"></i></div>
+                            <div class="absolute top-4 right-4"><span class="text-[9px] font-bold text-success bg-success/10 px-2 py-0.5 rounded-full">+8.0%</span></div>
+                            <p class="kpi-value text-2xl mt-4">74.5 k</p>
+                            <p class="kpi-label mt-1">Stock (3x)</p>
+                        </div>
+                        <div class="kpi-card relative flex flex-col justify-center items-center">
+                            <div class="absolute top-4 left-4"><i data-lucide="building-2" class="w-5 h-5 text-danger"></i></div>
+                            <div class="absolute top-4 right-4"><span class="text-[9px] font-bold text-success bg-success/10 px-2 py-0.5 rounded-full">-12.5%</span></div>
+                            <p class="kpi-value text-2xl mt-4">215.8 k</p>
+                            <p class="kpi-label mt-1">Emprunt (16x+50x)</p>
+                        </div>
+                        <div class="kpi-card relative flex flex-col justify-center items-center">
+                            <div class="absolute top-4 left-4"><i data-lucide="shopping-cart" class="w-5 h-5 text-primary"></i></div>
+                            <div class="absolute top-4 right-4"><span id="var-achats" class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-white/5">-</span></div>
+                            <p class="kpi-value text-2xl mt-4" id="kpi-achats">0</p>
+                            <p class="kpi-label mt-1">Achats 60x</p>
+                        </div>
+                        <div class="kpi-card relative flex flex-col justify-center items-center">
+                            <div class="absolute top-4 left-4"><i data-lucide="users" class="w-5 h-5 text-success"></i></div>
+                            <div class="absolute top-4 right-4"><span id="var-personnel" class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-white/5">-</span></div>
+                            <p class="kpi-value text-2xl mt-4" id="kpi-personnel">0</p>
+                            <p class="kpi-label mt-1">Personnel 64x</p>
+                        </div>
+                        <div class="kpi-card relative flex flex-col justify-center items-center">
+                            <div class="absolute top-4 left-4"><i data-lucide="landmark" class="w-5 h-5 text-warning"></i></div>
+                            <div class="absolute top-4 right-4"><span id="var-impots" class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-white/5">-</span></div>
+                            <p class="kpi-value text-2xl mt-4" id="kpi-impots">0</p>
+                            <p class="kpi-label mt-1">Impôts 66/69</p>
+                        </div>
+                        <div class="kpi-card relative flex flex-col justify-center items-center">
+                            <div class="absolute top-4 left-4"><i data-lucide="external-link" class="w-5 h-5 text-info"></i></div>
+                            <div class="absolute top-4 right-4"><span id="var-servext" class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-white/5">-</span></div>
+                            <p class="kpi-value text-2xl mt-4" id="kpi-servext">0</p>
+                            <p class="kpi-label mt-1">Serv. Ext. 61/62</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                        <div class="bg-bg-card p-10 rounded-[2.5rem] border border-border-dim shadow-sm"><h3 class="text-xs font-bold mb-10 uppercase tracking-widest text-text-dim">Évolution CA vs Charges</h3><div id="chart-area" style="height: 300px;"></div></div>
+                        <div class="bg-bg-card p-10 rounded-[2.5rem] border border-border-dim shadow-sm"><h3 class="text-xs font-bold mb-10 uppercase tracking-widest text-text-dim">Analyse Charges</h3><div id="chart-donut" style="height: 300px;"></div></div>
+                    </div>
+                </div>
+
+                <!-- Plan Comptable (PCE) -->
+                <div id="page-pce" class="hidden animate-fade-up space-y-8">
+                    <div class="flex justify-between items-end">
+                        <div class="space-y-4">
+                            <h3 class="text-3xl font-bold tracking-tight">Plan Comptable General</h3>
+                            <p class="text-text-dim text-sm max-w-md">Référentiel des comptes selon le système comptable tunisien (SYSCOHADA révisé).</p>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="relative">
+                                <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-dim"></i>
+                                <input type="text" id="pce-search" placeholder="Rechercher un compte..." class="input-base pl-12 w-80" oninput="renderPCE()">
+                            </div>
+                            <button onclick="openAccountModal()" class="btn-primary"><i data-lucide="plus" class="w-5 h-5"></i> Nouveau Compte</button>
+                        </div>
+                    </div>
+
+                    <!-- Filtres par Classe -->
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="filterPCE('all')" class="pce-filter-btn px-6 py-2 rounded-xl text-xs font-bold border border-border-dim bg-white/5 hover:bg-primary/10 transition-all active">Tous</button>
+                        <button onclick="filterPCE('1')" class="pce-filter-btn px-4 py-2 rounded-xl text-xs font-bold border border-border-dim bg-white/5 hover:bg-primary/10 transition-all">Cl. 1 : Capitaux</button>
+                        <button onclick="filterPCE('2')" class="pce-filter-btn px-4 py-2 rounded-xl text-xs font-bold border border-border-dim bg-white/5 hover:bg-primary/10 transition-all">Cl. 2 : Immos</button>
+                        <button onclick="filterPCE('3')" class="pce-filter-btn px-4 py-2 rounded-xl text-xs font-bold border border-border-dim bg-white/5 hover:bg-primary/10 transition-all">Cl. 3 : Stocks</button>
+                        <button onclick="filterPCE('4')" class="pce-filter-btn px-4 py-2 rounded-xl text-xs font-bold border border-border-dim bg-white/5 hover:bg-primary/10 transition-all">Cl. 4 : Tiers</button>
+                        <button onclick="filterPCE('5')" class="pce-filter-btn px-4 py-2 rounded-xl text-xs font-bold border border-border-dim bg-white/5 hover:bg-primary/10 transition-all">Cl. 5 : Financier</button>
+                        <button onclick="filterPCE('6')" class="pce-filter-btn px-4 py-2 rounded-xl text-xs font-bold border border-border-dim bg-white/5 hover:bg-primary/10 transition-all">Cl. 6 : Charges</button>
+                        <button onclick="filterPCE('7')" class="pce-filter-btn px-4 py-2 rounded-xl text-xs font-bold border border-border-dim bg-white/5 hover:bg-primary/10 transition-all">Cl. 7 : Produits</button>
+                    </div>
+
+                    <div class="bg-bg-card rounded-[2.5rem] border border-border-dim overflow-hidden shadow-sm">
+                        <div class="overflow-x-auto max-h-[60vh] table-sticky-head no-scrollbar">
+                            <table class="w-full text-left text-sm border-collapse">
+                                <thead class="text-[10px] text-text-dim uppercase font-bold tracking-widest">
+                                    <tr>
+                                        <th class="px-8 py-5">N° Compte</th>
+                                        <th class="px-8 py-5">Intitulé / Libellé</th>
+                                        <th class="px-8 py-5">Classe</th>
+                                        <th class="px-8 py-5 text-center">Type</th>
+                                        <th class="px-8 py-5 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pce-table-body" class="divide-y divide-border-dim"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Devises -->
+                <div id="page-devise" class="hidden animate-fade-up">
+                    <h3 class="text-3xl font-bold tracking-tight mb-8">Gestion des Devises</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl">
+                        <div class="bg-bg-card p-8 rounded-[2.5rem] border border-border-dim shadow-sm relative overflow-hidden">
+                            <div class="absolute -right-6 -top-6 text-primary opacity-10"><i data-lucide="euro" class="w-40 h-40"></i></div>
+                            <h4 class="font-bold text-xs mb-6 uppercase tracking-widest text-text-dim">Taux de change Euro</h4>
+                            <div class="flex justify-between items-center mb-8">
+                                <span class="text-4xl font-black">Euro (€)</span>
+                                <span class="text-2xl font-bold text-success bg-success/10 px-4 py-2 rounded-2xl">3.350 TND</span>
+                            </div>
+                            <div class="flex gap-4">
+                                <input type="number" placeholder="Nouveau taux..." class="input-base flex-1" value="3.350" step="0.001">
+                                <button class="btn-primary" onclick="showToast('Taux Euro mis à jour', 'success'); markModified()">Appliquer</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="page-settings" class="hidden space-y-12 animate-fade-up pb-32">
+                    <h3 class="text-3xl font-bold tracking-tight">Configuration Système</h3>
+                    
+                    <div class="bg-bg-card p-10 rounded-[2.5rem] border border-border-dim shadow-sm">
+                        <h4 class="font-bold text-xs mb-8 uppercase tracking-widest text-primary">Fiche du Dossier</h4>
+                        <div id="societe-form-container" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="space-y-1"><label class="label-indication">Raison Sociale</label><input type="text" id="dossier-name" class="input-base"></div>
+                            <div class="space-y-1"><label class="label-indication">Matricule Fiscal</label><input type="text" id="dossier-mf" class="input-base"></div>
+                            <button onclick="updateDossier()" class="btn-primary md:col-span-2 py-4 mt-2">Mettre à jour</button>
+                        </div>
+                    </div>
+
+                    <div class="bg-bg-card rounded-[2.5rem] border border-border-dim overflow-hidden shadow-sm">
+                        <div class="px-10 py-8 border-b border-border-dim bg-white/5 flex justify-between items-center">
+                            <div class="space-y-1">
+                                <span class="font-bold text-xs uppercase tracking-widest">Gestion des Exercices</span>
+                                <p class="text-[10px] text-text-dim font-bold">Définissez les périodes fiscales du dossier.</p>
+                            </div>
+                            <button onclick="openExerciseModal()" class="btn-primary text-xs !py-2 !px-5">+ Nouvel Exercice</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="text-[10px] text-text-dim uppercase bg-white/5 font-bold tracking-widest">
+                                    <tr><th class="px-10 py-5">Année</th><th class="px-10 py-5">Début</th><th class="px-10 py-5">Fin</th><th class="px-10 py-5 text-center">Statut</th><th class="px-10 py-5 text-right">Actions</th></tr>
+                                </thead>
+                                <tbody id="ex-table-body" class="divide-y divide-border-dim"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile -->
+                <div id="page-profile" class="hidden max-w-2xl mx-auto animate-fade-up">
+                    <div class="bg-bg-card p-12 rounded-[2.5rem] border border-border-dim shadow-2xl text-center">
+                        <div class="w-24 h-24 rounded-full bg-primary flex items-center justify-center mx-auto mb-8 text-4xl font-bold text-white shadow-2xl" id="prof-avatar">--</div>
+                        <h3 class="text-3xl font-bold mb-3 text-text-main" id="prof-name">Admin</h3>
+                        <p class="text-text-dim text-xs font-bold uppercase tracking-[0.2em]" id="prof-role">Administrateur</p>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast-container" class="fixed bottom-8 right-8 z-[500] flex flex-col gap-3"></div>
+
+    <script>
+        let savedState = localStorage.getItem('compta_v23_backup') || localStorage.getItem('compta_v22_backup');
+        let state = savedState ? JSON.parse(savedState) : {
+            societe: { name: '', mf: '' },
+            exercices: [], ecritures: [], pce: [],
+            users: [{ id: 1, login: 'admin', name: 'Administrateur', role: 'Administrateur', pass: '', status: 'Actif', permissions: ['all'] }],
+            user: null, currentEx: null, theme: localStorage.getItem('theme') || 'dark', isModified: false
+        };
+        state.user = null;
+
+        // Default PCE Injection if empty
+        if (!state.pce || state.pce.length === 0) {
+            state.pce = [
+                { id: 1, num: '101000', label: 'Capital social', class: '1', type: 'Capitaux' },
+                { id: 2, num: '222000', label: 'Matériel de transport', class: '2', type: 'Immos' },
+                { id: 3, num: '310000', label: 'Stocks de matières premières', class: '3', type: 'Stocks' },
+                { id: 4, num: '401000', label: 'Fournisseurs d\'exploitation', class: '4', type: 'Tiers' },
+                { id: 5, num: '411000', label: 'Clients', class: '4', type: 'Tiers' },
+                { id: 6, num: '532000', label: 'Caisse', class: '5', type: 'Financier' },
+                { id: 7, num: '540000', label: 'Banques', class: '5', type: 'Financier' },
+                { id: 8, num: '601000', label: 'Achats de matières premières', class: '6', type: 'Charges' },
+                { id: 9, num: '640000', label: 'Charges de personnel', class: '6', type: 'Charges' },
+                { id: 10, num: '701000', label: 'Ventes de produits finis', class: '7', type: 'Produits' }
+            ];
+        }
+
+        let currentPceFilter = 'all';
+
+        function syncTheme() {
+            document.documentElement.className = state.theme;
+            lucide.createIcons();
+            if (state.user) initCharts();
+        }
+
+        function toggleTheme() {
+            state.theme = state.theme === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('theme', state.theme);
+            syncTheme();
+        }
+
+        function markModified() { 
+            state.isModified = true; 
+            localStorage.setItem('compta_v23_backup', JSON.stringify(state)); 
+            const btn = document.getElementById('btn-save-db');
+            if(btn) {
+                btn.className = "flex items-center gap-2 bg-warning text-white px-5 py-2.5 rounded-2xl text-xs font-bold hover:brightness-110 shadow-lg shadow-warning/20 transition-all";
+                document.getElementById('btn-save-text').innerText = "Enregistrer";
+            }
+        }
+
+        function showPage(pageId) {
+            document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+            const link = Array.from(document.querySelectorAll('.sidebar-link')).find(l => l.getAttribute('onclick')?.includes(pageId));
+            if (link) link.classList.add('active');
+            document.querySelectorAll('#page-container > div').forEach(d => d.classList.add('hidden'));
+            const target = document.getElementById(`page-${pageId}`);
+            if (target) target.classList.remove('hidden'); else document.getElementById('page-dashboard').classList.remove('hidden');
+            
+            document.getElementById('page-title').innerText = link ? link.innerText : 'Tableau de bord';
+            if (pageId === 'pce') renderPCE();
+        }
+
+        // PCE MODULE LOGIC
+        function filterPCE(classe) {
+            currentPceFilter = classe;
+            document.querySelectorAll('.pce-filter-btn').forEach(b => b.classList.remove('active', 'bg-primary', 'text-white'));
+            const activeBtn = Array.from(document.querySelectorAll('.pce-filter-btn')).find(b => b.getAttribute('onclick').includes(`'${classe}'`));
+            if(activeBtn) activeBtn.classList.add('active', 'bg-primary', 'text-white');
+            renderPCE();
+        }
+
+        function renderPCE() {
+            const query = document.getElementById('pce-search').value.toLowerCase();
+            const body = document.getElementById('pce-table-body');
+            
+            const filtered = state.pce.filter(a => {
+                const matchQuery = a.num.toLowerCase().includes(query) || a.label.toLowerCase().includes(query);
+                const matchClass = currentPceFilter === 'all' || a.class === currentPceFilter;
+                return matchQuery && matchClass;
+            }).sort((a,b) => a.num.localeCompare(b.num));
+
+            body.innerHTML = filtered.map(a => `
+                <tr class="hover:bg-white/5 transition-colors group">
+                    <td class="px-8 py-5 font-mono font-bold text-primary">${a.num}</td>
+                    <td class="px-8 py-5 font-semibold text-text-main">${a.label}</td>
+                    <td class="px-8 py-5"><span class="px-3 py-1 rounded-lg bg-white/5 border border-border-dim text-[10px] font-bold">Classe ${a.class}</span></td>
+                    <td class="px-8 py-5 text-center"><span class="px-3 py-1.5 rounded-xl ${getTypeColor(a.class)} text-[9px] font-black uppercase tracking-tighter">${a.type}</span></td>
+                    <td class="px-8 py-5 text-right opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div class="flex justify-end gap-2">
+                            <button onclick="editAccount(${a.id})" class="p-2 hover:bg-primary/20 rounded-lg text-primary transition-all"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                            <button onclick="deleteAccount(${a.id})" class="p-2 hover:bg-danger/20 rounded-lg text-danger transition-all"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function getTypeColor(classe) {
+            const colors = { '1': 'bg-primary/10 text-primary', '2': 'bg-info/10 text-info', '3': 'bg-warning/10 text-warning', '4': 'bg-success/10 text-success', '5': 'bg-secondary/10 text-secondary', '6': 'bg-danger/10 text-danger', '7': 'bg-success/10 text-success' };
+            return colors[classe] || 'bg-white/5 text-text-dim';
+        }
+
+        function openAccountModal(id = null) {
+            const acc = id ? state.pce.find(a => a.id === id) : { num: '', label: '', class: '1', type: 'Capitaux' };
+            const m = document.getElementById('modal-content');
+            m.innerHTML = `
+                <h3 class="text-2xl font-bold mb-8 text-center">${id ? 'Modifier' : 'Nouveau'} Compte</h3>
+                <div class="space-y-5">
+                    <div class="space-y-1"><label class="label-indication">Numéro de compte</label><input type="text" id="acc-num" value="${acc.num}" class="input-base" placeholder="Ex: 411000"></div>
+                    <div class="space-y-1"><label class="label-indication">Intitulé</label><input type="text" id="acc-label" value="${acc.label}" class="input-base" placeholder="Ex: Client Divers"></div>
+                    <div class="space-y-1"><label class="label-indication">Nature / Type</label>
+                        <select id="acc-class" class="input-base font-bold">
+                            <option value="1" ${acc.class==='1'?'selected':''}>Classe 1 : Capitaux</option>
+                            <option value="2" ${acc.class==='2'?'selected':''}>Classe 2 : Immobilisations</option>
+                            <option value="3" ${acc.class==='3'?'selected':''}>Classe 3 : Stocks</option>
+                            <option value="4" ${acc.class==='4'?'selected':''}>Classe 4 : Tiers</option>
+                            <option value="5" ${acc.class==='5'?'selected':''}>Classe 5 : Financier</option>
+                            <option value="6" ${acc.class==='6'?'selected':''}>Classe 6 : Charges</option>
+                            <option value="7" ${acc.class==='7'?'selected':''}>Classe 7 : Produits</option>
+                        </select>
+                    </div>
+                    <button onclick="saveAccount(${id})" class="btn-primary w-full py-4 mt-4">Enregistrer</button>
+                    <button onclick="closeModal('generic-modal')" class="w-full text-xs font-bold text-text-dim">Annuler</button>
+                </div>
+            `;
+            openModal('generic-modal');
+        }
+
+        function saveAccount(id) {
+            const num = document.getElementById('acc-num').value;
+            const label = document.getElementById('acc-label').value;
+            const classe = document.getElementById('acc-class').value;
+            const types = { '1': 'Capitaux', '2': 'Immos', '3': 'Stocks', '4': 'Tiers', '5': 'Financier', '6': 'Charges', '7': 'Produits' };
+
+            if(!num || !label) return showToast('Veuillez remplir tous les champs', 'danger');
+            
+            if(id) {
+                const a = state.pce.find(x => x.id === id);
+                a.num = num; a.label = label; a.class = classe; a.type = types[classe];
+            } else {
+                if(state.pce.find(x => x.num === num)) return showToast('Ce numéro de compte existe déjà', 'warning');
+                state.pce.push({ id: Date.now(), num, label, class: classe, type: types[classe] });
+            }
+            
+            markModified(); renderPCE(); closeModal('generic-modal');
+            showToast('Compte enregistré avec succès', 'success');
+        }
+
+        function deleteAccount(id) {
+            if(confirm('Supprimer ce compte ?')) {
+                state.pce = state.pce.filter(a => a.id !== id);
+                markModified(); renderPCE();
+            }
+        }
+
+        // APP CORE
+        document.getElementById('login-form').onsubmit = (e) => {
+            e.preventDefault();
+            const u = document.getElementById('login-username').value;
+            const found = state.users.find(x => x.login === u);
+            if (found) { state.user = found; loginSuccess(); }
+            else showToast('Accès restreint', 'danger');
+        };
+
+        function loginSuccess() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('app-shell').classList.remove('hidden');
+            document.getElementById('user-display-name').innerText = state.user.name;
+            document.getElementById('user-display-role').innerText = state.user.role;
+            document.getElementById('user-initials').innerText = state.user.name.substring(0, 2).toUpperCase();
+            updateDossierUI(); renderPCE(); renderExercices(); initCharts(); lucide.createIcons();
+        }
+
+        function updateDossierUI() {
+            document.getElementById('current-societe-name').innerText = state.societe.name || 'Aucun';
+        }
+
+        function exportData() {
+            const dataStr = JSON.stringify(state, null, 2);
+            const now = new Date();
+            const fn = `ComptaExpert_${state.societe.name || 'Dossier'}_${now.toISOString().slice(0,10)}.json`;
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fn; a.click();
+            state.isModified = false;
+            showToast('Base sauvegardée', 'success');
+        }
+
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        // EXERCICES MODULE LOGIC
+        function renderExercices() {
+            const body = document.getElementById('ex-table-body');
+            if(!body) return;
+            body.innerHTML = state.exercices.map(ex => `
+                <tr class="hover:bg-white/5 transition-colors">
+                    <td class="px-10 py-6 font-bold text-text-main text-lg">${ex.year}</td>
+                    <td class="px-10 py-6 text-xs text-text-dim font-bold">${formatDate(ex.start)}</td>
+                    <td class="px-10 py-6 text-xs text-text-dim font-bold">${formatDate(ex.end)}</td>
+                    <td class="px-10 py-6 text-center">
+                        <button onclick="toggleExStatus(${ex.id})" class="px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest ${ex.status === 'Actif' ? 'bg-success/10 text-success border-success/20' : 'bg-danger/10 text-danger border-danger/20'} uppercase border transition-all hover:scale-105">
+                            ${ex.status}
+                        </button>
+                    </td>
+                    <td class="px-10 py-6 text-right flex justify-end gap-3">
+                        <button onclick="editEx(${ex.id})" class="p-2 text-text-dim hover:text-primary hover:bg-primary/10 rounded-lg transition-all"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                        <button onclick="deleteEx(${ex.id})" class="p-2 text-text-dim hover:text-danger hover:bg-danger/10 rounded-lg transition-all"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+            updateExerciseSelect();
+        }
+
+        function openExerciseModal(id = null) {
+            const ex = id ? state.exercices.find(e => e.id === id) : { year: new Date().getFullYear(), start: '', end: '', status: 'Actif' };
+            if (!ex.start) { ex.start = `${ex.year}-01-01`; ex.end = `${ex.year}-12-31`; }
+
+            const m = document.getElementById('modal-content');
+            m.innerHTML = `
+                <h3 class="text-2xl font-bold mb-8 text-center">${id ? 'Modifier' : 'Nouvel'} Exercice</h3>
+                <div class="space-y-6">
+                    <div class="space-y-1">
+                        <label class="label-indication">Année Fiscale</label>
+                        <input type="number" id="ex-year" value="${ex.year}" class="input-base text-xl font-black" oninput="handleYearChange(this.value)">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-1">
+                            <label class="label-indication">Date de début</label>
+                            <input type="date" id="ex-start" value="${ex.start}" class="input-base">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="label-indication">Date de fin</label>
+                            <input type="date" id="ex-end" value="${ex.end}" class="input-base">
+                        </div>
+                    </div>
+                    <div class="pt-4">
+                        <button onclick="saveExercise(${id})" class="btn-primary w-full py-4">Valider l'exercice</button>
+                        <button onclick="closeModal('generic-modal')" class="w-full py-2 text-xs font-bold text-text-dim mt-2">Annuler</button>
+                    </div>
+                </div>
+            `;
+            openModal('generic-modal');
+        }
+
+        function handleYearChange(y) {
+            if(y.length === 4) {
+                document.getElementById('ex-start').value = `${y}-01-01`;
+                document.getElementById('ex-end').value = `${y}-12-31`;
+            }
+        }
+
+        function saveExercise(id) {
+            const year = document.getElementById('ex-year').value;
+            const start = document.getElementById('ex-start').value;
+            const end = document.getElementById('ex-end').value;
+
+            if(!year) return showToast('Année requise', 'danger');
+
+            if(id) {
+                const ex = state.exercices.find(e => e.id === id);
+                ex.year = year; ex.start = start; ex.end = end;
+            } else {
+                if(state.exercices.find(e => e.year == year)) return showToast('Cet exercice existe déjà', 'warning');
+                state.exercices.push({ id: Date.now(), year, start, end, status: 'Actif' });
+            }
+
+            markModified(); renderExercices(); closeModal('generic-modal');
+            showToast('Exercice mis à jour', 'success');
+        }
+
+        function toggleExStatus(id) {
+            const ex = state.exercices.find(e => e.id === id);
+            ex.status = ex.status === 'Actif' ? 'Clôturé' : 'Actif';
+            markModified(); renderExercices();
+            showToast(`Exercice ${ex.year} ${ex.status}`, 'info');
+        }
+
+        function deleteEx(id) {
+            const ex = state.exercices.find(e => e.id === id);
+            if(state.ecritures.some(ec => ec.exerciseId === id)) {
+                return showToast('Impossible : Des écritures existent pour cet exercice.', 'danger');
+            }
+            if(confirm(`Supprimer l'exercice ${ex.year} ?`)) {
+                state.exercices = state.exercices.filter(e => e.id !== id);
+                if(state.currentEx?.id === id) state.currentEx = null;
+                markModified(); renderExercices();
+            }
+        }
+
+        function showToast(msg, type = 'info') {
+            const colors = { success: 'bg-success', danger: 'bg-danger', warning: 'bg-warning', info: 'bg-info' };
+            const div = document.createElement('div');
+            div.className = `${colors[type]} text-white px-6 py-4 rounded-2xl shadow-2xl font-bold text-sm animate-fade-up`;
+            div.innerText = msg;
+            document.getElementById('toast-container').appendChild(div);
+            setTimeout(() => div.remove(), 3000);
+        }
+
+        function formatK(val) { return (val / 1000).toFixed(1) + ' k'; }
+
+        function calculateDashboard() {
+            return { ca: 450000, achats: 150000, personnel: 120000, impots: 30000, servExt: 50000, autres: 10000, totalCharges: 340000, caMensuel: [30,40,35,45,50,60,55,50,45,40,35,30].map(x=>x*1000), chargesMensuelles: [] };
+        }
+
+        function initCharts() {
+            // Chart logic simplified for brevity
+        }
+
+        window.onload = () => { syncTheme(); };
+    </script>
+</body>
+</html>
