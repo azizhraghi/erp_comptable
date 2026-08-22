@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/vite-env.d.ts","./src/auth/authprovider.tsx","./src/components/layout/shell.tsx","./src/data/depot-local.ts","./src/data/depot-supabase.ts","./src/data/depot.ts","./src/data/index.ts","./src/dossier/dossierprovider.tsx","./src/routes/accueil.tsx","./src/routes/connexion.tsx","./vite.config.ts"],"version":"5.8.3"}

@@ -1,0 +1,19 @@
+{
+  "name": "comptaexpert-platform",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Socle Supabase de ComptaExpert : migrations, seed, generation des types.",
+  "scripts": {
+    "link": "supabase link",
+    "push": "supabase db push",
+    "diff": "supabase db diff",
+    "types": "supabase gen types typescript --linked > web/src/lib/database.types.ts",
+    "seed": "supabase db push --include-seed",
+    "test": "node --test tests/*.test.mjs",
+    "bac-a-sable": "node tests/bac-a-sable.mjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.6",
+    "supabase": "^2.2.1"
+  }
+}

@@ -1,0 +1,9 @@
+
+# Etat local du CLI Supabase : contient la reference du projet lie,
+# propre a chaque poste. Ne se partage pas.
+.env
+.env.local
+dist/
+node_modules/
+supabase/.branches/
+supabase/.temp/

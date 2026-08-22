@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+html { color-scheme: light dark; }
+
+/* Les montants s'alignent en colonne : chiffres à chasse fixe partout. */
+.tabular { font-variant-numeric: tabular-nums; }
