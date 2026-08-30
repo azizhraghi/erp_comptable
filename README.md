@@ -40,10 +40,10 @@ Copy-Item .env.example .env
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -e ".[dev]"
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8001
 ```
 
-La vérification est disponible sur `http://127.0.0.1:8000/health`.
+La vérification est disponible sur `http://127.0.0.1:8001/health`.
 
 ## Règles de sécurité à préserver
 

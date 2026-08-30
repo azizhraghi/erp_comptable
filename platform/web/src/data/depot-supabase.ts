@@ -161,7 +161,7 @@ export class DepotSupabase implements Depot {
   }
 
   async analyserFinancier(dossierId: string, exerciceId: string, question: string): Promise<AnalyseFinanciere> {
-    const apiUrl = (import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8000').replace(/\/$/, '');
+    const apiUrl = (import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8001').replace(/\/$/, '');
     const { data: session } = await this.client.auth.getSession();
     const accessToken = session.session?.access_token;
     if (!accessToken) throw new Error('Votre session a expiré. Reconnectez-vous avant de lancer l’agent ANA.');
