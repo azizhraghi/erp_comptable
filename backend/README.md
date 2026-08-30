@@ -24,7 +24,7 @@ Copy-Item .env.example .env
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -e ".[dev]"
-uvicorn app.main:app --reload --port 8001
+uvicorn app.main:app --host 127.0.0.1 --port 8001
 ```
 
 L’API répond ensuite sur `http://127.0.0.1:8001` :
