@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import SecretStr
+from pydantic import AliasChoices, Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -12,8 +12,17 @@ class Settings(BaseSettings):
     app_name: str = "ComptaExpert API"
     environment: str = "development"
     api_v1_prefix: str = "/api/v1"
-    supabase_url: str = ""
-    supabase_publishable_key: str = ""
+    # Les alias VITE_* facilitent la reprise de la configuration locale du
+    # frontend. Les noms sans VITE_ restent ceux à utiliser en production.
+    supabase_url: str = Field(
+        default="", validation_alias=AliasChoices("SUPABASE_URL", "VITE_SUPABASE_URL")
+    )
+    supabase_publishable_key: str = Field(
+        default="",
+        validation_alias=AliasChoices(
+            "SUPABASE_PUBLISHABLE_KEY", "VITE_SUPABASE_PUBLISHABLE_KEY", "VITE_SUPABASE_ANON_KEY"
+        ),
+    )
     mistral_api_key: SecretStr | None = None
     mistral_model: str = "mistral-small-latest"
     cors_origins: str = "http://127.0.0.1:5174,http://localhost:5174"
