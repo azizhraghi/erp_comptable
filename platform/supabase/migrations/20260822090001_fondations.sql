@@ -185,3 +185,16 @@ set search_path = public, pg_catalog
 as $$
   select profil from collaborateur where id = auth.uid() and actif;
 $$;
+
+-- Cabinet de l'utilisateur courant. SECURITY DEFINER est indispensable :
+-- une policy RLS sur collaborateur ne doit jamais relire collaborateur par
+-- une sous-requête ordinaire, ce qui provoquerait une récursion infinie.
+create or replace function app.cabinet_courant()
+returns uuid
+language sql
+stable
+security definer
+set search_path = public, pg_catalog
+as $$
+  select cabinet_id from collaborateur where id = auth.uid() and actif;
+$$;

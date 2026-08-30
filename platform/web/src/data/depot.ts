@@ -57,8 +57,28 @@ export interface Compte {
   numero: string;
   libelle: string;
   classe: number;
+  type: 'Actif' | 'Passif' | 'Charge' | 'Produit' | null;
+  nature_solde: 'Debiteur' | 'Crediteur' | 'Solde';
   collectif: boolean;
   type_tiers: string | null;
+  lettrable: boolean;
+  rapprochable: boolean;
+  report_ran: 'detail' | 'solde';
+  bloque: boolean;
+}
+
+/** Données modifiables d'un compte du plan comptable. */
+export interface DonneesCompte {
+  numero: string;
+  libelle: string;
+  classe: number;
+  type: Compte['type'];
+  nature_solde: Compte['nature_solde'];
+  collectif: boolean;
+  type_tiers: string | null;
+  lettrable: boolean;
+  rapprochable: boolean;
+  report_ran: Compte['report_ran'];
   bloque: boolean;
 }
 
@@ -66,8 +86,52 @@ export interface Tiers {
   id: string;
   code: string;
   raison_sociale: string;
-  type: string;
+  type: 'client' | 'fournisseur' | 'salarie' | 'autre';
   compte_collectif_id: string | null;
+  mf: string | null;
+  rc: string | null;
+  adresse: string | null;
+  ville: string | null;
+  pays: string | null;
+  contact: string | null;
+  telephone: string | null;
+  email: string | null;
+  rib: string | null;
+  banque: string | null;
+  devise: string | null;
+  mode_reglement: string | null;
+  delai_paiement: number | null;
+  plafond_credit: number | null;
+  lettrage_auto: boolean;
+  gestion_echeances: boolean;
+  statut: 'actif' | 'bloque' | 'inactif';
+  notes: string | null;
+}
+
+/** Coordonnées et paramètres comptables modifiables d'un tiers. */
+export interface DonneesTiers {
+  code: string;
+  raison_sociale: string;
+  type: Tiers['type'];
+  compte_collectif_id: string | null;
+  mf: string | null;
+  rc: string | null;
+  adresse: string | null;
+  ville: string | null;
+  pays: string | null;
+  contact: string | null;
+  telephone: string | null;
+  email: string | null;
+  rib: string | null;
+  banque: string | null;
+  devise: string | null;
+  mode_reglement: string | null;
+  delai_paiement: number | null;
+  plafond_credit: number | null;
+  lettrage_auto: boolean;
+  gestion_echeances: boolean;
+  statut: Tiers['statut'];
+  notes: string | null;
 }
 
 export interface Violation {
@@ -104,6 +168,31 @@ export interface ResultatEnregistrement {
   numero: string;
   statut: string;
   violations: Violation[];
+}
+
+/** Pièce proposée à l'agent de révision. */
+export interface PieceRevision {
+  id: string;
+  numero: string;
+  date_piece: string;
+  libelle: string | null;
+  statut: 'brouillon' | 'revise' | 'supervise' | 'valide';
+  source: 'manuelle' | 'import' | 'agent' | 'generee';
+  created_at: string;
+}
+
+/** Résultat traçable d'une exécution de l'agent REV. */
+export interface AnalyseRevision {
+  violations: Violation[];
+  confiance: number;
+  duree_ms: number;
+}
+
+export interface AnalyseFinanciere {
+  reponse: string;
+  observations: string[];
+  points_a_verifier: string[];
+  duree_ms: number;
 }
 
 export interface LigneBalance {
@@ -145,10 +234,17 @@ export interface Depot {
   listerExercices(dossierId: string): Promise<Exercice[]>;
   listerJournaux(dossierId: string): Promise<Journal[]>;
   listerComptes(dossierId: string): Promise<Compte[]>;
+  creerCompte(dossierId: string, donnees: DonneesCompte): Promise<Compte>;
+  modifierCompte(compteId: string, donnees: DonneesCompte): Promise<Compte>;
   listerTiers(dossierId: string): Promise<Tiers[]>;
+  creerTiers(dossierId: string, donnees: DonneesTiers): Promise<Tiers>;
+  modifierTiers(tiersId: string, donnees: DonneesTiers): Promise<Tiers>;
 
   enregistrerPiece(demande: DemandeEnregistrement): Promise<ResultatEnregistrement>;
   controlerPiece(pieceId: string): Promise<Violation[]>;
+  listerPiecesRevision(exerciceId: string): Promise<PieceRevision[]>;
+  analyserPieceRevision(dossierId: string, pieceId: string): Promise<AnalyseRevision>;
+  analyserFinancier(dossierId: string, exerciceId: string, question: string): Promise<AnalyseFinanciere>;
 
   balanceGenerale(exerciceId: string): Promise<LigneBalance[]>;
   grandLivre(exerciceId: string, compteId?: string): Promise<LigneGrandLivre[]>;

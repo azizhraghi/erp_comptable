@@ -1,6 +1,0 @@
-{
-  "name": "Compta Tunisie",
-  "description": "Application de gestion comptable tunisienne 100% Web et Hors-ligne, conforme SYSCOHADA et liasse fiscale F6001-F6005, avec contrôles par cycles.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}

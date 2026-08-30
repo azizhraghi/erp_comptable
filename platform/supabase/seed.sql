@@ -5,8 +5,10 @@
 --   Dashboard > Authentication > Users > Add user
 --   Cochez « Auto Confirm User », sinon la connexion sera refusée.
 --
--- Ensuite : remplacez l'e-mail ci-dessous par le vôtre et exécutez tout ce
--- fichier dans le SQL Editor du dashboard.
+-- L'amorçage attend exactement UN utilisateur dans Supabase Auth, puis le
+-- promeut en administrateur du cabinet. Si l'équipe contient déjà plusieurs
+-- utilisateurs, exécutez plutôt un script d'administration explicite : il
+-- ne faut jamais choisir un administrateur par hasard.
 --
 -- Sans cet amorçage, la RLS fait son travail et vous ne verrez rien :
 -- pas de cabinet, pas de collaborateur, donc aucun dossier autorisé.
@@ -14,23 +16,27 @@
 
 do $$
 declare
-  -- ⚠️ SEULE LIGNE À MODIFIER
-  v_email    text := 'najd.benthabet@amex.com.tn';
-
   v_user     uuid;
+  v_email    text;
+  v_nom      text;
   v_cabinet  uuid;
   v_dossier  uuid;
   v_exercice uuid;
   v_annee    smallint := extract(year from current_date)::smallint;
 begin
-  -- 1. Retrouver l'utilisateur créé dans le dashboard
-  select id into v_user from auth.users where email = v_email;
-
-  if v_user is null then
+  -- 1. Retrouver l'unique utilisateur créé dans le dashboard.
+  -- Le garde-fou évite de donner les droits administrateur au mauvais compte.
+  if (select count(*) from auth.users) <> 1 then
     raise exception
-      'Aucun utilisateur « % » dans Auth. Créez-le d''abord : Authentication > Users > Add user (avec Auto Confirm).',
-      v_email;
+      'L''amorçage requiert exactement un utilisateur dans Auth. Créez le premier administrateur, ou utilisez un script d''administration explicite.';
   end if;
+
+  select
+    id,
+    email,
+    coalesce(nullif(raw_user_meta_data ->> 'full_name', ''), split_part(email, '@', 1))
+  into v_user, v_email, v_nom
+  from auth.users;
 
   -- 2. Le cabinet
   insert into cabinet (nom, email)
@@ -39,7 +45,7 @@ begin
 
   -- 3. Vous, en administrateur
   insert into collaborateur (id, cabinet_id, nom, prenom, email, profil)
-  values (v_user, v_cabinet, 'Ben Thabet', 'Najd', v_email, 'administrateur');
+  values (v_user, v_cabinet, v_nom, null, v_email, 'administrateur');
 
   -- 4. Un dossier de démonstration
   insert into dossier (

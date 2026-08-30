@@ -119,19 +119,17 @@ begin
 
     execute format(
       'create policy %I on %I for select
-         using (cabinet_id in (
-           select cabinet_id from collaborateur where id = auth.uid() and actif
-         ))',
+         using (cabinet_id = app.cabinet_courant())',
       t || '_select', t);
 
     execute format(
       'create policy %I on %I for all
          using (
-           cabinet_id in (select cabinet_id from collaborateur where id = auth.uid() and actif)
+           cabinet_id = app.cabinet_courant()
            and app.profil_courant() = ''administrateur''
          )
          with check (
-           cabinet_id in (select cabinet_id from collaborateur where id = auth.uid() and actif)
+           cabinet_id = app.cabinet_courant()
            and app.profil_courant() = ''administrateur''
          )',
       t || '_write', t);
@@ -149,10 +147,7 @@ alter table regle_imputation force row level security;
 
 create policy regle_imputation_select on regle_imputation for select
   using (
-    (portee = 'cabinet'
-      and cabinet_id in (
-        select cabinet_id from collaborateur where id = auth.uid() and actif
-      ))
+    (portee = 'cabinet' and cabinet_id = app.cabinet_courant())
     or
     (portee = 'dossier' and dossier_id in (select app.dossiers_autorises()))
   );
@@ -189,8 +184,8 @@ alter table declaration_regle force row level security;
 create policy declaration_regle_all on declaration_regle for all
   using (exists (
     select 1 from declaration_type dt
-      join collaborateur c on c.cabinet_id = dt.cabinet_id
-     where dt.id = declaration_type_id and c.id = auth.uid() and c.actif
+     where dt.id = declaration_type_id
+       and dt.cabinet_id = app.cabinet_courant()
   ))
   with check (app.profil_courant() = 'administrateur');
 
@@ -218,9 +213,7 @@ alter table collaborateur enable row level security;
 alter table collaborateur force row level security;
 
 create policy collaborateur_select on collaborateur for select
-  using (cabinet_id in (
-    select cabinet_id from collaborateur c where c.id = auth.uid() and c.actif
-  ));
+  using (cabinet_id = app.cabinet_courant());
 
 create policy collaborateur_update_soi on collaborateur for update
   using (id = auth.uid())
@@ -248,7 +241,7 @@ alter table cabinet enable row level security;
 alter table cabinet force row level security;
 
 create policy cabinet_select on cabinet for select
-  using (id in (select cabinet_id from collaborateur where id = auth.uid() and actif));
+  using (id = app.cabinet_courant());
 
 create policy cabinet_update on cabinet for update
   using (app.profil_courant() = 'administrateur')

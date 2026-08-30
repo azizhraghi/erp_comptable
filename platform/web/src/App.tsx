@@ -3,6 +3,12 @@ import { useAuth } from '@/auth/AuthProvider';
 import Connexion from '@/routes/Connexion';
 import Shell from '@/components/layout/Shell';
 import Accueil from '@/routes/Accueil';
+import PlanComptable from '@/routes/PlanComptable';
+import Tiers from '@/routes/Tiers';
+import Saisie from '@/routes/Saisie';
+import ImportExcel from '@/routes/ImportExcel';
+import Editions from '@/routes/Editions';
+import CentreIA from '@/routes/CentreIA';
 
 export default function App() {
   const { chargement, connexionRequise } = useAuth();
@@ -26,6 +32,12 @@ export default function App() {
     <Shell>
       <Routes>
         <Route path="/" element={<Accueil />} />
+        <Route path="/pce" element={<PlanComptable />} />
+        <Route path="/tiers" element={<Tiers />} />
+        <Route path="/saisie" element={<Saisie />} />
+        <Route path="/import" element={<ImportExcel />} />
+        <Route path="/editions" element={<Editions />} />
+        <Route path="/ia" element={<CentreIA />} />
         {/* Les écrans métier arrivent ici : saisie, éditions, lettrage. */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

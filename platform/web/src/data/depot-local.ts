@@ -17,8 +17,8 @@ import { pgcrypto } from '@electric-sql/pglite/contrib/pgcrypto';
 import { pg_trgm } from '@electric-sql/pglite/contrib/pg_trgm';
 import { btree_gist } from '@electric-sql/pglite/contrib/btree_gist';
 import type {
-  Collaborateur, Compte, DemandeEnregistrement, Depot, Dossier, Exercice,
-  Journal, LigneBalance, LigneGrandLivre, ResultatEnregistrement, Tiers, Violation,
+  Collaborateur, Compte, DemandeEnregistrement, Depot, DonneesCompte, DonneesTiers, Dossier, Exercice,
+  AnalyseFinanciere, AnalyseRevision, Journal, LigneBalance, LigneGrandLivre, PieceRevision, ResultatEnregistrement, Tiers, Violation,
 } from './depot';
 
 import amorcageSql from './amorcage-local.sql?raw';
@@ -136,18 +136,91 @@ export class DepotLocal implements Depot {
 
   listerComptes(dossierId: string) {
     return this.q<Compte>(
-      `select id, numero, libelle, classe, collectif, type_tiers, bloque
+      `select id, numero, libelle, classe, type, nature_solde, collectif, type_tiers,
+              lettrable, rapprochable, report_ran, bloque
          from compte where dossier_id = $1 and actif order by numero`,
       [dossierId]
     );
   }
 
+  async creerCompte(dossierId: string, donnees: DonneesCompte): Promise<Compte> {
+    const r = await this.q<Compte>(
+      `insert into compte (
+          dossier_id, numero, libelle, classe, type, nature_solde, collectif,
+          type_tiers, lettrable, rapprochable, report_ran, bloque
+        ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        returning id, numero, libelle, classe, type, nature_solde, collectif,
+                  type_tiers, lettrable, rapprochable, report_ran, bloque`,
+      [
+        dossierId, donnees.numero, donnees.libelle, donnees.classe, donnees.type,
+        donnees.nature_solde, donnees.collectif, donnees.type_tiers, donnees.lettrable,
+        donnees.rapprochable, donnees.report_ran, donnees.bloque,
+      ]
+    );
+    return r[0]!;
+  }
+
+  async modifierCompte(compteId: string, donnees: DonneesCompte): Promise<Compte> {
+    const r = await this.q<Compte>(
+      `update compte set
+          numero = $2, libelle = $3, classe = $4, type = $5, nature_solde = $6,
+          collectif = $7, type_tiers = $8, lettrable = $9, rapprochable = $10,
+          report_ran = $11, bloque = $12
+        where id = $1
+        returning id, numero, libelle, classe, type, nature_solde, collectif,
+                  type_tiers, lettrable, rapprochable, report_ran, bloque`,
+      [
+        compteId, donnees.numero, donnees.libelle, donnees.classe, donnees.type,
+        donnees.nature_solde, donnees.collectif, donnees.type_tiers, donnees.lettrable,
+        donnees.rapprochable, donnees.report_ran, donnees.bloque,
+      ]
+    );
+    return r[0]!;
+  }
+
   listerTiers(dossierId: string) {
     return this.q<Tiers>(
-      `select id, code, raison_sociale, type, compte_collectif_id
-         from tiers where dossier_id = $1 and statut = 'actif' order by code`,
+      `select id, code, raison_sociale, type, compte_collectif_id, mf, rc, adresse,
+              ville, pays, contact, telephone, email, rib, banque, devise,
+              mode_reglement, delai_paiement, plafond_credit, lettrage_auto,
+              gestion_echeances, statut, notes
+         from tiers where dossier_id = $1 order by code`,
       [dossierId]
     );
+  }
+
+  async creerTiers(dossierId: string, donnees: DonneesTiers): Promise<Tiers> {
+    const r = await this.q<Tiers>(
+      `insert into tiers (
+          dossier_id, code, raison_sociale, type, compte_collectif_id, mf, rc,
+          adresse, ville, pays, contact, telephone, email, rib, banque, devise,
+          mode_reglement, delai_paiement, plafond_credit, lettrage_auto,
+          gestion_echeances, statut, notes
+        ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23)
+        returning id, code, raison_sociale, type, compte_collectif_id, mf, rc,
+          adresse, ville, pays, contact, telephone, email, rib, banque, devise,
+          mode_reglement, delai_paiement, plafond_credit, lettrage_auto,
+          gestion_echeances, statut, notes`,
+      [dossierId, ...valeursTiers(donnees)]
+    );
+    return r[0]!;
+  }
+
+  async modifierTiers(tiersId: string, donnees: DonneesTiers): Promise<Tiers> {
+    const r = await this.q<Tiers>(
+      `update tiers set code=$2, raison_sociale=$3, type=$4, compte_collectif_id=$5,
+          mf=$6, rc=$7, adresse=$8, ville=$9, pays=$10, contact=$11,
+          telephone=$12, email=$13, rib=$14, banque=$15, devise=$16,
+          mode_reglement=$17, delai_paiement=$18, plafond_credit=$19,
+          lettrage_auto=$20, gestion_echeances=$21, statut=$22, notes=$23
+        where id=$1
+        returning id, code, raison_sociale, type, compte_collectif_id, mf, rc,
+          adresse, ville, pays, contact, telephone, email, rib, banque, devise,
+          mode_reglement, delai_paiement, plafond_credit, lettrage_auto,
+          gestion_echeances, statut, notes`,
+      [tiersId, ...valeursTiers(donnees)]
+    );
+    return r[0]!;
   }
 
   async enregistrerPiece(demande: DemandeEnregistrement): Promise<ResultatEnregistrement> {
@@ -160,6 +233,34 @@ export class DepotLocal implements Depot {
 
   controlerPiece(pieceId: string) {
     return this.q<Violation>(`select * from public.controler_piece($1)`, [pieceId]);
+  }
+
+  listerPiecesRevision(exerciceId: string) {
+    return this.q<PieceRevision>(
+      `select id, numero, date_piece, libelle, statut, source, created_at
+         from piece where exercice_id = $1
+         order by date_piece desc, created_at desc limit 50`,
+      [exerciceId]
+    );
+  }
+
+  async analyserPieceRevision(dossierId: string, pieceId: string): Promise<AnalyseRevision> {
+    const debut = performance.now();
+    const violations = await this.controlerPiece(pieceId);
+    const duree_ms = Math.round(performance.now() - debut);
+    const confiance = violations.some((violation) => violation.gravite === 'bloquant') ? 0.99 : 1;
+    await this.q(
+      `insert into agent_execution (
+          dossier_id, agent_code, modele, modele_version, entree_ref, sources,
+          confiance, duree_ms, statut
+        ) values ($1, 'REV', 'moteur-regles-sql', '1', $2, $3::jsonb, $4, $5, 'succes')`,
+      [dossierId, pieceId, JSON.stringify({ piece_id: pieceId, controles: violations.map((v) => v.code) }), confiance, duree_ms]
+    );
+    return { violations, confiance, duree_ms };
+  }
+
+  async analyserFinancier(_dossierId: string, _exerciceId: string, _question: string): Promise<AnalyseFinanciere> {
+    throw new Error('L’agent ANA nécessite Supabase et le secret MISTRAL_API_KEY.');
   }
 
   balanceGenerale(exerciceId: string) {
@@ -198,4 +299,15 @@ export class DepotLocal implements Depot {
     this.db = null;
     this.pret = null;
   }
+}
+
+function valeursTiers(donnees: DonneesTiers): unknown[] {
+  return [
+    donnees.code, donnees.raison_sociale, donnees.type, donnees.compte_collectif_id,
+    donnees.mf, donnees.rc, donnees.adresse, donnees.ville, donnees.pays,
+    donnees.contact, donnees.telephone, donnees.email, donnees.rib, donnees.banque,
+    donnees.devise, donnees.mode_reglement, donnees.delai_paiement,
+    donnees.plafond_credit, donnees.lettrage_auto, donnees.gestion_echeances,
+    donnees.statut, donnees.notes,
+  ];
 }

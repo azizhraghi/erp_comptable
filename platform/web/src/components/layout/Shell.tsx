@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { NavLink } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthProvider';
 import { useDossier } from '@/dossier/DossierProvider';
 import { modeLocal } from '@/data';
@@ -88,7 +89,35 @@ export default function Shell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
+      <nav className="border-b border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900" aria-label="Navigation principale">
+        <div className="mx-auto flex max-w-7xl gap-1 px-4">
+          <LienNavigation to="/" fin>Accueil</LienNavigation>
+          <LienNavigation to="/pce">Plan comptable</LienNavigation>
+          <LienNavigation to="/tiers">Tiers</LienNavigation>
+          <LienNavigation to="/saisie">Saisie</LienNavigation>
+          <LienNavigation to="/import">Import Excel</LienNavigation>
+          <LienNavigation to="/editions">Éditions</LienNavigation>
+          <LienNavigation to="/ia">Centre IA</LienNavigation>
+        </div>
+      </nav>
+
       <main className="mx-auto max-w-7xl px-4 py-6">{children}</main>
     </div>
+  );
+}
+
+function LienNavigation({ to, children, fin = false }: { to: string; children: ReactNode; fin?: boolean }) {
+  return (
+    <NavLink
+      to={to}
+      end={fin}
+      className={({ isActive }) => `border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
+        isActive
+          ? 'border-emerald-700 text-emerald-800 dark:text-emerald-400'
+          : 'border-transparent text-neutral-600 hover:text-neutral-950 dark:text-neutral-400 dark:hover:text-white'
+      }`}
+    >
+      {children}
+    </NavLink>
   );
 }
